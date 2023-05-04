@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using TerraMours.Domains.LoginDomain.IServices;
+using TerraMours.Domains.LoginDomain.Services;
 using TerraMours.Framework.Infrastructure.EFCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +14,8 @@ builder.Services.AddSwaggerGen();
 //IConfiguration configuration = builder.Configuration;
 //添加EF Core数据库
 // Add services to the container.
+builder.Services.AddScoped<ISysUserService, SysUserService>();
+
 builder.Services.AddDbContext<FrameworkDbContext>(opt =>
 {
     //从配置文件中获取key,这种方法需要新增一个类与之对应
@@ -41,6 +45,9 @@ if (app.Environment.IsDevelopment())
 
 
 app.UseHttpsRedirection();
+
+//用于启用或禁用 Npgsql 客户端与 Postgres 服务器之间的时间戳行为。它并不会直接修改 Postgres 的时区设置。
+//AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 
 app.Run();
