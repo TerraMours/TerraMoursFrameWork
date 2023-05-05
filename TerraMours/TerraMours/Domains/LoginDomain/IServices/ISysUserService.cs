@@ -4,6 +4,6 @@ namespace TerraMours.Domains.LoginDomain.IServices
 {
     public interface ISysUserService
     {
-        Task<SysUserReq> Login(SysUserReq userReq);
+        Task<string> Login(SysUserReq userReq);
     }
 }

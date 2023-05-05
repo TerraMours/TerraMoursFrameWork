@@ -1,6 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
 using TerraMours.Domains.LoginDomain.IServices;
+using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours.Framework.Infrastructure.EFCore;
 
 namespace TerraMours.Domains.LoginDomain.Services
@@ -11,24 +18,38 @@ namespace TerraMours.Domains.LoginDomain.Services
     public class SysUserService : ISysUserService
     {
         private readonly FrameworkDbContext _dbContext;
-        public SysUserService(FrameworkDbContext dbContext)
+        private readonly IOptionsSnapshot<SysSettings> _sysSettings;
+        public SysUserService(FrameworkDbContext dbContext, IOptionsSnapshot<SysSettings> sysSettings)
         {
             _dbContext = dbContext;
+            _sysSettings = sysSettings;
         }
 
-
-        public async Task<SysUserReq> Login(SysUserReq userReq)
+        [AllowAnonymous]
+        public async Task<string> Login(SysUserReq userReq)
         {
             //todo 添加jwt，然后校验邮箱以及手机号等等，密码加密
             //登录
             try
             {
                 //查看数据库是否有此用户
-                var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserName == userReq.UserAccount && x.UserPassword == userReq.UserPassword) ?? throw new Exception("用户或者密码不正确");
-                SysUserReq res = new SysUserReq();
-                res.UserAccount = user.UserEmail;
-                res.UserPassword = user.UserPassword;
-                return res;
+                //目前只支持邮箱注册所以这里去判断UserEmail 即可，后续如果可以对接手机号注册 则加上手机号即可
+                var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserEmail == userReq.UserAccount && x.UserPassword == userReq.UserPassword) ?? throw new Exception("用户或者密码不正确");
+
+                //需要使用到的Claims ,
+                var claims = new List<Claim>();
+                claims.Add(new Claim(ClaimTypes.Name, user.UserEmail));
+                //claims.Add(new Claim(ClaimTypes.NameIdentifier, user.));
+
+                //生成token
+                var token = CreateToken(claims);
+
+                //更新数据库用户的的token
+                user.Token = token;
+                _dbContext.SysUsers.Update(user);
+                _dbContext.SaveChanges();
+
+                return token;
             }
 
             catch (Exception ex)
@@ -38,5 +59,44 @@ namespace TerraMours.Domains.LoginDomain.Services
 
 
         }
+
+        public string CreateToken(IEnumerable<Claim> claims)
+        {
+            // 1. 定义需要使用到的Claims ,由前端传过来
+            /* var claims = new[]
+             {
+                 new Claim("Id", "9527"),
+                 new Claim("Name", "Admin")
+             };*/
+
+            // 2. 从 appsettings.json 中读取SecretKey
+            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_sysSettings.Value.jwt.SecretKey));
+
+            // 3. 选择加密算法
+            var algorithm = SecurityAlgorithms.HmacSha256;
+
+            // 4. 生成Credentials
+            var signingCredentials = new SigningCredentials(secretKey, algorithm);
+
+            // 5. 从 appsettings.json 中读取Expires
+            var expires = Convert.ToDouble(_sysSettings.Value.jwt.Expires);
+
+            // 6. 根据以上，生成token
+            var token = new JwtSecurityToken(
+                _sysSettings.Value.jwt.Issuer,     //Issuer
+                _sysSettings.Value.jwt.Audience,   //Audience
+                claims,                          //Claims,
+                DateTime.Now,                    //notBefore
+                DateTime.Now.AddDays(expires),   //expires
+                signingCredentials               //Credentials
+            );
+
+            // 7. 将token变为string
+            var jwtToken = new JwtSecurityTokenHandler().WriteToken(token);
+
+            return jwtToken;
+        }
+
+
     }
 }
