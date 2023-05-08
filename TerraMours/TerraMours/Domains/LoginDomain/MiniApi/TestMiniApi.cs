@@ -3,7 +3,6 @@
 public class TestMiniApi : ServiceBase
 {
 
-
     public TestMiniApi(IServiceCollection services) : base(services)
     {
         //此处/api/v1/Test 这里是swagger显示的路由

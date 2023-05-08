@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
 using TerraMours.Domains.LoginDomain.IServices;
 
@@ -21,6 +22,7 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
         /// 用户登录
         /// </summary>
         /// <returns></returns>
+        [AllowAnonymous]
         public async Task<IResult> Login([FromBody] SysUserReq userReq)
         {
             var res = await _sysUserService.Login(userReq);
@@ -28,11 +30,13 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
         }
 
         /// <summary>
-        /// 注册成功
+        /// 注册成功，此方法注册的用户只是普通用户，不能访问后台管理页面，或者能登录，但是没有菜单显示即可
         /// </summary>
         /// <returns></returns>
-        public async Task<IResult> Register()
+        [Authorize]
+        public async Task<IResult> Register([FromBody] SysUserReq userReq)
         {
+            var res = await _sysUserService.Register(userReq);
             return Results.Ok("注册成功");
         }
 

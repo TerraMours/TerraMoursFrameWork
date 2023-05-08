@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 using TerraMours.Domains.LoginDomain.IServices;
 using TerraMours.Domains.LoginDomain.Services;
@@ -9,20 +10,51 @@ using TerraMours.Framework.Infrastructure.EFCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 //获取appsetting配置文件
 IConfiguration configuration = builder.Configuration;
 
 //添加配置文件与实体类绑定
 builder.Services.Configure<SysSettings>(configuration.GetSection("SysSettings"));
 var sysSettings = builder.Configuration.GetSection("SysSettings").Get<SysSettings>();
+
+// Add services to the container.
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    //登录成功之后复制token,在swagger 右上角锁图标位置填入token
+    //填入格式为Bearer xxxxxx   
+    //注意Bearer后面有一个空格，后面再填入token
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+    {
+        Description = "在下框中输入请求头中需要添加Jwt授权Token：Bearer Token",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        BearerFormat = "JWT",
+        Scheme = "Bearer"
+    });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] { }
+        }
+    });
+});
+
 //添加EF Core数据库
 // Add services to the container.
 builder.Services.AddScoped<ISysUserService, SysUserService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+
 
 //添加认证  授权服务
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>

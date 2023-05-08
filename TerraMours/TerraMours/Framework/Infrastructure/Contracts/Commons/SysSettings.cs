@@ -4,6 +4,8 @@
     {
         public JWT jwt { get; set; }
         public Connection connection { get; set; }
+
+        public Email email { get; set; }
     }
 
 
@@ -31,6 +33,38 @@
         /// 过期时间配置 默认配置天数 系统安全级别不高
         /// </summary>
         public string Expires { get; set; }
+
+    }
+
+    /// <summary>
+    /// 邮箱配置
+    /// </summary>
+    public class Email
+    {
+        /// <summary>
+        /// 邮箱host qq是 smtp.qq.com
+        /// </summary>
+        public string Host { get; set; }
+        /// <summary>
+        /// QQ邮箱端口
+        /// </summary>
+        public int Port { get; set; }
+        /// <summary>
+        /// 是否开启ssl协议
+        /// </summary>
+        public bool UseSsl { get; set; }
+        /// <summary>
+        /// 发送的邮箱账号
+        /// </summary>
+        public string SenderEmail { get; set; }
+        /// <summary>
+        /// 发送的邮箱名称类似于网名
+        /// </summary>
+        public string SenderName { get; set; }
+        /// <summary>
+        /// 邮箱的授权码而不是密码
+        /// </summary>
+        public string SenderPassword { get; set; }
 
     }
 }
