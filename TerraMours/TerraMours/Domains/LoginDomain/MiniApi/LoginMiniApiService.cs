@@ -15,7 +15,7 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
             //此处/api/v1/Test 这里是swagger显示的路由
             //命名规则取当前的xxxMiniApiService的xxx,然后/api/v1/xxx/方法名
             App.MapPost("/api/v1/Login/Login", Login);
-            App.MapGet("/api/v1/Login/Register", Register);
+            App.MapPost("/api/v1/Login/Register", Register);
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
         /// 注册成功，此方法注册的用户只是普通用户，不能访问后台管理页面，或者能登录，但是没有菜单显示即可
         /// </summary>
         /// <returns></returns>
-        [Authorize]
+        [AllowAnonymous]
         public async Task<IResult> Register([FromBody] SysUserReq userReq)
         {
             var res = await _sysUserService.Register(userReq);

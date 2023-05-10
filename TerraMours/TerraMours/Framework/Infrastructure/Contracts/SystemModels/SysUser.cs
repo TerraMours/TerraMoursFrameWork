@@ -81,7 +81,8 @@
         /// <summary>
         /// 过期时间  记录当时最大失败时候的时间，然后加上十五分钟，如果登陆时候的时间大于这个失效时间即可登陆。然后下次账号再被锁的时候，更新对应的过期时间即可
         /// </summary>
-        public bool? ExpireTime { get; set; }
+        public DateTime? ExpireTime { get; set; }
+
 
 
     }
