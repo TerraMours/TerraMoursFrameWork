@@ -9,6 +9,7 @@ using TerraMours.Domains.LoginDomain.IServices;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 using TerraMours.Framework.Infrastructure.EFCore;
+using TerraMours.Framework.Infrastructure.Utils;
 
 namespace TerraMours.Domains.LoginDomain.Services
 {
@@ -84,22 +85,32 @@ namespace TerraMours.Domains.LoginDomain.Services
 
                 //判断邮件6位数 验证码是否正确
                 //todo 编写mailService
-                //CheckCode
+                //根据用户的邮箱查询缓存里面的验证码是否正确或者过期
+                var checkCode = CacheHelper.GetCache(userReq.UserAccount).ToString();
 
-                var addUser = new SysUser()
+                if (userReq.CheckCode == checkCode)
                 {
-                    UserEmail = userReq.UserAccount,
-                    //这里没加密：todo 需要加密
-                    UserPassword = userReq.UserPassword,
+                    var addUser = new SysUser()
+                    {
+                        UserEmail = userReq.UserAccount,
+                        //这里没加密：todo 需要加密
+                        UserPassword = userReq.UserPassword,
 
-                };
-                _dbContext.SysUsers.Add(addUser);
+                    };
+                    _dbContext.SysUsers.Add(addUser);
 
-                //更新数据库
+                    //更新数据库
 
-                var res = _dbContext.SaveChanges();
+                    var res = _dbContext.SaveChanges();
 
-                return "";
+                    return "";
+                }
+                else
+                {
+                    return "验证码不正确或已过期";
+                }
+
+
             }
 
             catch (Exception ex)
