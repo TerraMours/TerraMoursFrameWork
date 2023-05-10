@@ -38,9 +38,12 @@ namespace TerraMours.Domains.LoginDomain.Services
             //登录
             try
             {
+                //加密密码
+                var encryptPwd = userReq.UserPassword.EncryptDES(_sysSettings.Value.secret.Encrypt);
+
                 //查看数据库是否有此用户
                 //目前只支持邮箱注册所以这里去判断UserEmail 即可，后续如果可以对接手机号注册 则加上手机号即可
-                var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserEmail == userReq.UserAccount && x.UserPassword == userReq.UserPassword) ?? throw new Exception("用户或者密码不正确");
+                var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserEmail == userReq.UserAccount && x.UserPassword == encryptPwd) ?? throw new Exception("用户或者密码不正确");
 
                 //需要使用到的Claims ,
                 var claims = new List<Claim>();
@@ -90,26 +93,22 @@ namespace TerraMours.Domains.LoginDomain.Services
 
                 if (userReq.CheckCode == checkCode)
                 {
-                    var addUser = new SysUser()
-                    {
-                        UserEmail = userReq.UserAccount,
-                        //这里没加密：todo 需要加密
-                        UserPassword = userReq.UserPassword,
+                    //加密密码
+                    var encryptPwd = userReq.UserPassword.EncryptDES(_sysSettings.Value.secret.Encrypt);
 
-                    };
+                    var addUser = new SysUser(userReq.UserAccount, encryptPwd);
                     _dbContext.SysUsers.Add(addUser);
 
                     //更新数据库
 
                     var res = _dbContext.SaveChanges();
 
-                    return "";
+                    return "注册成功";
                 }
                 else
                 {
                     return "验证码不正确或已过期";
                 }
-
 
             }
 
