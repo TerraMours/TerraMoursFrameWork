@@ -2,6 +2,7 @@
 using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
+using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
 using TerraMours.Domains.LoginDomain.IServices;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
@@ -23,7 +24,7 @@ namespace TerraMours.Domains.LoginDomain.Services
         /// </summary>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async Task<string> CreateCheckCode(EmailReq req)
+        public async Task<ApiResponse<bool>> CreateCheckCode(EmailReq req)
         {
             try
             {
@@ -33,7 +34,7 @@ namespace TerraMours.Domains.LoginDomain.Services
                 await SendEmailAsync(req.UserEmail, checkCode);
                 //3.以邮箱账号为key value存验证码，五分钟过期。
                 CacheHelper.SetCache(req.UserEmail, checkCode, 300);
-                return checkCode;
+                return  ApiResponse<bool>.Success(true);
             }
             catch (Exception ex)
             {

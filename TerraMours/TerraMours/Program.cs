@@ -1,3 +1,4 @@
+using Masa.BuildingBlocks.Service.MinimalAPIs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -53,6 +54,17 @@ builder.Services.AddSwaggerGen(options =>
 //添加EF Core数据库
 // Add services to the container.
 builder.Services.AddScoped<ISysUserService, SysUserService>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: "MyPolicy",
+                      policy =>
+                      {
+                          policy.AllowAnyOrigin()
+                                   .AllowAnyMethod()
+                                   .AllowAnyHeader();
+                          //.AllowCredentials();
+                      });
+});
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 
@@ -110,6 +122,6 @@ app.UseAuthorization();
 
 //用于启用或禁用 Npgsql 客户端与 Postgres 服务器之间的时间戳行为。它并不会直接修改 Postgres 的时区设置。
 //AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
+app.UseCors();
 app.Run();
 

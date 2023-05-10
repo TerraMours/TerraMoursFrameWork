@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
 using TerraMours.Domains.LoginDomain.IServices;
@@ -21,6 +22,7 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
         /// 邮件发验证码
         /// </summary>
         /// <returns></returns>
+        [EnableCors("MyPolicy")]
         [AllowAnonymous]
         public async Task<IResult> CreateCheckCode([FromBody] EmailReq req)
         {

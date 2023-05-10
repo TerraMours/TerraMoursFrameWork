@@ -1,10 +1,11 @@
-﻿using TerraMours.Domains.LoginDomain.Contracts.Req;
+﻿using TerraMours.Domains.LoginDomain.Contracts.Common;
+using TerraMours.Domains.LoginDomain.Contracts.Req;
 
 namespace TerraMours.Domains.LoginDomain.IServices
 {
     public interface ISysUserService
     {
-        Task<string> Login(SysUserReq userReq);
-        Task<string> Register(SysUserReq userReq);
+        Task<ApiResponse<string>> Register(SysUserReq userReq);
+        Task<ApiResponse<LoginRes>> Login(SysUserReq userReq);
     }
 }

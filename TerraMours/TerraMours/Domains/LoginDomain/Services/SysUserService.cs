@@ -4,11 +4,13 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
 using TerraMours.Domains.LoginDomain.IServices;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 using TerraMours.Framework.Infrastructure.EFCore;
+using TerraMours.Framework.Infrastructure.Utils;
 
 namespace TerraMours.Domains.LoginDomain.Services
 {
@@ -31,7 +33,7 @@ namespace TerraMours.Domains.LoginDomain.Services
         /// <param name="userReq">用户登录请求信息</param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public async Task<string> Login(SysUserReq userReq)
+        public async Task<ApiResponse<LoginRes>> Login(SysUserReq userReq)
         {
             //todo 添加jwt，然后校验邮箱以及手机号等等，密码加密
             //登录
@@ -53,8 +55,7 @@ namespace TerraMours.Domains.LoginDomain.Services
                 user.Token = token;
                 _dbContext.SysUsers.Update(user);
                 _dbContext.SaveChanges();
-
-                return token;
+                return ApiResponse<LoginRes>.Success(new LoginRes(token,token));
             }
 
             catch (Exception ex)
@@ -69,7 +70,7 @@ namespace TerraMours.Domains.LoginDomain.Services
         /// <param name="userReq"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async Task<string> Register(SysUserReq userReq)
+        public async Task<ApiResponse<string>> Register(SysUserReq userReq)
         {
             try
             {
@@ -79,13 +80,17 @@ namespace TerraMours.Domains.LoginDomain.Services
                 var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserEmail == userReq.UserAccount && x.UserPassword == userReq.UserPassword);
                 if (user != null)
                 {
-                    return "用户已存在";
+                    return ApiResponse<string>.Success("用户已存在");
                 }
 
                 //判断邮件6位数 验证码是否正确
                 //todo 编写mailService
                 //CheckCode
-
+                string? code = CacheHelper.GetCache(userReq.UserAccount)?.ToString();
+                if (string.IsNullOrEmpty( code))
+                {
+                    return ApiResponse<string>.Success("验证码不正确");
+                }
                 var addUser = new SysUser()
                 {
                     UserEmail = userReq.UserAccount,
@@ -99,7 +104,7 @@ namespace TerraMours.Domains.LoginDomain.Services
 
                 var res = _dbContext.SaveChanges();
 
-                return "";
+                return ApiResponse<string>.Success("注册成功");
             }
 
             catch (Exception ex)
