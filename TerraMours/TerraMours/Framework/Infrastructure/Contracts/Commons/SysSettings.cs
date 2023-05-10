@@ -4,6 +4,7 @@
     {
         public JWT jwt { get; set; }
         public Connection connection { get; set; }
+        public Secret secret { get; set; }
 
         public Email email { get; set; }
     }
@@ -33,6 +34,18 @@
         /// 过期时间配置 默认配置天数 系统安全级别不高
         /// </summary>
         public string Expires { get; set; }
+
+    }
+
+    /// <summary>
+    /// 加解密配置key
+    /// </summary>
+    public class Secret
+    {
+        /// <summary>
+        /// 加密key
+        /// </summary>
+        public string Encrypt { get; set; }
 
     }
 

@@ -12,9 +12,9 @@
         /// <summary>
         /// 菜单父级id 
         /// </summary>
-        public long ParentId { get; set; }
+        public long? ParentId { get; set; }
         /// <summary>
-        /// 是否有子菜单
+        /// 是否有子菜单 默认无
         /// </summary>
         public bool HasChildren { get; set; }
         /// <summary>
@@ -24,7 +24,7 @@
         /// <summary>
         /// 菜单url地址 应该是sysurl + 菜单按钮 类似于相对路径的配置
         /// </summary>
-        public string MenuUrl { get; set; }
+        public string? MenuUrl { get; set; }
         /// <summary>
         /// 菜单图标  用不着 这个前端设置即可
         /// </summary>

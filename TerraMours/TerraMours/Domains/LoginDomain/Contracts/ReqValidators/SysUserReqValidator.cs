@@ -7,6 +7,8 @@ namespace TerraMours.Domains.LoginDomain.Contracts.ReqValidators
     {
         public SysUserReqValidator()
         {
+            //todo Validator 还没起作用
+
             //邮箱的校验 现在还不需要
 
             RuleFor(x => x.UserAccount).NotNull().EmailAddress()
