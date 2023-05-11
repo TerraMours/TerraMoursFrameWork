@@ -54,7 +54,15 @@ builder.Services.AddSwaggerGen(options =>
 // Add services to the container.
 builder.Services.AddScoped<ISysUserService, SysUserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
-
+builder.Services.AddCors(options => {
+    options.AddPolicy(name: "MyPolicy",
+                      policy => {
+                          policy.AllowAnyOrigin()
+                                   .AllowAnyMethod()
+                                   .AllowAnyHeader();
+                          //.AllowCredentials();
+                      });
+});
 
 //添加认证  授权服务
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
@@ -111,6 +119,6 @@ app.UseAuthorization();
 //用于启用或禁用 Npgsql 客户端与 Postgres 服务器之间的时间戳行为。它并不会直接修改 Postgres 的时区设置。
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
-
+app.UseCors("MyPolicy");
 app.Run();
 

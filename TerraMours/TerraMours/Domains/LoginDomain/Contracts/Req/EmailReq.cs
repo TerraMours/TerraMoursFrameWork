@@ -4,7 +4,6 @@ namespace TerraMours.Domains.LoginDomain.Contracts.Req
 {
     public class EmailReq
     {
-        [JsonPropertyName("email")]
-        public string UserEmail { get; set; }
+        public string userEmail { get; set; }
     }
 }

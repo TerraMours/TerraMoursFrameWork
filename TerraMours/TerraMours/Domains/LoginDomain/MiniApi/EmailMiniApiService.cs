@@ -11,6 +11,7 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
         private readonly IEmailService _emailService;
         public EmailMiniApiService(IServiceCollection services, IEmailService emailService) : base()
         {
+            RouteOptions.DisableAutoMapRoute = true;
             _emailService = emailService;
             RouteOptions.DisableAutoMapRoute = true;
             //此处/api/v1/Test 这里是swagger显示的路由
@@ -22,7 +23,6 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
         /// 邮件发验证码
         /// </summary>
         /// <returns></returns>
-        [EnableCors("MyPolicy")]
         [AllowAnonymous]
         public async Task<IResult> CreateCheckCode([FromBody] EmailReq req)
         {

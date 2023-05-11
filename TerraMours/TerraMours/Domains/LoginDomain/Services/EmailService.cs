@@ -31,9 +31,9 @@ namespace TerraMours.Domains.LoginDomain.Services
                 //生成随机六位数验证码
                 var checkCode = GenerateRandomSixDigitNumber();
                 //1.得先发送邮件 引用MailKit类库
-                await SendEmailAsync(req.UserEmail, checkCode);
+                await SendEmailAsync(req.userEmail, checkCode);
                 //3.以邮箱账号为key value存验证码，五分钟过期。
-                CacheHelper.SetCache(req.UserEmail, checkCode, 300);
+                CacheHelper.SetCache(req.userEmail, checkCode, 300);
                 return  ApiResponse<bool>.Success(true);
             }
             catch (Exception ex)

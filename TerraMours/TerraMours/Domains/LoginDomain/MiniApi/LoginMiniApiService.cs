@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
 using TerraMours.Domains.LoginDomain.IServices;
 
@@ -8,14 +9,16 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
     public class LoginMiniApiService : ServiceBase
     {
         private readonly ISysUserService _sysUserService;
-
-        public LoginMiniApiService(IServiceCollection services, ISysUserService sysUserService) : base()
-        {
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        public LoginMiniApiService(IServiceCollection services, ISysUserService sysUserService, IHttpContextAccessor httpContextAccessor) : base() {
+            RouteOptions.DisableAutoMapRoute = true;
             _sysUserService = sysUserService;
+            _httpContextAccessor = httpContextAccessor;
             //此处/api/v1/Test 这里是swagger显示的路由
             //命名规则取当前的xxxMiniApiService的xxx,然后/api/v1/xxx/方法名
             App.MapPost("/api/v1/Login/Login", Login);
             App.MapPost("/api/v1/Login/Register", Register);
+            App.MapGet("/api/v1/Login/GetUserInfo", GetUserInfo);
         }
 
         /// <summary>
@@ -37,7 +40,14 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
         public async Task<IResult> Register([FromBody] SysUserReq userReq)
         {
             var res = await _sysUserService.Register(userReq);
-            return Results.Ok("注册成功");
+            return Results.Ok(res);
+        }
+
+        [Authorize]
+        public async Task<IResult> GetUserInfo() {
+            string userEmail = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Name);
+            var res=await _sysUserService.GetUserInfo(userEmail);
+            return Results.Ok(res);
         }
 
     }
