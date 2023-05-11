@@ -40,11 +40,11 @@ namespace TerraMours.Domains.LoginDomain.Services
             try
             {
                 //加密密码
-                var encryptPwd = userReq.userPassword.EncryptDES(_sysSettings.Value.secret.Encrypt);
+                var encryptPwd = userReq.UserPassword.EncryptDES(_sysSettings.Value.secret.Encrypt);
 
                 //查看数据库是否有此用户
                 //目前只支持邮箱注册所以这里去判断UserEmail 即可，后续如果可以对接手机号注册 则加上手机号即可
-                var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserEmail == userReq.userAccount && x.UserPassword == encryptPwd) ?? throw new Exception("用户或者密码不正确");
+                var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserEmail == userReq.UserAccount && x.UserPassword == encryptPwd) ?? throw new Exception("用户或者密码不正确");
 
                 //需要使用到的Claims ,
                 var claims = new List<Claim>();
@@ -81,7 +81,7 @@ namespace TerraMours.Domains.LoginDomain.Services
                 //查看数据库是否有此用户
                 //目前只支持邮箱注册所以这里去判断UserEmail 即可，后续如果可以对接手机号注册 则加上手机号即可
                 //判断此邮箱是否已经被注册
-                var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserEmail == userReq.userAccount && x.UserPassword == userReq.userPassword);
+                var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserEmail == userReq.UserAccount && x.UserPassword == userReq.UserPassword);
                 if (user != null)
                 {
                     return ApiResponse<string>.Success("用户已存在");
@@ -90,14 +90,14 @@ namespace TerraMours.Domains.LoginDomain.Services
                 //判断邮件6位数 验证码是否正确
                 //todo 编写mailService
                 //根据用户的邮箱查询缓存里面的验证码是否正确或者过期
-                var checkCode = CacheHelper.GetCache(userReq.userAccount).ToString();
+                var checkCode = CacheHelper.GetCache(userReq.UserAccount).ToString();
 
-                if (userReq.checkCode == checkCode)
+                if (userReq.CheckCode == checkCode)
                 {
                     //加密密码
-                    var encryptPwd = userReq.userPassword.EncryptDES(_sysSettings.Value.secret.Encrypt);
+                    var encryptPwd = userReq.UserPassword.EncryptDES(_sysSettings.Value.secret.Encrypt);
 
-                    var addUser = new SysUser(userReq.userAccount, encryptPwd);
+                    var addUser = new SysUser(userReq.UserAccount, encryptPwd);
                     _dbContext.SysUsers.Add(addUser);
 
                     //更新数据库
@@ -175,12 +175,12 @@ namespace TerraMours.Domains.LoginDomain.Services
         public async Task<ApiResponse<List<SysUserDetailRes>>> GetAllUserList() {
             var userList = await _dbContext.SysUsers.Where(x => x.Enable == true).ToListAsync();
             var userDetailList = userList.Select(u => new SysUserDetailRes {
-                userId = u.UserId,
-                userName = u.UserName,
-                userEmail = u.UserEmail,
-                userPhoneNum = u.UserPhoneNum,
-                gender = u.Gender,
-                enableLogin = u.EnableLogin
+                UserId = u.UserId,
+                UserName = u.UserName,
+                UserEmail = u.UserEmail,
+                UserPhoneNum = u.UserPhoneNum,
+                Gender = u.Gender,
+                EnableLogin = u.EnableLogin
             }).ToList();
             return ApiResponse<List<SysUserDetailRes>>.Success(userDetailList);
         }

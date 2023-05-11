@@ -1,15 +1,18 @@
-﻿namespace TerraMours.Domains.LoginDomain.Contracts.Req
+﻿using System.Text.Json.Serialization;
+
+namespace TerraMours.Domains.LoginDomain.Contracts.Req
 {
     public class LoginRes
     {
         public LoginRes(string token, string refreshToken)
         {
-            this.token = token;
-            this.refreshToken = refreshToken;
+            this.Token = token;
+            this.RefreshToken = refreshToken;
         }
-
-        public string token { get; set; }
-        public string refreshToken { get; set; }
+        [JsonPropertyName("token")]
+        public string Token { get; set; }
+        [JsonPropertyName("refreshToken")]
+        public string RefreshToken { get; set; }
     }
 
 }

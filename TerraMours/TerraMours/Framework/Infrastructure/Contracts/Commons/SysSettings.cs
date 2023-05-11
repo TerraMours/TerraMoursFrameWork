@@ -19,7 +19,7 @@
     public class JWT
     {
         /// <summary>
-        /// token 密钥
+        /// Token 密钥
         /// </summary>
         public string SecretKey { get; set; }
         /// <summary>

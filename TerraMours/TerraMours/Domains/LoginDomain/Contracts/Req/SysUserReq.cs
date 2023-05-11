@@ -5,21 +5,25 @@ namespace TerraMours.Domains.LoginDomain.Contracts.Req
     public class SysUserReq
     {
         /// <summary>
-        /// 登录账号 userEmail 或者 UserPhoneNum 因为可以使用邮箱或者手机号登录。
+        /// 登录账号 UserEmail 或者 UserPhoneNum 因为可以使用邮箱或者手机号登录。
         /// </summary>
-        public string userAccount { get; set; }
+        [JsonPropertyName("userAccount")]
+        public string UserAccount { get; set; }
 
         /// <summary>
         /// 密码（是否加密）UserTrueName
         /// </summary>
-        public string userPassword { get; set; }
+        [JsonPropertyName("userPassword")]
+        public string UserPassword { get; set; }
         /// <summary>
         /// 注册时使用，保证两次密码一样
         /// </summary>
-        public string repeatPassword { get; set; }
+        [JsonPropertyName("repeatPassword")]
+        public string RepeatPassword { get; set; }
         /// <summary>
         /// 校验码
         /// </summary>
-        public string checkCode { get; set; }
+        [JsonPropertyName("checkCode")]
+        public string CheckCode { get; set; }
     }
 }
