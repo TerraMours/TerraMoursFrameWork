@@ -7,11 +7,13 @@ namespace TerraMours.Domains.LoginDomain.Contracts.ReqValidators
     {
         public SysUserReqValidator()
         {
+            //todo Validator 还没起作用
+
             //邮箱的校验 现在还不需要
 
-            /*RuleFor(x => x.UserAccount).NotNull().EmailAddress()
+            RuleFor(x => x.UserAccount).NotNull().EmailAddress()
             .Must(v => v.EndsWith("@qq.com") || v.EndsWith("@163.com"))
-            .WithMessage("只支持QQ和163邮箱");*/
+            .WithMessage("只支持QQ和163邮箱");
 
             /* RuleFor(x => x.UserPassword)
             .NotEmpty()

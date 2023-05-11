@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TerraMours.Framework.Infrastructure.EFCore;
@@ -11,9 +12,11 @@ using TerraMours.Framework.Infrastructure.EFCore;
 namespace TerraMours.Migrations
 {
     [DbContext(typeof(FrameworkDbContext))]
-    partial class FrameworkDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230510135824_init")]
+    partial class init
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -299,7 +302,7 @@ namespace TerraMours.Migrations
                     b.Property<bool>("EnableLogin")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("ExpireTime")
+                    b.Property<DateTimeOffset?>("ExpireTime")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Gender")
@@ -360,6 +363,7 @@ namespace TerraMours.Migrations
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("bigint");
 
                     b.HasKey("UserId");

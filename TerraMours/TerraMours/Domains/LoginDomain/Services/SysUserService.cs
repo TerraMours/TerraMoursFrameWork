@@ -4,7 +4,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
 using TerraMours.Domains.LoginDomain.IServices;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
@@ -33,15 +32,18 @@ namespace TerraMours.Domains.LoginDomain.Services
         /// <param name="userReq">用户登录请求信息</param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public async Task<ApiResponse<LoginRes>> Login(SysUserReq userReq)
+        public async Task<string> Login(SysUserReq userReq)
         {
             //todo 添加jwt，然后校验邮箱以及手机号等等，密码加密
             //登录
             try
             {
+                //加密密码
+                var encryptPwd = userReq.UserPassword.EncryptDES(_sysSettings.Value.secret.Encrypt);
+
                 //查看数据库是否有此用户
                 //目前只支持邮箱注册所以这里去判断UserEmail 即可，后续如果可以对接手机号注册 则加上手机号即可
-                var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserEmail == userReq.UserAccount && x.UserPassword == userReq.UserPassword) ?? throw new Exception("用户或者密码不正确");
+                var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserEmail == userReq.UserAccount && x.UserPassword == encryptPwd) ?? throw new Exception("用户或者密码不正确");
 
                 //需要使用到的Claims ,
                 var claims = new List<Claim>();
@@ -55,7 +57,8 @@ namespace TerraMours.Domains.LoginDomain.Services
                 user.Token = token;
                 _dbContext.SysUsers.Update(user);
                 _dbContext.SaveChanges();
-                return ApiResponse<LoginRes>.Success(new LoginRes(token,token));
+
+                return token;
             }
 
             catch (Exception ex)
@@ -70,7 +73,7 @@ namespace TerraMours.Domains.LoginDomain.Services
         /// <param name="userReq"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async Task<ApiResponse<string>> Register(SysUserReq userReq)
+        public async Task<string> Register(SysUserReq userReq)
         {
             try
             {
@@ -80,31 +83,33 @@ namespace TerraMours.Domains.LoginDomain.Services
                 var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserEmail == userReq.UserAccount && x.UserPassword == userReq.UserPassword);
                 if (user != null)
                 {
-                    return ApiResponse<string>.Success("用户已存在");
+                    return "用户已存在";
                 }
 
                 //判断邮件6位数 验证码是否正确
                 //todo 编写mailService
-                //CheckCode
-                string? code = CacheHelper.GetCache(userReq.UserAccount)?.ToString();
-                if (string.IsNullOrEmpty( code))
+                //根据用户的邮箱查询缓存里面的验证码是否正确或者过期
+                var checkCode = CacheHelper.GetCache(userReq.UserAccount).ToString();
+
+                if (userReq.CheckCode == checkCode)
                 {
-                    return ApiResponse<string>.Success("验证码不正确");
+                    //加密密码
+                    var encryptPwd = userReq.UserPassword.EncryptDES(_sysSettings.Value.secret.Encrypt);
+
+                    var addUser = new SysUser(userReq.UserAccount, encryptPwd);
+                    _dbContext.SysUsers.Add(addUser);
+
+                    //更新数据库
+
+                    var res = _dbContext.SaveChanges();
+
+                    return "注册成功";
                 }
-                var addUser = new SysUser()
+                else
                 {
-                    UserEmail = userReq.UserAccount,
-                    //这里没加密：todo 需要加密
-                    UserPassword = userReq.UserPassword,
+                    return "验证码不正确或已过期";
+                }
 
-                };
-                _dbContext.SysUsers.Add(addUser);
-
-                //更新数据库
-
-                var res = _dbContext.SaveChanges();
-
-                return ApiResponse<string>.Success("注册成功");
             }
 
             catch (Exception ex)

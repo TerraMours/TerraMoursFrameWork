@@ -15,6 +15,8 @@ namespace TerraMours.Framework.Infrastructure.Contracts.SystemModels
             //设置主键自增
             builder.Property(e => e.RolesToMenuId)
                    .UseIdentityColumn();
+            //将 Version 属性设置为每次插入或更新时自增，并且将其设置为乐观并发标识。
+            builder.Property(e => e.Version).ValueGeneratedOnAddOrUpdate().IsConcurrencyToken();
 
             // 配置关系一个菜单对应的对应多个按钮 关系
             builder.HasOne<SysRole>(e => e.SysRole)

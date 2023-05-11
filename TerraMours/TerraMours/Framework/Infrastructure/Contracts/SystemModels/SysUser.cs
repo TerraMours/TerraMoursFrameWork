@@ -61,19 +61,19 @@
         /// <summary>
         /// 角色id
         /// </summary>
-        public string RoleId { get; set; }
+        public string? RoleId { get; set; }
         /// <summary>
         /// 角色名称
         /// </summary>
-        public string RoleName { get; set; }
+        public string? RoleName { get; set; }
         /// <summary>
         /// 登陆token
         /// </summary>
-        public string Token { get; set; }
+        public string? Token { get; set; }
         /// <summary>
         /// 登录失败次数，超过某个值则锁定多少分钟不能登录，防止恶意登录
         /// </summary>
-        public int LoginFailCount { get; set; }
+        public int? LoginFailCount { get; set; }
         /// <summary>
         /// 是否能登陆 账号被锁
         /// </summary>
@@ -81,7 +81,75 @@
         /// <summary>
         /// 过期时间  记录当时最大失败时候的时间，然后加上十五分钟，如果登陆时候的时间大于这个失效时间即可登陆。然后下次账号再被锁的时候，更新对应的过期时间即可
         /// </summary>
-        public bool? ExpireTime { get; set; }
+        public DateTime? ExpireTime { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="userEmail">邮箱账号</param>
+        /// <param name="userPassword">加密后的密码</param>
+        public SysUser(string userEmail, string userPassword)
+        {
+            //初始化用户 ：以下是有用的字段
+            UserEmail = userEmail;
+            //存的加密过后的密码
+            UserPassword = userPassword;
+            //默认用户昵称与邮箱一致
+            UserName = userEmail;
+            EnableLogin = true;
+            LoginFailCount = 0;
+            IsRegregisterPhone = false;
+
+            //EntityBase
+            Version = 1;
+            Enable = true;
+            CreateDate = DateTime.Now;
+        }
+
+        /// <summary>
+        /// 修改密码
+        /// </summary>
+        /// <param name="userEmail"></param>
+        /// <param name="userPassword"></param>
+        public SysUser ChangePassword(string userPassword)
+        {
+            this.UserPassword = userPassword;
+            return this;
+        }
+
+        /// <summary>
+        /// 锁账号
+        /// </summary>
+        /// <param name="userPassword"></param>
+        /// <returns></returns>
+        public SysUser LockLogin()
+        {
+            this.EnableLogin = false;
+            return this;
+        }
+
+        /// <summary>
+        /// 解锁账号
+        /// </summary>
+        /// <returns></returns>
+        public SysUser UnLockLogin()
+        {
+            this.EnableLogin = true;
+            return this;
+        }
+
+        /// <summary>
+        /// 删除用户  （逻辑删）
+        /// </summary>
+        /// <returns></returns>
+        public SysUser Delete()
+        {
+            this.Enable = false;
+            return this;
+        }
+
+        //todo: 还没有写获取当前登录用户方法，需要增加修改人，修改时间等方法
+        //修改用户：
 
 
     }

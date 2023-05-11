@@ -12,8 +12,8 @@ using TerraMours.Framework.Infrastructure.EFCore;
 namespace TerraMours.Migrations
 {
     [DbContext(typeof(FrameworkDbContext))]
-    [Migration("20230503100040_init")]
-    partial class init
+    [Migration("20230510145114_upateUser0510")]
+    partial class upateUser0510
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -75,6 +75,8 @@ namespace TerraMours.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("bigint");
 
                     b.HasKey("MenuButtonId");
@@ -121,7 +123,6 @@ namespace TerraMours.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("MenuUrl")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("ModifierName")
@@ -136,13 +137,15 @@ namespace TerraMours.Migrations
                     b.Property<int?>("OrderNo")
                         .HasColumnType("integer");
 
-                    b.Property<long>("ParentId")
+                    b.Property<long?>("ParentId")
                         .HasColumnType("bigint");
 
                     b.Property<string>("Remark")
                         .HasColumnType("text");
 
                     b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("bigint");
 
                     b.HasKey("MenuId");
@@ -202,6 +205,8 @@ namespace TerraMours.Migrations
                         .HasColumnType("text");
 
                     b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("bigint");
 
                     b.HasKey("RoleId");
@@ -254,6 +259,8 @@ namespace TerraMours.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("bigint");
 
                     b.HasKey("RolesToMenuId");
@@ -295,8 +302,8 @@ namespace TerraMours.Migrations
                     b.Property<bool>("EnableLogin")
                         .HasColumnType("boolean");
 
-                    b.Property<bool?>("ExpireTime")
-                        .HasColumnType("boolean");
+                    b.Property<DateTime?>("ExpireTime")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Gender")
                         .HasColumnType("text");
@@ -307,7 +314,7 @@ namespace TerraMours.Migrations
                     b.Property<bool>("IsRegregisterPhone")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("LoginFailCount")
+                    b.Property<int?>("LoginFailCount")
                         .HasColumnType("integer");
 
                     b.Property<string>("ModifierName")
@@ -326,18 +333,15 @@ namespace TerraMours.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("RoleId")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("RoleName")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("ShortPhone")
                         .HasColumnType("text");
 
                     b.Property<string>("Token")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("UserEmail")
@@ -358,6 +362,7 @@ namespace TerraMours.Migrations
                         .HasColumnType("text");
 
                     b.Property<long>("Version")
+                        .IsConcurrencyToken()
                         .HasColumnType("bigint");
 
                     b.HasKey("UserId");
