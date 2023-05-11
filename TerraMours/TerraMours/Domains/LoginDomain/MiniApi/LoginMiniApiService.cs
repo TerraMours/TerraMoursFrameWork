@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
 using TerraMours.Domains.LoginDomain.IServices;
@@ -19,12 +20,20 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
         }
 
         /// <summary>
-        /// 用户登录
+        /// 用户登录   
         /// </summary>
         /// <returns></returns>
         [AllowAnonymous]
-        public async Task<IResult> Login([FromBody] SysUserReq userReq)
+        public async Task<IResult> Login(IValidator<SysUserReq> validator, SysUserReq userReq)
         {
+            //这里可以用来验证返回，但是体验不好，后续优化 现在先放着，不做处理，注入方法貌似与controller不太一样，正常注入不生效
+            //var result = await validator.ValidateAsync(userReq);
+            var validationResult = await validator.ValidateAsync(userReq);
+            if (!validationResult.IsValid)
+            {
+                return Results.ValidationProblem(validationResult.ToDictionary());
+            }
+
             var res = await _sysUserService.Login(userReq);
             return Results.Ok(res);
         }

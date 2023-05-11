@@ -1,8 +1,13 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using TerraMours.Domains.LoginDomain.Contracts.Req;
+using TerraMours.Domains.LoginDomain.Contracts.ReqValidators;
 using TerraMours.Domains.LoginDomain.IServices;
 using TerraMours.Domains.LoginDomain.Services;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
@@ -50,10 +55,18 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+
+// 可用 启动自动验证 但是对外方法也要加东西 体验不好
+builder.Services.AddFluentValidationAutoValidation();
+//注入 ModifyUser2 ModifyUserIntendedEffect 对应上面两个cs文件
+builder.Services.AddScoped<IValidator<SysUserReq>, SysUserReqValidator>();
+
 //添加EF Core数据库
 // Add services to the container.
 builder.Services.AddScoped<ISysUserService, SysUserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+
+
 
 
 //添加认证  授权服务
@@ -86,6 +99,19 @@ builder.Services.AddDbContext<FrameworkDbContext>(opt =>
 
 });
 
+//json小写的问题
+builder.Services.Configure<JsonOptions>(options =>
+{
+    //net6的 options.JsonSerializerOptions.PropertyNamingPolicy = null;
+
+    //net7 PropertyNameCaseInsensitive = true
+    //保留原样字段名
+    //options.SerializerOptions.PropertyNamingPolicy = null;
+    //不区分大小写
+    options.SerializerOptions.PropertyNameCaseInsensitive = true;
+});
+
+
 
 //将builder.Build();注释掉然后 改为  builder.AddServices(); 自动注入我们写的服务（miniapi）即可，由于只是单体框架我们不需要使用caller，
 //很简单的只是将miniapi代替以前的传统的controller而已,
@@ -100,7 +126,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
 
 app.UseHttpsRedirection();
 
