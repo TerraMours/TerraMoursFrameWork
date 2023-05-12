@@ -11,7 +11,6 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
         private readonly ISysUserService _sysUserService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         public LoginMiniApiService(IServiceCollection services, ISysUserService sysUserService, IHttpContextAccessor httpContextAccessor) : base() {
-            RouteOptions.DisableAutoMapRoute = true;
             _sysUserService = sysUserService;
             _httpContextAccessor = httpContextAccessor;
             //此处/api/v1/Test 这里是swagger显示的路由

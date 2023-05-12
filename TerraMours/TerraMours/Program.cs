@@ -99,7 +99,9 @@ builder.Services.AddDbContext<FrameworkDbContext>(opt =>
 //很简单的只是将miniapi代替以前的传统的controller而已,
 //var app = builder.Build();
 //添加masa miniapi
-var app = builder.AddServices();
+var app = builder.AddServices(opt => {
+    opt.DisableAutoMapRoute = true;
+});
 
 
 // Configure the HTTP request pipeline.
