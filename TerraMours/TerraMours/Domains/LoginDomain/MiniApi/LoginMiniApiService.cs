@@ -9,10 +9,12 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
     public class LoginMiniApiService : ServiceBase
     {
         private readonly ISysUserService _sysUserService;
+        private readonly Serilog.ILogger _log;
 
-        public LoginMiniApiService(IServiceCollection services, ISysUserService sysUserService) : base()
+        public LoginMiniApiService(IServiceCollection services, ISysUserService sysUserService, Serilog.ILogger log) : base()
         {
             _sysUserService = sysUserService;
+            _log = log;
             //此处/api/v1/Test 这里是swagger显示的路由
             //命名规则取当前的xxxMiniApiService的xxx,然后/api/v1/xxx/方法名
             App.MapPost("/api/v1/Login/Login", Login);
@@ -33,6 +35,9 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
             {
                 return Results.ValidationProblem(validationResult.ToDictionary());
             }
+
+            //测试seq
+            _log.Information("登录成功，测试Seq");
 
             var res = await _sysUserService.Login(userReq);
             return Results.Ok(res);

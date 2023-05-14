@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
+using Serilog.Events;
 using System.Text;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
 using TerraMours.Domains.LoginDomain.Contracts.ReqValidators;
@@ -21,6 +23,35 @@ IConfiguration configuration = builder.Configuration;
 //添加配置文件与实体类绑定
 builder.Services.Configure<SysSettings>(configuration.GetSection("SysSettings"));
 var sysSettings = builder.Configuration.GetSection("SysSettings").Get<SysSettings>();
+
+//注入日志
+// 配置 Serilog 日志记录器
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    //.WriteTo.File()
+    .WriteTo.Seq("http://localhost:5341/")
+    .CreateLogger();
+builder.Host.UseSerilog(Log.Logger);
+
+//minimal Service 构造函数没有Ilog 会报错 
+/*builder.Services.AddLogging(builder =>
+{
+    Log.Logger = new LoggerConfiguration()
+     // .MinimumLevel.Information().Enrich.FromLogContext()
+     .MinimumLevel.Debug()
+     .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+     .Enrich.FromLogContext()
+     .WriteTo.Console()
+     //.WriteTo.File(initOptions.LogFilePath)
+     .WriteTo.Seq("http://localhost:5341/")
+     .CreateLogger();
+    builder.AddSerilog();
+});*/
+
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -126,6 +157,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+//日志
+app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
 
