@@ -106,6 +106,10 @@
             CreateDate = DateTime.Now;
         }
 
+        public SysUser()
+        {
+        }
+
         /// <summary>
         /// 修改密码
         /// </summary>

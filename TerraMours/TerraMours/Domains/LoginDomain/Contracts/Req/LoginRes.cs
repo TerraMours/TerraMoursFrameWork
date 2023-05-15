@@ -9,9 +9,7 @@ namespace TerraMours.Domains.LoginDomain.Contracts.Req
             this.Token = token;
             this.RefreshToken = refreshToken;
         }
-        [JsonPropertyName("token")]
         public string Token { get; set; }
-        [JsonPropertyName("refreshToken")]
         public string RefreshToken { get; set; }
     }
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -21,10 +22,12 @@ namespace TerraMours.Domains.LoginDomain.Services
     {
         private readonly FrameworkDbContext _dbContext;
         private readonly IOptionsSnapshot<SysSettings> _sysSettings;
-        public SysUserService(FrameworkDbContext dbContext, IOptionsSnapshot<SysSettings> sysSettings)
+        private readonly IMapper _mapper;
+        public SysUserService(FrameworkDbContext dbContext, IOptionsSnapshot<SysSettings> sysSettings, IMapper mapper)
         {
             _dbContext = dbContext;
             _sysSettings = sysSettings;
+            _mapper = mapper;
         }
 
         /// <summary>
@@ -183,6 +186,37 @@ namespace TerraMours.Domains.LoginDomain.Services
                 EnableLogin = u.EnableLogin
             }).ToList();
             return ApiResponse<List<SysUserDetailRes>>.Success(userDetailList);
+        }
+        /// <summary>
+        /// 删除用户
+        /// </summary>
+        /// <param name="userReq"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task<ApiResponse<bool>> DelUser(SysUserBaseReq userReq)
+        {
+            var user=await _dbContext.SysUsers.FirstOrDefaultAsync(m => m.UserId == userReq.UserId);
+            if (user == null)
+            {
+                return ApiResponse<bool>.Fail("用户不存在");
+            }
+            user?.Delete();
+            await _dbContext.SaveChangesAsync();
+            return ApiResponse<bool>.Success(true);
+        }
+        /// <summary>
+        /// 更新用户信息
+        /// </summary>
+        /// <param name="userReq"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task<ApiResponse<bool>> UpdateUser(SysUserDetailRes userReq)
+        {
+            var user =await _dbContext.SysUsers.FirstOrDefaultAsync(m => m.UserId == userReq.UserId);
+            _mapper.Map(userReq, user);
+            _dbContext.SysUsers.Update(user);
+            await _dbContext.SaveChangesAsync();
+            return ApiResponse<bool>.Success(true);
         }
     }
 }

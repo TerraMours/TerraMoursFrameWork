@@ -1,11 +1,15 @@
+using AutoMapper;
+using Masa.BuildingBlocks.Service.MinimalAPIs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using TerraMours.Domains.LoginDomain.Contracts.Req;
 using TerraMours.Domains.LoginDomain.IServices;
 using TerraMours.Domains.LoginDomain.Services;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
+using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 using TerraMours.Framework.Infrastructure.EFCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,6 +53,14 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
+//automapper
+// 配置映射规则
+MapperConfiguration mapperConfig = new(cfg => {
+    cfg.CreateMap<SysUserDetailRes, SysUser>().ForMember(m=>m.UserId,n=>n.Ignore());
+});
+//注册配置
+IMapper mapper = mapperConfig.CreateMapper();
+builder.Services.AddSingleton(mapper);
 
 //添加EF Core数据库
 // Add services to the container.
