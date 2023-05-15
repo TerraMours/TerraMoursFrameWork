@@ -14,6 +14,7 @@ using TerraMours.Domains.LoginDomain.IServices;
 using TerraMours.Domains.LoginDomain.Services;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours.Framework.Infrastructure.EFCore;
+using TerraMours.Framework.Infrastructure.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -91,6 +92,8 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddFluentValidationAutoValidation();
 //注入 ModifyUser2 ModifyUserIntendedEffect 对应上面两个cs文件
 builder.Services.AddScoped<IValidator<SysUserReq>, SysUserReqValidator>();
+builder.Services.AddScoped<IValidator<SysLoginUserReq>, SysLoginUserReqValidator>();
+
 
 //添加EF Core数据库
 // Add services to the container.
@@ -98,6 +101,13 @@ builder.Services.AddScoped<ISysUserService, SysUserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 
+//redis 缓存 这个实现了IDistributedCache 
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = sysSettings.connection.RedisHost;
+    options.InstanceName = sysSettings.connection.RedisInstanceName;
+});
+builder.Services.AddScoped<IDistributedCacheHelper, DistributedCacheHelper>();
 
 
 //添加认证  授权服务
@@ -141,6 +151,7 @@ builder.Services.Configure<JsonOptions>(options =>
     //不区分大小写
     options.SerializerOptions.PropertyNameCaseInsensitive = true;
 });
+
 
 
 
