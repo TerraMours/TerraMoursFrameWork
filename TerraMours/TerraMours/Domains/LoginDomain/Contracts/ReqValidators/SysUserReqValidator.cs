@@ -25,11 +25,11 @@ namespace TerraMours.Domains.LoginDomain.Contracts.ReqValidators
                 .Equal(x => x.RepeatPassword).WithMessage("两次密码必须一致");
 
             //当是注册时候 Repeatpassword 不为空 判断确认的密码与第一次一样，也可以前端判断
-            RuleFor(x => x.RepeatPassword)
-           .NotEmpty()
-           .When(x => !string.IsNullOrEmpty(x.RepeatPassword))
-           .Equal(x => x.UserPassword)
-           .WithMessage("两次密码必须一致");
+            /* RuleFor(x => x.RepeatPassword)
+            .NotEmpty()
+            .When(x => !string.IsNullOrEmpty(x.RepeatPassword))
+            .Equal(x => x.UserPassword)
+            .WithMessage("两次密码必须一致");*/
 
 
 
