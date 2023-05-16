@@ -93,6 +93,7 @@ builder.Services.AddSwaggerGen(options =>
 // ÅäÖÃÓ³Éä¹æÔò
 MapperConfiguration mapperConfig = new(cfg => {
     cfg.CreateMap<SysUserDetailRes, SysUser>().ForMember(m=>m.UserId,n=>n.Ignore());
+    cfg.CreateMap<SysUserAddReq, SysUser>().ForMember(m => m.UserId, n => n.Ignore());
 });
 //×¢²áÅäÖÃ
 IMapper mapper = mapperConfig.CreateMapper();

@@ -22,6 +22,7 @@ namespace TerraMours.Domains.LoginDomain.MiniApi {
 			App.MapPost("/api/v1/User/getUserRoutes", getUserRoutes);
             App.MapPost("/api/v1/User/DelUser", DelUser);
             App.MapPost("/api/v1/User/UpdateUser", UpdateUser);
+            App.MapPost("/api/v1/User/AddUser", AddUser);
         }
 		/// <summary>
 		/// 全部用户列表 todo：jwt添加权限
@@ -54,6 +55,17 @@ namespace TerraMours.Domains.LoginDomain.MiniApi {
         public async Task<IResult> UpdateUser([FromBody] SysUserDetailRes req)
         {
             var res = await _sysUserService.UpdateUser(req);
+            return Results.Ok(res);
+        }
+        /// <summary>
+        /// 新增用户（管理员）
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> AddUser([FromBody] SysUserAddReq req)
+        {
+            var res = await _sysUserService.AddUser(req);
             return Results.Ok(res);
         }
 

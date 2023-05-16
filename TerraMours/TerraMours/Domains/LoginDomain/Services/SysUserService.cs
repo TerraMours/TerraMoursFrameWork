@@ -212,9 +212,33 @@ namespace TerraMours.Domains.LoginDomain.Services
         /// <exception cref="NotImplementedException"></exception>
         public async Task<ApiResponse<bool>> UpdateUser(SysUserDetailRes userReq)
         {
+            if(await _dbContext.SysUsers.AnyAsync(m=>m.UserEmail==userReq.UserEmail && m.UserId != userReq.UserId))
+            {
+                return ApiResponse<bool>.Fail("邮箱已注册！");
+            }
             var user =await _dbContext.SysUsers.FirstOrDefaultAsync(m => m.UserId == userReq.UserId);
             _mapper.Map(userReq, user);
             _dbContext.SysUsers.Update(user);
+            await _dbContext.SaveChangesAsync();
+            return ApiResponse<bool>.Success(true);
+        }
+        /// <summary>
+        /// 新增用户（管理员）
+        /// </summary>
+        /// <param name="userReq"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task<ApiResponse<bool>> AddUser(SysUserAddReq userReq)
+        {
+            if (await _dbContext.SysUsers.AnyAsync(m => m.UserEmail == userReq.UserEmail))
+            {
+                return ApiResponse<bool>.Fail("邮箱已注册！");
+            }
+            //初始密码(todo:后续改进，可写在配置文件中)
+            var encryptPwd = "1a!23456".EncryptDES(_sysSettings.Value.secret.Encrypt);
+            var user = new SysUser(userReq.UserEmail, encryptPwd);
+            _mapper.Map(userReq, user);
+            await _dbContext.SysUsers.AddAsync(user);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
         }

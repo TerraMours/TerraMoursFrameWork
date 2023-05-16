@@ -11,5 +11,6 @@ namespace TerraMours.Domains.LoginDomain.IServices
         Task<ApiResponse<List<SysUserDetailRes>>> GetAllUserList();
         Task<ApiResponse<bool>> DelUser(SysUserBaseReq userReq);
         Task<ApiResponse<bool>> UpdateUser(SysUserDetailRes userReq);
+        Task<ApiResponse<bool>> AddUser(SysUserAddReq userReq);
     }
 }
