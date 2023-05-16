@@ -1,16 +1,23 @@
 using AutoMapper;
 using Masa.BuildingBlocks.Service.MinimalAPIs;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
+using Serilog.Events;
 using System.Text;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
+using TerraMours.Domains.LoginDomain.Contracts.ReqValidators;
 using TerraMours.Domains.LoginDomain.IServices;
 using TerraMours.Domains.LoginDomain.Services;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 using TerraMours.Framework.Infrastructure.EFCore;
+using TerraMours.Framework.Infrastructure.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +27,35 @@ IConfiguration configuration = builder.Configuration;
 //添加配置文件与实体类绑定
 builder.Services.Configure<SysSettings>(configuration.GetSection("SysSettings"));
 var sysSettings = builder.Configuration.GetSection("SysSettings").Get<SysSettings>();
+
+//注入日志
+// 配置 Serilog 日志记录器
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    //.WriteTo.File()
+    .WriteTo.Seq("http://localhost:5341/")
+    .CreateLogger();
+builder.Host.UseSerilog(Log.Logger);
+
+//minimal Service 构造函数没有Ilog 会报错 
+/*builder.Services.AddLogging(builder =>
+{
+    Log.Logger = new LoggerConfiguration()
+     // .MinimumLevel.Information().Enrich.FromLogContext()
+     .MinimumLevel.Debug()
+     .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+     .Enrich.FromLogContext()
+     .WriteTo.Console()
+     //.WriteTo.File(initOptions.LogFilePath)
+     .WriteTo.Seq("http://localhost:5341/")
+     .CreateLogger();
+    builder.AddSerilog();
+});*/
+
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -62,6 +98,14 @@ MapperConfiguration mapperConfig = new(cfg => {
 IMapper mapper = mapperConfig.CreateMapper();
 builder.Services.AddSingleton(mapper);
 
+
+// 可用 启动自动验证 但是对外方法也要加东西 体验不好
+builder.Services.AddFluentValidationAutoValidation();
+//注入 ModifyUser2 ModifyUserIntendedEffect 对应上面两个cs文件
+builder.Services.AddScoped<IValidator<SysUserReq>, SysUserReqValidator>();
+builder.Services.AddScoped<IValidator<SysLoginUserReq>, SysLoginUserReqValidator>();
+
+
 //添加EF Core数据库
 // Add services to the container.
 builder.Services.AddScoped<ISysUserService, SysUserService>();
@@ -75,6 +119,15 @@ builder.Services.AddCors(options => {
                           //.AllowCredentials();
                       });
 });
+
+//redis 缓存 这个实现了IDistributedCache 
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = sysSettings.connection.RedisHost;
+    options.InstanceName = sysSettings.connection.RedisInstanceName;
+});
+builder.Services.AddScoped<IDistributedCacheHelper, DistributedCacheHelper>();
+
 
 //添加认证  授权服务
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
@@ -106,6 +159,20 @@ builder.Services.AddDbContext<FrameworkDbContext>(opt =>
 
 });
 
+//json小写的问题
+builder.Services.Configure<JsonOptions>(options =>
+{
+    //net6的 options.JsonSerializerOptions.PropertyNamingPolicy = null;
+
+    //net7 PropertyNameCaseInsensitive = true
+    //保留原样字段名
+    //options.SerializerOptions.PropertyNamingPolicy = null;
+    //不区分大小写
+    options.SerializerOptions.PropertyNameCaseInsensitive = true;
+});
+
+
+
 
 //将builder.Build();注释掉然后 改为  builder.AddServices(); 自动注入我们写的服务（miniapi）即可，由于只是单体框架我们不需要使用caller，
 //很简单的只是将miniapi代替以前的传统的controller而已,
@@ -123,6 +190,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+//日志
+app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
 

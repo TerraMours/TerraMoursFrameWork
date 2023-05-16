@@ -14,6 +14,8 @@
     {
         public string DBType { get; set; }
         public string DbConnectionString { get; set; }
+        public string RedisHost { get; set; }
+        public string RedisInstanceName { get; set; }
     }
 
     public class JWT

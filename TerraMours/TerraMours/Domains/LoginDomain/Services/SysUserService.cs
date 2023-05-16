@@ -36,7 +36,7 @@ namespace TerraMours.Domains.LoginDomain.Services
         /// <param name="userReq">用户登录请求信息</param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public async Task<ApiResponse<LoginRes>> Login(SysUserReq userReq)
+        public async Task<ApiResponse<LoginRes>> Login(SysLoginUserReq userReq)
         {
             //todo 添加jwt，然后校验邮箱以及手机号等等，密码加密
             //登录
