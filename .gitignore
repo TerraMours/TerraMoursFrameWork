@@ -1,2 +1,7 @@
 /TerraMours/TerraMours/*.user
 *.vsidx
+TerraMours/.vs/TerraMours/v17/.suo
+*.v2
+/TerraMours/.vs
+/TerraMours/TerraMours/appsettings.json
+/TerraMours/.vs/TerraMours/v17/.suo

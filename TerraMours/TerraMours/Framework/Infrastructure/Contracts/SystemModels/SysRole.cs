@@ -31,5 +31,42 @@
         /// 一个角色对应的多个权限（菜单）外键是roleid
         /// </summary>
         public List<SysRolesToMenu>? RolesToMenus { get; set; }
+
+        public SysRole()
+        {
+
+        }
+        /// <summary>
+        /// 新建角色 todo：添加部门字段
+        /// </summary>
+        /// <param name="roleName"></param>
+        public SysRole(string roleName)
+        {
+            RoleName = roleName;
+            HasChildren = false;
+            //EntityBase
+            Version = 1;
+            Enable = true;
+            CreateDate = DateTime.Now;
+        }
+        /// <summary>
+        /// 删除
+        /// </summary>
+        /// <returns></returns>
+        public SysRole Delete()
+        {
+            this.Enable=false;
+            return this;
+        }
+        /// <summary>
+        /// 修改角色名称
+        /// </summary>
+        /// <param name="roleName"></param>
+        /// <returns></returns>
+        public SysRole ChangeName(string roleName)
+        {
+            this.RoleName=roleName;
+            return this;
+        }
     }
 }

@@ -18,6 +18,7 @@ using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 using TerraMours.Framework.Infrastructure.EFCore;
 using TerraMours.Framework.Infrastructure.Redis;
+using TerraMours.Domains.LoginDomain.Contracts.Res;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -94,6 +95,9 @@ builder.Services.AddSwaggerGen(options =>
 MapperConfiguration mapperConfig = new(cfg => {
     cfg.CreateMap<SysUserDetailRes, SysUser>().ForMember(m=>m.UserId,n=>n.Ignore());
     cfg.CreateMap<SysUserAddReq, SysUser>().ForMember(m => m.UserId, n => n.Ignore());
+    cfg.CreateMap<SysRole, SysRoleRes>();
+    cfg.CreateMap<SysMenuReq, SysMenus>().ForMember(m => m.MenuId, n => n.Ignore());
+    cfg.CreateMap<SysMenus, SysMenuRes>();
 });
 //◊¢≤·≈‰÷√
 IMapper mapper = mapperConfig.CreateMapper();
@@ -111,6 +115,8 @@ builder.Services.AddScoped<IValidator<SysLoginUserReq>, SysLoginUserReqValidator
 // Add services to the container.
 builder.Services.AddScoped<ISysUserService, SysUserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<ISysRoleService, SysRoleService>();
+builder.Services.AddScoped<ISysMenuService, SysMenuService>();
 builder.Services.AddCors(options => {
     options.AddPolicy(name: "MyPolicy",
                       policy => {

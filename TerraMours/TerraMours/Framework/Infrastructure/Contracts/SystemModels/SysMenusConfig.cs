@@ -17,7 +17,7 @@ namespace TerraMours.Framework.Infrastructure.Contracts.SystemModels
                    .UseIdentityColumn();
 
             //将 Version 属性设置为每次插入或更新时自增，并且将其设置为乐观并发标识。
-            builder.Property(e => e.Version).ValueGeneratedOnAddOrUpdate().IsConcurrencyToken();
+            //builder.Property(e => e.Version).ValueGeneratedOnAddOrUpdate().IsConcurrencyToken();
 
         }
     }

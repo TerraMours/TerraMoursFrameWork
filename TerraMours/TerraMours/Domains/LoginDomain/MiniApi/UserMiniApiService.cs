@@ -6,10 +6,12 @@ using System.Collections.Generic;
 using System.Text.Json;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
+using TerraMours.Domains.LoginDomain.Contracts.Res;
 using TerraMours.Domains.LoginDomain.IServices;
 
-namespace TerraMours.Domains.LoginDomain.MiniApi {
-	public class UserMiniApiService : ServiceBase
+namespace TerraMours.Domains.LoginDomain.MiniApi
+{
+    public class UserMiniApiService : ServiceBase
 	{
 		private readonly ISysUserService _sysUserService;
 		private readonly IHttpContextAccessor _httpContextAccessor;
@@ -74,14 +76,14 @@ namespace TerraMours.Domains.LoginDomain.MiniApi {
         /// </summary>
         /// <returns></returns>
         //[Authorize]
-        public async Task<IResult> getUserRoutes([FromBody] SysMenuReq  req)
+        public async Task<IResult> getUserRoutes([FromBody] SysUserBaseReq req)
 		{
 			var js = "";
 			var home = "";
             switch (req.UserId)
 			{
 				case 1:
-					js = "[{name:'dashboard_analysis',path:'/dashboard/analysis',component:'self',meta:{title:'数据看板',requiresAuth:true,singleLayout:'basic',icon:'icon-park-outline:analysis',order:2}},{name:'management_user',path:'/management/user',component:'self',meta:{title:'用户管理',requiresAuth:true,singleLayout:'basic',icon:'ic:round-manage-accounts',order:2}},{name:'management',path:'/management',redirect:'/management/user',component:'basic',children:[{name:'management_auth',path:'/management/auth',component:'self',meta:{title:'权限管理',requiresAuth:true,icon:'ic:baseline-security'}},{name:'management_role',path:'/management/role',component:'self',meta:{title:'角色管理',requiresAuth:true,icon:'carbon:user-role'}},{name:'management_route',path:'/management/route',component:'self',meta:{title:'路由管理',requiresAuth:true,icon:'material-symbols:route'}}],meta:{title:'系统管理',icon:'carbon:cloud-service-management',order:9}}]";
+					js = "[{name:'dashboard_analysis',path:'/dashboard/analysis',component:'self',meta:{title:'数据看板',requiresAuth:true,singleLayout:'basic',icon:'icon-park-outline:analysis',order:2}},{name:'management_user',path:'/management/user',component:'self',meta:{title:'用户管理',requiresAuth:true,singleLayout:'basic',icon:'ic:round-manage-accounts',order:2}},{name:'management',path:'/management',redirect:'/management/user',component:'basic',children:[{name:'management_auth',path:'/management/auth',component:'self',meta:{title:'权限管理',requiresAuth:true,icon:'ic:baseline-security'}},{name:'management_role',path:'/management/role',component:'self',meta:{title:'角色管理',requiresAuth:true,icon:'carbon:user-role'}},{name:'management_route',path:'/management/route',component:'self',meta:{title:'菜单管理',requiresAuth:true,icon:'material-symbols:route'}}],meta:{title:'系统管理',icon:'carbon:cloud-service-management',order:9}}]";
 					home = "dashboard_analysis";
 
                     break;
@@ -92,7 +94,7 @@ namespace TerraMours.Domains.LoginDomain.MiniApi {
             }
             //System.Text.Json.JsonSerializer.Deserialize 不支持将小写驼峰赋值给类的字段
             var obj = JsonConvert.DeserializeObject<List<RouteObject>>(js);
-            return Results.Ok(ApiResponse<SysMenuRes>.Success(new SysMenuRes() { Home= home, Routes= obj }));
+            return Results.Ok(ApiResponse<SysMenuRouteRes>.Success(new SysMenuRouteRes() { Home= home, Routes= obj }));
 		}
 	}
 }
