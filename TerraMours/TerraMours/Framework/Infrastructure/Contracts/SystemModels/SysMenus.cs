@@ -44,6 +44,18 @@
         //public long MenuForeignId { get; set; }
 
         /// <summary>
+        /// 是否是首页 默认false
+        /// </summary>
+        public bool IsHome { get; set; }
+        /// <summary>
+        /// 是否是外链链接，默认是false，默认是内部系统地址
+        /// </summary>
+        public bool ExternalUrl { get; set; }
+        /// <summary>
+        /// 是否可见，默认true
+        /// </summary>
+        public bool IsShow { get; set; }
+        /// <summary>
         /// 每个菜单的按钮 外键就是 MenuId 自己
         /// </summary>
         public List<SysMenuButtons>? SysMenuButtons { get; set; }
