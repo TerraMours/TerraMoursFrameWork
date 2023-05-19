@@ -2,12 +2,12 @@
 
 namespace TerraMours.Domains.LoginDomain.Contracts.Req
 {
-    public class SysMenuBaseReq
+    public class MenuToRoleAddReq
     {
         /// <summary>
-        /// 菜单id
+        /// 菜单id集合
         /// </summary>
-        public int MenuId { get; set; }
+        public List<long>? MenuIds { get; set; }
 
         /// <summary>
         /// 角色id

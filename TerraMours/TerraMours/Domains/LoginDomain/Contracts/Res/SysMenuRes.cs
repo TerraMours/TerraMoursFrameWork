@@ -64,6 +64,14 @@
         /// 排序号  猜测是会根据那个部门的id来排序 职位等级等 目前用不到
         /// </summary>
         public int? OrderNo { get; set; }
+        /// <summary>
+        /// 子节点
+        /// </summary>
+        public List<SysMenuRes>? Children { get; set; }
+        /// <summary>
+        /// 是否选中（树用）
+        /// </summary>
+        public bool? IsChecked { get; set; }
     }
     /// <summary>
     /// 前端路由配置类
