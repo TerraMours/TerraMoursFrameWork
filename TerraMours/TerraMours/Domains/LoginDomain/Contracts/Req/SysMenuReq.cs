@@ -50,5 +50,10 @@ namespace TerraMours.Domains.LoginDomain.Contracts.Req
         /// 是否可见，默认true
         /// </summary>
         public bool IsShow { get; set; }
+
+        /// <summary>
+        /// 排序
+        /// </summary>
+        public int? OrderNo { get; set; }
     }
 }

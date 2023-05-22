@@ -47,12 +47,15 @@ namespace TerraMours.Domains.LoginDomain.Services
 
                 //查看数据库是否有此用户
                 //目前只支持邮箱注册所以这里去判断UserEmail 即可，后续如果可以对接手机号注册 则加上手机号即可
-                var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserEmail == userReq.UserAccount && x.UserPassword == encryptPwd) ?? throw new Exception("用户或者密码不正确");
-
+                var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserEmail == userReq.UserAccount && x.UserPassword == encryptPwd);
+                if(user == null)
+                {
+                    return ApiResponse<LoginRes>.Fail("用户或者密码不正确");
+                }
                 //需要使用到的Claims ,
                 var claims = new List<Claim>();
                 claims.Add(new Claim(ClaimTypes.Name, user.UserEmail));
-                claims.Add(new Claim(ClaimTypes.Role, user.RoleId));
+                claims.Add(new Claim(ClaimTypes.Role, user.RoleId.ToString()));
                 //claims.Add(new Claim(ClaimTypes.NameIdentifier, user.));
 
                 //生成token
@@ -169,7 +172,7 @@ namespace TerraMours.Domains.LoginDomain.Services
             if (user == null) {
                 return ApiResponse<SysUserRes>.Fail("用户不存在");
             }
-            return ApiResponse<SysUserRes>.Success(new SysUserRes(user.UserId,user.UserName,user.RoleId));
+            return ApiResponse<SysUserRes>.Success(new SysUserRes(user.UserId,user.UserName,long.Parse( user.RoleId)));
         }
         /// <summary>
         /// 全部用户列表 todo：jwt添加权限
@@ -184,7 +187,8 @@ namespace TerraMours.Domains.LoginDomain.Services
                 UserEmail = u.UserEmail,
                 UserPhoneNum = u.UserPhoneNum,
                 Gender = u.Gender,
-                EnableLogin = u.EnableLogin
+                EnableLogin = u.EnableLogin,
+                RoleId=long.Parse( u.RoleId)
             }).ToList();
             return ApiResponse<List<SysUserDetailRes>>.Success(userDetailList);
         }

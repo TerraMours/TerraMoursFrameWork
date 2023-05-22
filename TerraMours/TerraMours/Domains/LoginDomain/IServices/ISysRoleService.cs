@@ -10,5 +10,6 @@ namespace TerraMours.Domains.LoginDomain.IServices
         Task<ApiResponse<bool>> DelRole(SysRoleBaseReq req);
         Task<ApiResponse<bool>> UpdateRole(SysRoleBaseReq req);
         Task<ApiResponse<bool>> AddRole(SysRoleBaseReq req);
+        Task<ApiResponse<List<KeyValueRes>>> GetRoleSelect();
     }
 }

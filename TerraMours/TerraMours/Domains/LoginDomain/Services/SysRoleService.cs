@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Ocsp;
 using System.Collections.Generic;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
@@ -56,6 +57,19 @@ namespace TerraMours.Domains.LoginDomain.Services
             List < SysRoleRes > sysRoleRes=_mapper.Map<List<SysRoleRes>>(roleList);
             return ApiResponse<List<SysRoleRes>>.Success(sysRoleRes);
         }
+        /// <summary>
+        /// 角色下拉框
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task<ApiResponse<List<KeyValueRes>>> GetRoleSelect()
+        {
+            var selectValue = await _dbContext.SysRoles
+            .Where(m => m.Enable==true)
+           .Select(m => new KeyValueRes(m.RoleId, m.RoleName)).ToListAsync();
+            return ApiResponse<List<KeyValueRes>>.Success(selectValue);
+        }
+
         /// <summary>
         /// 更新（目前只更新名称）
         /// </summary>

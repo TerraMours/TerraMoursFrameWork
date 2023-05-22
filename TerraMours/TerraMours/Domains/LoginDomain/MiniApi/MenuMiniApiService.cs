@@ -26,6 +26,8 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
             App.MapPost("/api/v1/Menu/GetMenuTree", GetMenuTree);
             App.MapPost("/api/v1/Menu/AddMenuToRole", AddMenuToRole);
             App.MapPost("/api/v1/Menu/GetRoleMenusIds", GetRoleMenusIds);
+            App.MapPost("/api/v1/Menu/GetUserRoutes", GetUserRoutes);
+            App.MapPost("/api/v1/Menu/GetMenuSelect", GetMenuSelect);
             _httpContextAccessor = httpContextAccessor;
         }
         /// <summary>
@@ -84,7 +86,7 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
         }
 
         /// <summary>
-        /// 菜单树
+        /// 给角色配置菜单
         /// </summary>
         /// <returns></returns>
         [Authorize]
@@ -102,6 +104,36 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
         public async Task<IResult> GetRoleMenusIds([FromBody] MenuToRoleAddReq req)
         {
             var res = await _sysMenuService.GetRoleMenusIds(req);
+            return Results.Ok(res);
+        }
+        /// <summary>
+        /// 用户路由
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> GetUserRoutes([FromBody] SysMenuBaseReq req)
+        {
+            if(req.RoleId == null)
+            {
+                req.RoleId =long.Parse( _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Role));
+            }
+            var res =await _sysMenuService.GetUserRoutes(req.RoleId);
+            return Results.Ok(res);
+        }
+        /// <summary>
+        /// 菜单下拉框
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> GetMenuSelect([FromBody] SysMenuBaseReq req)
+        {
+            if (req.RoleId == null)
+            {
+                req.RoleId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Role));
+            }
+            var res = await _sysMenuService.GetMenuSelect(req);
             return Results.Ok(res);
         }
     }

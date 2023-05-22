@@ -21,7 +21,7 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
 			_sysUserService = sysUserService;
 			_httpContextAccessor = httpContextAccessor;
 			App.MapGet("/api/v1/User/GetAllUserList", GetAllUserList);
-			App.MapPost("/api/v1/User/getUserRoutes", getUserRoutes);
+			App.MapPost("/api/v1/User/GetUserRoutes", getUserRoutes);
             App.MapPost("/api/v1/User/DelUser", DelUser);
             App.MapPost("/api/v1/User/UpdateUser", UpdateUser);
             App.MapPost("/api/v1/User/AddUser", AddUser);
@@ -83,7 +83,7 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
             switch (req.UserId)
 			{
 				case 1:
-					js = "[{name:'dashboard_analysis',path:'/dashboard/analysis',component:'self',meta:{title:'数据看板',requiresAuth:true,singleLayout:'basic',icon:'icon-park-outline:analysis',order:2}},{name:'management_user',path:'/management/user',component:'self',meta:{title:'用户管理',requiresAuth:true,singleLayout:'basic',icon:'ic:round-manage-accounts',order:2}},{name:'management',path:'/management',redirect:'/management/user',component:'basic',children:[{name:'management_auth',path:'/management/auth',component:'self',meta:{title:'权限管理',requiresAuth:true,icon:'ic:baseline-security'}},{name:'management_role',path:'/management/role',component:'self',meta:{title:'角色管理',requiresAuth:true,icon:'carbon:user-role'}},{name:'management_route',path:'/management/route',component:'self',meta:{title:'菜单管理',requiresAuth:true,icon:'material-symbols:route'}}],meta:{title:'系统管理',icon:'carbon:cloud-service-management',order:9}}]";
+					js = "[{name:'dashboard_analysis',path:'/dashboard/analysis',component:'self',meta:{title:'数据看板',requiresAuth:true,singleLayout:'basic',icon:'icon-park-outline:analysis',order:2}},{name:'management_user',path:'/management/user',component:'self',meta:{title:'用户管理',requiresAuth:true,singleLayout:'basic',icon:'ic:round-manage-accounts',order:2}},{name:'management1',path:'/management1',redirect:'/management/user',component:'basic',children:[{name:'management_auth',path:'/management/auth',component:'self',meta:{title:'权限管理',requiresAuth:true,icon:'ic:baseline-security'}},{name:'management_role',path:'/management/role',component:'self',meta:{title:'角色管理',requiresAuth:true,icon:'carbon:user-role'}},{name:'management_route',path:'/management/route',component:'self',meta:{title:'菜单管理',requiresAuth:true,icon:'material-symbols:route'}}],meta:{title:'系统管理',icon:'carbon:cloud-service-management',order:9}}]";
 					home = "dashboard_analysis";
 
                     break;
@@ -96,5 +96,5 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
             var obj = JsonConvert.DeserializeObject<List<RouteObject>>(js);
             return Results.Ok(ApiResponse<SysMenuRouteRes>.Success(new SysMenuRouteRes() { Home= home, Routes= obj }));
 		}
-	}
+    }
 }

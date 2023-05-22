@@ -14,5 +14,7 @@ namespace TerraMours.Domains.LoginDomain.IServices
         Task<ApiResponse<List<SysMenuRes>>> GetMenuTree(long? roleId);
         Task<ApiResponse<bool>> AddMenuToRole(MenuToRoleAddReq req);
         Task<ApiResponse<List<long>>> GetRoleMenusIds(MenuToRoleAddReq req);
+        Task<ApiResponse<SysMenuRouteRes>> GetUserRoutes(long? roleId);
+        Task<ApiResponse<List<KeyValueRes>>>GetMenuSelect(SysMenuBaseReq req);
     }
 }

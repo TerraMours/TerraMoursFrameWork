@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Ocsp;
@@ -114,6 +115,25 @@ namespace TerraMours.Domains.LoginDomain.Services
             var menuIds =await _dbContext.SysRolesToMenus.Where(m => m.RoleId == req.RoleId && m.Enable == true).Select(m=>m.MenuId).ToListAsync();
             return ApiResponse<List<long>>.Success(menuIds);
         }
+        /// <summary>
+        /// 用户路由
+        /// </summary>
+        /// <param name="roleId"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task<ApiResponse<SysMenuRouteRes>> GetUserRoutes(long? roleId)
+        {
+            var menuIds =await _dbContext.SysRolesToMenus.Where(m => m.RoleId == roleId && m.Enable == true).Select(m => m.MenuId).ToListAsync();
+            var menus=await _dbContext.SysMenus.Where(m=>menuIds.Contains(m.MenuId) && m.Enable == true).ToListAsync();
+            var homeMenu=menus.FirstOrDefault(m=>m.IsHome)?.MenuUrl ?? menus.FirstOrDefault()?.MenuUrl;
+            
+            var route = new SysMenuRouteRes()
+            {
+                Home = homeMenu?.Substring(1).Replace("/", "_"),
+                Routes=ToRouteObjects(ToSysMenuRes(menus))
+            };
+            return ApiResponse<SysMenuRouteRes>.Success(route);
+        }
 
         /// <summary>
         /// 更新（目前只更新名称）
@@ -131,7 +151,19 @@ namespace TerraMours.Domains.LoginDomain.Services
             _dbContext.SaveChanges();
             return ApiResponse<bool>.Success(true);
         }
-
+        /// <summary>
+        /// 菜单下拉框
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task<ApiResponse<List<KeyValueRes>>> GetMenuSelect(SysMenuBaseReq req)
+        {
+            var selectValue =await _dbContext.SysMenus
+            .Where(m => m.Enable && (req.MenuId ==null || m.MenuId != req.MenuId))
+            .Select(m => new KeyValueRes(m.MenuId,m.MenuName)).ToListAsync();
+            return ApiResponse<List<KeyValueRes>>.Success(selectValue);
+        }
         #region 私有方法
         /// <summary>
         /// 递归查询子集
@@ -149,6 +181,52 @@ namespace TerraMours.Domains.LoginDomain.Services
             }
             return children;
         }
+        /// <summary>
+        /// 菜单的树形转化
+        /// </summary>
+        /// <param name="menusModels"></param>
+        /// <returns></returns>
+        private List<SysMenuRes> ToSysMenuRes(List<SysMenus> menusModels)
+        {
+            var menus = _mapper.Map<List<SysMenuRes>>(menusModels);
+            var roots = menus.Where(m => m.ParentId == null); // 获取所有根菜单
+            foreach (var root in roots)
+            {
+                // 递归查询菜单的子菜单
+                root.Children = FindChildren(root.MenuId, menus);
+            }
+            return roots.ToList();
+        }
+
+        private List<RouteObject> ToRouteObjects(List<SysMenuRes> menuTree)
+        {
+            var routeObjects = new List<RouteObject>();
+
+            foreach (var menu in menuTree)
+            {
+                var isRoot = menu.ParentId == null;
+                var routeObject = new RouteObject(
+                    menu.MenuUrl ?? "/",
+                    isRoot ? "basic" : "self",
+                    new Meta(menu.MenuName,menu.Icon, isRoot ? menu.OrderNo : null));
+
+                if (menu.Children?.Count > 0)
+                {
+                    routeObject.Children = ToRouteObjects(menu.Children);
+                }
+                else if (isRoot)
+                {
+                    routeObject.Component = "self";
+                    routeObject.Meta.SingleLayout = "basic";
+                }
+
+                routeObjects.Add(routeObject);
+            }
+
+            return routeObjects;
+        }
+
+
         #endregion
     }
 }
