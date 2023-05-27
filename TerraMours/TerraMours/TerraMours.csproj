@@ -31,7 +31,6 @@
 
   <ItemGroup>
     <Folder Include="Domains\EmailDomain\" />
-    <Folder Include="Migrations\" />
   </ItemGroup>
 
 </Project>

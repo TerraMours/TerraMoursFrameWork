@@ -105,6 +105,8 @@ namespace TerraMours.Domains.LoginDomain.Services
                     var encryptPwd = userReq.UserPassword.EncryptDES(_sysSettings.Value.secret.Encrypt);
 
                     var addUser = new SysUser(userReq.UserAccount, encryptPwd);
+                    //注册用户默认角色
+                    addUser.RoleId = _sysSettings.Value.initial.InitialRoleId;
                     _dbContext.SysUsers.Add(addUser);
 
                     //更新数据库
@@ -172,7 +174,7 @@ namespace TerraMours.Domains.LoginDomain.Services
             if (user == null) {
                 return ApiResponse<SysUserRes>.Fail("用户不存在");
             }
-            return ApiResponse<SysUserRes>.Success(new SysUserRes(user.UserId,user.UserName,long.Parse( user.RoleId)));
+            return ApiResponse<SysUserRes>.Success(new SysUserRes(user.UserId,user.UserName, user.RoleId));
         }
         /// <summary>
         /// 全部用户列表 todo：jwt添加权限
@@ -188,7 +190,7 @@ namespace TerraMours.Domains.LoginDomain.Services
                 UserPhoneNum = u.UserPhoneNum,
                 Gender = u.Gender,
                 EnableLogin = u.EnableLogin,
-                RoleId=long.Parse( u.RoleId)
+                RoleId=u.RoleId
             }).ToList();
             return ApiResponse<List<SysUserDetailRes>>.Success(userDetailList);
         }
@@ -239,8 +241,8 @@ namespace TerraMours.Domains.LoginDomain.Services
             {
                 return ApiResponse<bool>.Fail("邮箱已注册！");
             }
-            //初始密码(todo:后续改进，可写在配置文件中)
-            var encryptPwd = "1a!23456".EncryptDES(_sysSettings.Value.secret.Encrypt);
+            //初始密码
+            var encryptPwd = _sysSettings.Value.initial.InitialPassWord.EncryptDES(_sysSettings.Value.secret.Encrypt);
             var user = new SysUser(userReq.UserEmail, encryptPwd);
             _mapper.Map(userReq, user);
             await _dbContext.SysUsers.AddAsync(user);

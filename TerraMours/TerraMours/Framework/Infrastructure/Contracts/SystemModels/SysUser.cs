@@ -1,4 +1,7 @@
-﻿namespace TerraMours.Framework.Infrastructure.Contracts.SystemModels
+﻿using Microsoft.Extensions.Options;
+using TerraMours.Framework.Infrastructure.Contracts.Commons;
+
+namespace TerraMours.Framework.Infrastructure.Contracts.SystemModels
 {
     /// <summary>
     /// 系统用户表
@@ -61,7 +64,7 @@
         /// <summary>
         /// 角色id
         /// </summary>
-        public string? RoleId { get; set; }
+        public long? RoleId { get; set; }
         /// <summary>
         /// 角色名称
         /// </summary>
