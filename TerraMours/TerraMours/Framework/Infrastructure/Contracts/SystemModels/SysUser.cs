@@ -152,6 +152,16 @@
             return this;
         }
 
+        /// <summary>
+        /// 登出，删除token
+        /// </summary>
+        /// <returns></returns>
+        public SysUser Logout()
+        {
+            this.Token = "";
+            return this;
+        }
+
         //todo: 还没有写获取当前登录用户方法，需要增加修改人，修改时间等方法
         //修改用户：
 

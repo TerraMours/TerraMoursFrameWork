@@ -1,6 +1,8 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -14,16 +16,24 @@ using TerraMours.Domains.LoginDomain.IServices;
 using TerraMours.Domains.LoginDomain.Services;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours.Framework.Infrastructure.EFCore;
+using TerraMours.Framework.Infrastructure.Filters;
 using TerraMours.Framework.Infrastructure.Redis;
+using TerraMours.Framework.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+//健康检查
+builder.Services.AddHealthChecks()
+//这里是添加自己的自定义的健康检查逻辑
+    .AddCheck<HealthCheckService>("HealthCheck");
+builder.Services.AddHealthChecksUI().AddInMemoryStorage();
 
 //获取appsetting配置文件
 IConfiguration configuration = builder.Configuration;
 
 //添加配置文件与实体类绑定
 builder.Services.Configure<SysSettings>(configuration.GetSection("SysSettings"));
-var sysSettings = builder.Configuration.GetSection("SysSettings").Get<SysSettings>();
+var sysSettings = builder.Configuration.GetSection("SysSettings").Get<SysSettings>() ?? throw new Exception("用户或者密码不正确");
 
 //注入日志
 // 配置 Serilog 日志记录器
@@ -110,6 +120,10 @@ builder.Services.AddStackExchangeRedisCache(options =>
 builder.Services.AddScoped<IDistributedCacheHelper, DistributedCacheHelper>();
 
 
+//过滤器
+builder.Services.AddScoped<ExceptionFilter>();
+//builder.Services.AddScoped<GlobalActionFilter>();
+
 //添加认证  授权服务
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
@@ -161,6 +175,10 @@ builder.Services.Configure<JsonOptions>(options =>
 //添加masa miniapi
 var app = builder.AddServices();
 
+//健康检查
+//app.UseHealthChecks("/health");
+app.UseHealthChecksUI();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -181,6 +199,35 @@ app.UseAuthorization();
 //用于启用或禁用 Npgsql 客户端与 Postgres 服务器之间的时间戳行为。它并不会直接修改 Postgres 的时区设置。
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
+
+
+//使用minimal api
+app.MapHealthChecks("/health", new HealthCheckOptions()
+{
+    Predicate = _ => true,
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
+
+////可重写访问地址为http://localhost:5179/health-ui#/healthchecks
+//app.MapHealthChecksUI(options => options.UIPath = "/health-ui");
+
+
+//测试全局异常
+//app.MapGet("/testError", () => { throw new Exception("测试异常"); }).AddEndpointFilter<ExceptionFilter>(); ;
+
+//不使用minimal api
+/*app.UseRouting();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapHealthChecks("/health", new HealthCheckOptions()
+    {
+        Predicate = _ => true,
+        ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+    });
+    //可重写访问地址为http://localhost:5179/health-ui#/healthchecks
+    //endpoints.MapHealthChecksUI(options => options.UIPath = "/health-ui");
+});
+*/
 
 app.Run();
 

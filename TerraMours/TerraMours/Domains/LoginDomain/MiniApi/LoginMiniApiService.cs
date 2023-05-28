@@ -22,6 +22,7 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
             //命名规则取当前的xxxMiniApiService的xxx,然后/api/v1/xxx/方法名
             App.MapPost("/api/v1/Login/Login", Login);
             App.MapPost("/api/v1/Login/Register", Register);
+            App.MapPost("/api/v1/Login/Logout", Logout);
         }
 
         /// <summary>
@@ -63,6 +64,29 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
 
             var res = await _sysUserService.Register(userReq);
             return Results.Ok("注册成功");
+        }
+
+        /// <summary>
+        /// 登出  //目前做法直接删除user的Token
+        /// </summary>
+        /// <param name="validator"></param>
+        /// <param name="userReq"></param>
+        /// <returns></returns>
+        public async Task<IResult> Logout(IValidator<SysLoginUserReq> validator, SysLoginUserReq userReq)
+        {
+            var validationResult = await validator.ValidateAsync(userReq);
+            if (!validationResult.IsValid)
+            {
+                return Results.ValidationProblem(validationResult.ToDictionary());
+            }
+            //测试seq
+            //_log.Information("登录成功，测试Seq");
+
+            //redis缓存测试
+            //await _helper.GetOrCreateAsync("test", async e => "测试");
+
+            var res = await _sysUserService.Logout(userReq);
+            return Results.Ok(res);
         }
 
     }

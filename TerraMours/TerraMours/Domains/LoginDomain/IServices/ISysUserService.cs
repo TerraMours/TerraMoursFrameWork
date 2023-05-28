@@ -6,5 +6,6 @@ namespace TerraMours.Domains.LoginDomain.IServices
     {
         Task<string> Login(SysLoginUserReq userReq);
         Task<string> Register(SysUserReq userReq);
+        Task<string> Logout(SysLoginUserReq userReq);
     }
 }
