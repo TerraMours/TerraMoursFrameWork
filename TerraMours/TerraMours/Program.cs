@@ -26,21 +26,21 @@ using TerraMours.Framework.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//�������
+//健康检查
 builder.Services.AddHealthChecks()
-//����������Լ����Զ���Ľ�������߼� ʹ��Ĭ�ϵĿ���ע��
+//这里是添加自己的自定义的健康检查逻辑 使用默认的可以注释
     .AddCheck<HealthCheckService>("HealthCheck");
 builder.Services.AddHealthChecksUI().AddInMemoryStorage();
 
-//��ȡappsetting�����ļ�
+//获取appsetting配置文件
 IConfiguration configuration = builder.Configuration;
 
-//��������ļ���ʵ�����
+//添加配置文件与实体类绑定
 builder.Services.Configure<SysSettings>(configuration.GetSection("SysSettings"));
-var sysSettings = builder.Configuration.GetSection("SysSettings").Get<SysSettings>() ?? throw new Exception("�û��������벻��ȷ");
+var sysSettings = builder.Configuration.GetSection("SysSettings").Get<SysSettings>() ?? throw new Exception("用户或者密码不正确");
 
-//ע����־
-// ���� Serilog ��־��¼��
+//注入日志
+// 配置 Serilog 日志记录器
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
@@ -52,7 +52,7 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 builder.Host.UseSerilog(Log.Logger);
 
-//minimal Service ���캯��û��Ilog �ᱨ�� 
+//minimal Service 构造函数没有Ilog 会报错 
 /*builder.Services.AddLogging(builder =>
 {
     Log.Logger = new LoggerConfiguration()
@@ -74,12 +74,12 @@ builder.Host.UseSerilog(Log.Logger);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    //��¼�ɹ�֮����token,��swagger ���Ͻ���ͼ��λ������token
-    //�����ʽΪBearer xxxxxx   
-    //ע��Bearer������һ���ո񣬺���������token
+    //登录成功之后复制token,在swagger 右上角锁图标位置填入token
+    //填入格式为Bearer xxxxxx   
+    //注意Bearer后面有一个空格，后面再填入token
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
     {
-        Description = "���¿�����������ͷ����Ҫ���Jwt��ȨToken��Bearer Token",
+        Description = "在下框中输入请求头中需要添加Jwt授权Token：Bearer Token",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
@@ -101,27 +101,26 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 //automapper
-// ����ӳ�����
+// 配置映射规则
 MapperConfiguration mapperConfig = new(cfg => {
-    cfg.CreateMap<SysUserDetailRes, SysUser>().ForMember(m=>m.UserId,n=>n.Ignore());
+    cfg.CreateMap<SysUserDetailRes, SysUser>().ForMember(m => m.UserId, n => n.Ignore());
     cfg.CreateMap<SysUserAddReq, SysUser>().ForMember(m => m.UserId, n => n.Ignore());
     cfg.CreateMap<SysRole, SysRoleRes>();
     cfg.CreateMap<SysMenuReq, SysMenus>().ForMember(m => m.MenuId, n => n.Ignore());
     cfg.CreateMap<SysMenus, SysMenuRes>();
 });
-//ע������
+//注册配置
 IMapper mapper = mapperConfig.CreateMapper();
 builder.Services.AddSingleton(mapper);
 
-
-// ���� �����Զ���֤ ���Ƕ��ⷽ��ҲҪ�Ӷ��� ���鲻��
+// 可用 启动自动验证 但是对外方法也要加东西 体验不好
 builder.Services.AddFluentValidationAutoValidation();
-//ע�� ModifyUser2 ModifyUserIntendedEffect ��Ӧ��������cs�ļ�
+//注入 ModifyUser2 ModifyUserIntendedEffect 对应上面两个cs文件
 builder.Services.AddScoped<IValidator<SysUserReq>, SysUserReqValidator>();
 builder.Services.AddScoped<IValidator<SysLoginUserReq>, SysLoginUserReqValidator>();
 
 
-//���EF Core���ݿ�
+//添加EF Core数据库
 // Add services to the container.
 builder.Services.AddScoped<ISysUserService, SysUserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -137,7 +136,7 @@ builder.Services.AddCors(options => {
                       });
 });
 
-//redis ���� ���ʵ����IDistributedCache 
+//redis 缓存 这个实现了IDistributedCache
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = sysSettings.connection.RedisHost;
@@ -146,11 +145,11 @@ builder.Services.AddStackExchangeRedisCache(options =>
 builder.Services.AddScoped<IDistributedCacheHelper, DistributedCacheHelper>();
 
 
-//������
+//过滤器
 builder.Services.AddScoped<ExceptionFilter>();
 //builder.Services.AddScoped<GlobalActionFilter>();
 
-//�����֤  ��Ȩ����
+//添加认证  授权服务
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters()
@@ -172,7 +171,7 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddDbContext<FrameworkDbContext>(opt =>
 {
-    //�������ļ��л�ȡkey,���ַ�����Ҫ����һ������֮��Ӧ
+    //从配置文件中获取key,这种方法需要新增一个类与之对应
 
     //var connStr = $"Host=localhost;Database=TerraMours;Username=postgres;Password=root";
     var connStr = sysSettings.connection.DbConnectionString;
@@ -180,19 +179,19 @@ builder.Services.AddDbContext<FrameworkDbContext>(opt =>
 
 });
 
-//jsonСд������
+//json小写的问题
 builder.Services.Configure<JsonOptions>(options =>
 {
-    //net6�� options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    //net6的 options.JsonSerializerOptions.PropertyNamingPolicy = null;
 
     //net7 PropertyNameCaseInsensitive = true
-    //����ԭ���ֶ���
+    //保留原样字段名
     //options.SerializerOptions.PropertyNamingPolicy = null;
-    //�����ִ�Сд
+    //不区分大小写
     options.SerializerOptions.PropertyNameCaseInsensitive = true;
 });
 
-//��������м��
+//添加限流中间件
 /*var limiterName = "MyLimiterName";
 
 var options = new RateLimiterOptions()
@@ -203,15 +202,13 @@ builder.Services.AddSingleton(options);
 
 
 
-//��builder.Build();ע�͵�Ȼ�� ��Ϊ  builder.AddServices(); �Զ�ע������д�ķ���miniapi�����ɣ�����ֻ�ǵ��������ǲ���Ҫʹ��caller��
-//�ܼ򵥵�ֻ�ǽ�miniapi������ǰ�Ĵ�ͳ��controller����,
+//将builder.Build();注释掉然后 改为  builder.AddServices(); 自动注入我们写的服务（miniapi）即可，由于只是单体框架我们不需要使用caller，
+//很简单的只是将miniapi代替以前的传统的controller而已,
 //var app = builder.Build();
-//���masa miniapi
-var app = builder.AddServices(opt => {
-    opt.DisableAutoMapRoute = true;
-});
+//添加masa miniapi
+var app = builder.AddServices();
 
-//�������
+//健康检查
 //app.UseHealthChecks("/health");
 app.UseHealthChecksUI();
 
@@ -223,36 +220,36 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-//��־
+//日志
 app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
 
-//���jwt��֤
+//添加jwt验证
 app.UseAuthentication();
 app.UseAuthorization();
 
-//�������û���� Npgsql �ͻ����� Postgres ������֮���ʱ�����Ϊ����������ֱ���޸� Postgres ��ʱ�����á�
+//用于启用或禁用 Npgsql 客户端与 Postgres 服务器之间的时间戳行为。它并不会直接修改 Postgres 的时区设置。
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
 app.UseCors("MyPolicy");
 
 
-//ʹ��minimal api
+//使用minimal api
 app.MapHealthChecks("/health", new HealthCheckOptions()
 {
     Predicate = _ => true,
     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
 });
 
-////����д���ʵ�ַΪhttp://localhost:5179/health-ui#/healthchecks
+////可重写访问地址为http://localhost:5179/health-ui#/healthchecks
 //app.MapHealthChecksUI(options => options.UIPath = "/health-ui");
 
 
-//����ȫ���쳣
-//app.MapGet("/testError", () => { throw new Exception("�����쳣"); }).AddEndpointFilter<ExceptionFilter>(); ;
+//测试全局异常
+//app.MapGet("/testError", () => { throw new Exception("测试异常"); }).AddEndpointFilter<ExceptionFilter>(); ;
 
-//��ʹ��minimal api
+//不使用minimal api
 /*app.UseRouting();
 app.UseEndpoints(endpoints =>
 {
@@ -261,7 +258,7 @@ app.UseEndpoints(endpoints =>
         Predicate = _ => true,
         ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
     });
-    //����д���ʵ�ַΪhttp://localhost:5179/health-ui#/healthchecks
+    //可重写访问地址为http://localhost:5179/health-ui#/healthchecks
     //endpoints.MapHealthChecksUI(options => options.UIPath = "/health-ui");
 });
 */
