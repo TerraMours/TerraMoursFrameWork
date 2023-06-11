@@ -24,7 +24,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 //健康检查
 builder.Services.AddHealthChecks()
-//这里是添加自己的自定义的健康检查逻辑
+//这里是添加自己的自定义的健康检查逻辑 使用默认的可以注释
     .AddCheck<HealthCheckService>("HealthCheck");
 builder.Services.AddHealthChecksUI().AddInMemoryStorage();
 
@@ -166,6 +166,14 @@ builder.Services.Configure<JsonOptions>(options =>
     options.SerializerOptions.PropertyNameCaseInsensitive = true;
 });
 
+//添加限流中间件
+/*var limiterName = "MyLimiterName";
+
+var options = new RateLimiterOptions()
+    .AddTokenBucketLimiter(limiterName, new TokenBucketRateLimiterOptions(1, QueueProcessingOrder.OldestFirst, 1, TimeSpan.FromSeconds(8), 1));
+
+builder.Services.AddSingleton(options);
+*/
 
 
 

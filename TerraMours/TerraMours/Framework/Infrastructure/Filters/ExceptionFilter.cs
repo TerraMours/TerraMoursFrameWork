@@ -3,9 +3,14 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace TerraMours.Framework.Infrastructure.Filters
 {
-    //无效，改用中间件替换方案
+    //无效，改用中间件替换方案IEndpointFilter
     public class ExceptionFilter : ExceptionFilterAttribute
+    //public class ExceptionFilter : IEndpointFilter
     {
+        public ExceptionFilter()
+        {
+
+        }
         private readonly Serilog.ILogger _logger;
         /// <summary>
         /// 构造函数注入

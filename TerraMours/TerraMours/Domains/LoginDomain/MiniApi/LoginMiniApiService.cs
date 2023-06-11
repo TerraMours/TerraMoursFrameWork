@@ -63,7 +63,7 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
             }
 
             var res = await _sysUserService.Register(userReq);
-            return Results.Ok("注册成功");
+            return Results.Ok(res);
         }
 
         /// <summary>

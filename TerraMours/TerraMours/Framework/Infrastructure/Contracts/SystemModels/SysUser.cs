@@ -105,7 +105,6 @@
             IsRegregisterPhone = false;
             IsSuperAdmin = false;
             //EntityBase
-            Version = 1;
             Enable = true;
             CreateDate = DateTime.Now;
         }

@@ -80,7 +80,7 @@ namespace TerraMours.Domains.LoginDomain.Services
                 //查看数据库是否有此用户
                 //目前只支持邮箱注册所以这里去判断UserEmail 即可，后续如果可以对接手机号注册 则加上手机号即可
                 //判断此邮箱是否已经被注册
-                var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserEmail == userReq.UserAccount && x.UserPassword == userReq.UserPassword);
+                var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserEmail == userReq.UserAccount);
                 if (user != null)
                 {
                     return "用户已存在";
