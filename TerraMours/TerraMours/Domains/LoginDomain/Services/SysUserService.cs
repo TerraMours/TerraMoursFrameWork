@@ -249,5 +249,39 @@ namespace TerraMours.Domains.LoginDomain.Services
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
         }
+
+        /// <summary>
+        /// 登出 
+        /// </summary>
+        /// <param name="userReq"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public async Task<string> Logout(SysLoginUserReq userReq)
+        {
+
+            //登录
+            try
+            {
+                //加密密码
+                var encryptPwd = userReq.UserPassword.EncryptDES(_sysSettings.Value.secret.Encrypt);
+
+                //查看数据库是否有此用户
+                //目前只支持邮箱注册所以这里去判断UserEmail 即可，后续如果可以对接手机号注册 则加上手机号即可
+                var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserEmail == userReq.UserAccount && x.UserPassword == encryptPwd) ?? throw new Exception("用户或者密码不正确");
+                //更新数据库用户的的token
+                user.Logout();
+                //更新用户信息
+                _dbContext.SysUsers.Update(user);
+                _dbContext.SaveChanges();
+
+                return "登出成功";
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("" + ex.Message); ;
+            }
+        }
+
+
     }
 }

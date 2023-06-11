@@ -71,10 +71,12 @@ namespace TerraMours.Migrations
                     b.Property<long>("RolesToMenuId")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("Version")
+                    b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bigint");
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin")
+                        .HasComputedColumnSql("xmin");
 
                     b.HasKey("MenuButtonId");
 
@@ -149,8 +151,12 @@ namespace TerraMours.Migrations
                     b.Property<string>("Remark")
                         .HasColumnType("text");
 
-                    b.Property<long>("Version")
-                        .HasColumnType("bigint");
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin")
+                        .HasComputedColumnSql("xmin");
 
                     b.HasKey("MenuId");
 
@@ -208,8 +214,12 @@ namespace TerraMours.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<long>("Version")
-                        .HasColumnType("bigint");
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin")
+                        .HasComputedColumnSql("xmin");
 
                     b.HasKey("RoleId");
 
@@ -260,8 +270,12 @@ namespace TerraMours.Migrations
                     b.Property<long?>("UserId")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("Version")
-                        .HasColumnType("bigint");
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin")
+                        .HasComputedColumnSql("xmin");
 
                     b.HasKey("RolesToMenuId");
 
@@ -335,8 +349,8 @@ namespace TerraMours.Migrations
                     b.Property<string>("Remark")
                         .HasColumnType("text");
 
-                    b.Property<long?>("RoleId")
-                        .HasColumnType("bigint");
+                    b.Property<string>("RoleId")
+                        .HasColumnType("text");
 
                     b.Property<string>("RoleName")
                         .HasColumnType("text");
@@ -364,9 +378,12 @@ namespace TerraMours.Migrations
                     b.Property<string>("UserTrueName")
                         .HasColumnType("text");
 
-                    b.Property<long>("Version")
+                    b.Property<uint>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("bigint");
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin")
+                        .HasComputedColumnSql("xmin");
 
                     b.HasKey("UserId");
 

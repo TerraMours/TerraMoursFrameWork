@@ -2,7 +2,9 @@ using AutoMapper;
 using Masa.BuildingBlocks.Service.MinimalAPIs;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -17,20 +19,28 @@ using TerraMours.Domains.LoginDomain.Services;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 using TerraMours.Framework.Infrastructure.EFCore;
+using TerraMours.Framework.Infrastructure.Filters;
 using TerraMours.Framework.Infrastructure.Redis;
 using TerraMours.Domains.LoginDomain.Contracts.Res;
+using TerraMours.Framework.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//»ñÈ¡appsettingÅäÖÃÎÄ¼ş
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+builder.Services.AddHealthChecks()
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½Ä½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½ Ê¹ï¿½ï¿½Ä¬ï¿½ÏµÄ¿ï¿½ï¿½ï¿½×¢ï¿½ï¿½
+    .AddCheck<HealthCheckService>("HealthCheck");
+builder.Services.AddHealthChecksUI().AddInMemoryStorage();
+
+//ï¿½ï¿½È¡appsettingï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½
 IConfiguration configuration = builder.Configuration;
 
-//Ìí¼ÓÅäÖÃÎÄ¼şÓëÊµÌåÀà°ó¶¨
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½
 builder.Services.Configure<SysSettings>(configuration.GetSection("SysSettings"));
-var sysSettings = builder.Configuration.GetSection("SysSettings").Get<SysSettings>();
+var sysSettings = builder.Configuration.GetSection("SysSettings").Get<SysSettings>() ?? throw new Exception("ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ë²»ï¿½ï¿½È·");
 
-//×¢ÈëÈÕÖ¾
-// ÅäÖÃ Serilog ÈÕÖ¾¼ÇÂ¼Æ÷
+//×¢ï¿½ï¿½ï¿½ï¿½Ö¾
+// ï¿½ï¿½ï¿½ï¿½ Serilog ï¿½ï¿½Ö¾ï¿½ï¿½Â¼ï¿½ï¿½
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
@@ -42,7 +52,7 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 builder.Host.UseSerilog(Log.Logger);
 
-//minimal Service ¹¹Ôìº¯ÊıÃ»ÓĞIlog »á±¨´í 
+//minimal Service ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½Ã»ï¿½ï¿½Ilog ï¿½á±¨ï¿½ï¿½ 
 /*builder.Services.AddLogging(builder =>
 {
     Log.Logger = new LoggerConfiguration()
@@ -64,12 +74,12 @@ builder.Host.UseSerilog(Log.Logger);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    //µÇÂ¼³É¹¦Ö®ºó¸´ÖÆtoken,ÔÚswagger ÓÒÉÏ½ÇËøÍ¼±êÎ»ÖÃÌîÈëtoken
-    //ÌîÈë¸ñÊ½ÎªBearer xxxxxx   
-    //×¢ÒâBearerºóÃæÓĞÒ»¸ö¿Õ¸ñ£¬ºóÃæÔÙÌîÈëtoken
+    //ï¿½ï¿½Â¼ï¿½É¹ï¿½Ö®ï¿½ï¿½ï¿½ï¿½token,ï¿½ï¿½swagger ï¿½ï¿½ï¿½Ï½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½token
+    //ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ÎªBearer xxxxxx   
+    //×¢ï¿½ï¿½Bearerï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Õ¸ñ£¬ºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½token
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
     {
-        Description = "ÔÚÏÂ¿òÖĞÊäÈëÇëÇóÍ·ÖĞĞèÒªÌí¼ÓJwtÊÚÈ¨Token£ºBearer Token",
+        Description = "ï¿½ï¿½ï¿½Â¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½Jwtï¿½ï¿½È¨Tokenï¿½ï¿½Bearer Token",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
@@ -91,7 +101,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 //automapper
-// ÅäÖÃÓ³Éä¹æÔò
+// ï¿½ï¿½ï¿½ï¿½Ó³ï¿½ï¿½ï¿½ï¿½ï¿½
 MapperConfiguration mapperConfig = new(cfg => {
     cfg.CreateMap<SysUserDetailRes, SysUser>().ForMember(m=>m.UserId,n=>n.Ignore());
     cfg.CreateMap<SysUserAddReq, SysUser>().ForMember(m => m.UserId, n => n.Ignore());
@@ -99,19 +109,19 @@ MapperConfiguration mapperConfig = new(cfg => {
     cfg.CreateMap<SysMenuReq, SysMenus>().ForMember(m => m.MenuId, n => n.Ignore());
     cfg.CreateMap<SysMenus, SysMenuRes>();
 });
-//×¢²áÅäÖÃ
+//×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 IMapper mapper = mapperConfig.CreateMapper();
 builder.Services.AddSingleton(mapper);
 
 
-// ¿ÉÓÃ Æô¶¯×Ô¶¯ÑéÖ¤ µ«ÊÇ¶ÔÍâ·½·¨Ò²Òª¼Ó¶«Î÷ ÌåÑé²»ºÃ
+// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½Ö¤ ï¿½ï¿½ï¿½Ç¶ï¿½ï¿½â·½ï¿½ï¿½Ò²Òªï¿½Ó¶ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½é²»ï¿½ï¿½
 builder.Services.AddFluentValidationAutoValidation();
-//×¢Èë ModifyUser2 ModifyUserIntendedEffect ¶ÔÓ¦ÉÏÃæÁ½¸öcsÎÄ¼ş
+//×¢ï¿½ï¿½ ModifyUser2 ModifyUserIntendedEffect ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½csï¿½Ä¼ï¿½
 builder.Services.AddScoped<IValidator<SysUserReq>, SysUserReqValidator>();
 builder.Services.AddScoped<IValidator<SysLoginUserReq>, SysLoginUserReqValidator>();
 
 
-//Ìí¼ÓEF CoreÊı¾İ¿â
+//ï¿½ï¿½ï¿½EF Coreï¿½ï¿½ï¿½İ¿ï¿½
 // Add services to the container.
 builder.Services.AddScoped<ISysUserService, SysUserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -127,7 +137,7 @@ builder.Services.AddCors(options => {
                       });
 });
 
-//redis »º´æ Õâ¸öÊµÏÖÁËIDistributedCache 
+//redis ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½IDistributedCache 
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = sysSettings.connection.RedisHost;
@@ -136,7 +146,11 @@ builder.Services.AddStackExchangeRedisCache(options =>
 builder.Services.AddScoped<IDistributedCacheHelper, DistributedCacheHelper>();
 
 
-//Ìí¼ÓÈÏÖ¤  ÊÚÈ¨·şÎñ
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+builder.Services.AddScoped<ExceptionFilter>();
+//builder.Services.AddScoped<GlobalActionFilter>();
+
+//ï¿½ï¿½ï¿½ï¿½ï¿½Ö¤  ï¿½ï¿½È¨ï¿½ï¿½ï¿½ï¿½
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters()
@@ -158,7 +172,7 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddDbContext<FrameworkDbContext>(opt =>
 {
-    //´ÓÅäÖÃÎÄ¼şÖĞ»ñÈ¡key,ÕâÖÖ·½·¨ĞèÒªĞÂÔöÒ»¸öÀàÓëÖ®¶ÔÓ¦
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½Ğ»ï¿½È¡key,ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½Ó¦
 
     //var connStr = $"Host=localhost;Database=TerraMours;Username=postgres;Password=root";
     var connStr = sysSettings.connection.DbConnectionString;
@@ -166,28 +180,40 @@ builder.Services.AddDbContext<FrameworkDbContext>(opt =>
 
 });
 
-//jsonĞ¡Ğ´µÄÎÊÌâ
+//jsonĞ¡Ğ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 builder.Services.Configure<JsonOptions>(options =>
 {
-    //net6µÄ options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    //net6ï¿½ï¿½ options.JsonSerializerOptions.PropertyNamingPolicy = null;
 
     //net7 PropertyNameCaseInsensitive = true
-    //±£ÁôÔ­Ñù×Ö¶ÎÃû
+    //ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½ï¿½Ö¶ï¿½ï¿½ï¿½
     //options.SerializerOptions.PropertyNamingPolicy = null;
-    //²»Çø·Ö´óĞ¡Ğ´
+    //ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½Ğ¡Ğ´
     options.SerializerOptions.PropertyNameCaseInsensitive = true;
 });
 
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¼ï¿½ï¿½
+/*var limiterName = "MyLimiterName";
+
+var options = new RateLimiterOptions()
+    .AddTokenBucketLimiter(limiterName, new TokenBucketRateLimiterOptions(1, QueueProcessingOrder.OldestFirst, 1, TimeSpan.FromSeconds(8), 1));
+
+builder.Services.AddSingleton(options);
+*/
 
 
 
-//½«builder.Build();×¢ÊÍµôÈ»ºó ¸ÄÎª  builder.AddServices(); ×Ô¶¯×¢ÈëÎÒÃÇĞ´µÄ·şÎñ£¨miniapi£©¼´¿É£¬ÓÉÓÚÖ»ÊÇµ¥Ìå¿ò¼ÜÎÒÃÇ²»ĞèÒªÊ¹ÓÃcaller£¬
-//ºÜ¼òµ¥µÄÖ»ÊÇ½«miniapi´úÌæÒÔÇ°µÄ´«Í³µÄcontroller¶øÒÑ,
+//ï¿½ï¿½builder.Build();×¢ï¿½Íµï¿½È»ï¿½ï¿½ ï¿½ï¿½Îª  builder.AddServices(); ï¿½Ô¶ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ´ï¿½Ä·ï¿½ï¿½ï¿½miniapiï¿½ï¿½ï¿½ï¿½ï¿½É£ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç²ï¿½ï¿½ï¿½ÒªÊ¹ï¿½ï¿½callerï¿½ï¿½
+//ï¿½Ü¼òµ¥µï¿½Ö»ï¿½Ç½ï¿½miniapiï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½Ä´ï¿½Í³ï¿½ï¿½controllerï¿½ï¿½ï¿½ï¿½,
 //var app = builder.Build();
-//Ìí¼Ómasa miniapi
+//ï¿½ï¿½ï¿½masa miniapi
 var app = builder.AddServices(opt => {
     opt.DisableAutoMapRoute = true;
 });
+
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+//app.UseHealthChecks("/health");
+app.UseHealthChecksUI();
 
 
 // Configure the HTTP request pipeline.
@@ -197,18 +223,48 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-//ÈÕÖ¾
+//ï¿½ï¿½Ö¾
 app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
 
-//Ìí¼ÓjwtÑéÖ¤
+//ï¿½ï¿½ï¿½jwtï¿½ï¿½Ö¤
 app.UseAuthentication();
 app.UseAuthorization();
 
-//ÓÃÓÚÆôÓÃ»ò½ûÓÃ Npgsql ¿Í»§¶ËÓë Postgres ·şÎñÆ÷Ö®¼äµÄÊ±¼ä´ÁĞĞÎª¡£Ëü²¢²»»áÖ±½ÓĞŞ¸Ä Postgres µÄÊ±ÇøÉèÖÃ¡£
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ Npgsql ï¿½Í»ï¿½ï¿½ï¿½ï¿½ï¿½ Postgres ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½Ş¸ï¿½ Postgres ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Ã¡ï¿½
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
 app.UseCors("MyPolicy");
+
+
+//Ê¹ï¿½ï¿½minimal api
+app.MapHealthChecks("/health", new HealthCheckOptions()
+{
+    Predicate = _ => true,
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
+
+////ï¿½ï¿½ï¿½ï¿½Ğ´ï¿½ï¿½ï¿½Êµï¿½Ö·Îªhttp://localhost:5179/health-ui#/healthchecks
+//app.MapHealthChecksUI(options => options.UIPath = "/health-ui");
+
+
+//ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½ï¿½ì³£
+//app.MapGet("/testError", () => { throw new Exception("ï¿½ï¿½ï¿½ï¿½ï¿½ì³£"); }).AddEndpointFilter<ExceptionFilter>(); ;
+
+//ï¿½ï¿½Ê¹ï¿½ï¿½minimal api
+/*app.UseRouting();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapHealthChecks("/health", new HealthCheckOptions()
+    {
+        Predicate = _ => true,
+        ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+    });
+    //ï¿½ï¿½ï¿½ï¿½Ğ´ï¿½ï¿½ï¿½Êµï¿½Ö·Îªhttp://localhost:5179/health-ui#/healthchecks
+    //endpoints.MapHealthChecksUI(options => options.UIPath = "/health-ui");
+});
+*/
+
 app.Run();
 

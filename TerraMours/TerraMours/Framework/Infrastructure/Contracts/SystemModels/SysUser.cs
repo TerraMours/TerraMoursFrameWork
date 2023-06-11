@@ -108,7 +108,6 @@ namespace TerraMours.Framework.Infrastructure.Contracts.SystemModels
             IsRegregisterPhone = false;
             IsSuperAdmin = false;
             //EntityBase
-            Version = 1;
             Enable = true;
             CreateDate = DateTime.Now;
         }
@@ -156,6 +155,16 @@ namespace TerraMours.Framework.Infrastructure.Contracts.SystemModels
         public SysUser Delete()
         {
             this.Enable = false;
+            return this;
+        }
+
+        /// <summary>
+        /// 登出，删除token
+        /// </summary>
+        /// <returns></returns>
+        public SysUser Logout()
+        {
+            this.Token = "";
             return this;
         }
 

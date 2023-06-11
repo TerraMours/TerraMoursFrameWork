@@ -1,5 +1,4 @@
-﻿using TerraMours.Domains.LoginDomain.Contracts.Common;
-using TerraMours.Domains.LoginDomain.Contracts.Req;
+﻿using TerraMours.Domains.LoginDomain.Contracts.Req;
 
 namespace TerraMours.Domains.LoginDomain.IServices
 {
@@ -12,5 +11,6 @@ namespace TerraMours.Domains.LoginDomain.IServices
         Task<ApiResponse<bool>> DelUser(SysUserBaseReq userReq);
         Task<ApiResponse<bool>> UpdateUser(SysUserDetailRes userReq);
         Task<ApiResponse<bool>> AddUser(SysUserAddReq userReq);
+        Task<string> Logout(SysLoginUserReq userReq);
     }
 }
