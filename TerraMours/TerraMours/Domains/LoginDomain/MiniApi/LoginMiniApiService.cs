@@ -14,9 +14,7 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly Serilog.ILogger _log;
         private readonly IDistributedCacheHelper _helper;
-        public LoginMiniApiService(IServiceCollection services, ISysUserService sysUserService, IHttpContextAccessor httpContextAccessor, Serilog.ILogger log, IDistributedCacheHelper helper) : base() {
-
-        public LoginMiniApiService(IServiceCollection services, ISysUserService sysUserService, Serilog.ILogger log, IDistributedCacheHelper helper) : base()
+        public LoginMiniApiService(IServiceCollection services, ISysUserService sysUserService, IHttpContextAccessor httpContextAccessor, Serilog.ILogger log, IDistributedCacheHelper helper) : base() 
         {
             _sysUserService = sysUserService;
             _httpContextAccessor = httpContextAccessor;

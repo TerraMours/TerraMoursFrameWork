@@ -34,7 +34,6 @@
 
   <ItemGroup>
     <Folder Include="Domains\EmailDomain\" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <Folder Include="Framework\Infrastructure\IServices\" />
     <Folder Include="Migrations\" />
   </ItemGroup>
