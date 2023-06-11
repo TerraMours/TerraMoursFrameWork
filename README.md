@@ -1,5 +1,11 @@
 # TerraMours
 
+#### 官方文档地址如下：
+
+[中文 ](https://terramours.site/)| [English](https://terramours.site/en/)
+
+#### 简单的说明：
+
 系统通用框架：通过实际项目来学习各个技术栈：
 
 包括但不限于：
@@ -35,13 +41,21 @@
 
 ##### 7.完成整个登录注册用户角色权限模块
 
+##### 8.引入ES以及OpenTelemetry
 
+### 计划
+
+##### 基于现在的GptWeb项目https://ai.terramours.site/基于Semantic Kernel重构，剩下的就是功能性的开发了。
+
+##### 计划此项目也会开源
+
+##### 后续协议可能会添加上996.iuc协议，如果需要使用该项目代码请注意。
 
 ## 开源协议
 
 ### MIT
 
-
+[![LICENSE](https://camo.githubusercontent.com/8e53c4e75f0baf3b1cb6815fef6dc3648d0bb6b0d5fcda5a82a88b678893caf8/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f6c6963656e73652d416e74692532303939362d626c75652e7376673f7374796c653d666c61742d737175617265)](https://github.com/996icu/996.ICU/blob/master/LICENSE) 
 
 ## 个人博客地址：
 
