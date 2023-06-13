@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
 using TerraMours.Domains.LoginDomain.IServices;
 using TerraMours.Framework.Infrastructure.Redis;
@@ -10,18 +11,21 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
     public class LoginMiniApiService : ServiceBase
     {
         private readonly ISysUserService _sysUserService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly Serilog.ILogger _log;
         private readonly IDistributedCacheHelper _helper;
-
-        public LoginMiniApiService(IServiceCollection services, ISysUserService sysUserService, Serilog.ILogger log, IDistributedCacheHelper helper) : base()
+        public LoginMiniApiService(IServiceCollection services, ISysUserService sysUserService, IHttpContextAccessor httpContextAccessor, Serilog.ILogger log, IDistributedCacheHelper helper) : base() 
         {
             _sysUserService = sysUserService;
+            _httpContextAccessor = httpContextAccessor;
             _log = log;
             _helper = helper;
             //此处/api/v1/Test 这里是swagger显示的路由
             //命名规则取当前的xxxMiniApiService的xxx,然后/api/v1/xxx/方法名
             App.MapPost("/api/v1/Login/Login", Login);
             App.MapPost("/api/v1/Login/Register", Register);
+            App.MapGet("/api/v1/Login/GetUserInfo", GetUserInfo);
+            App.MapPost("/api/v1/Login/Logout", Logout);
         }
 
         /// <summary>
@@ -62,7 +66,37 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
             }
 
             var res = await _sysUserService.Register(userReq);
-            return Results.Ok("注册成功");
+            return Results.Ok(res);
+        }
+
+        [Authorize]
+        public async Task<IResult> GetUserInfo() {
+            string userEmail = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Name);
+            var res=await _sysUserService.GetUserInfo(userEmail);
+            return Results.Ok(res);
+        }
+
+        /// <summary>
+        /// 登出  //目前做法直接删除user的Token
+        /// </summary>
+        /// <param name="validator"></param>
+        /// <param name="userReq"></param>
+        /// <returns></returns>
+        public async Task<IResult> Logout(IValidator<SysLoginUserReq> validator, SysLoginUserReq userReq)
+        {
+            var validationResult = await validator.ValidateAsync(userReq);
+            if (!validationResult.IsValid)
+            {
+                return Results.ValidationProblem(validationResult.ToDictionary());
+            }
+            //测试seq
+            //_log.Information("登录成功，测试Seq");
+
+            //redis缓存测试
+            //await _helper.GetOrCreateAsync("test", async e => "测试");
+
+            var res = await _sysUserService.Logout(userReq);
+            return Results.Ok(res);
         }
 
     }

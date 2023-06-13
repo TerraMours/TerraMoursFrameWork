@@ -12,8 +12,8 @@ using TerraMours.Framework.Infrastructure.EFCore;
 namespace TerraMours.Migrations
 {
     [DbContext(typeof(FrameworkDbContext))]
-    [Migration("20230510145114_upateUser0510")]
-    partial class upateUser0510
+    [Migration("20230526124214_updateUser0526")]
+    partial class updateUser0526
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -109,6 +109,9 @@ namespace TerraMours.Migrations
                     b.Property<bool>("Enable")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("ExternalUrl")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("HasChildren")
                         .HasColumnType("boolean");
 
@@ -117,6 +120,12 @@ namespace TerraMours.Migrations
 
                     b.Property<string>("IconUrl")
                         .HasColumnType("text");
+
+                    b.Property<bool>("IsHome")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsShow")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("MenuName")
                         .IsRequired()
@@ -144,8 +153,6 @@ namespace TerraMours.Migrations
                         .HasColumnType("text");
 
                     b.Property<long>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("bigint");
 
                     b.HasKey("MenuId");
@@ -205,8 +212,6 @@ namespace TerraMours.Migrations
                         .HasColumnType("text");
 
                     b.Property<long>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("bigint");
 
                     b.HasKey("RoleId");
@@ -259,8 +264,6 @@ namespace TerraMours.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<long>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("bigint");
 
                     b.HasKey("RolesToMenuId");
@@ -314,6 +317,9 @@ namespace TerraMours.Migrations
                     b.Property<bool>("IsRegregisterPhone")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsSuperAdmin")
+                        .HasColumnType("boolean");
+
                     b.Property<int?>("LoginFailCount")
                         .HasColumnType("integer");
 
@@ -332,8 +338,8 @@ namespace TerraMours.Migrations
                     b.Property<string>("Remark")
                         .HasColumnType("text");
 
-                    b.Property<string>("RoleId")
-                        .HasColumnType("text");
+                    b.Property<long?>("RoleId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("RoleName")
                         .HasColumnType("text");

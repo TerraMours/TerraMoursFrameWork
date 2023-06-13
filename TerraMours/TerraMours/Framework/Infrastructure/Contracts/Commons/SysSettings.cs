@@ -1,7 +1,13 @@
-﻿namespace TerraMours.Framework.Infrastructure.Contracts.Commons
+﻿using Newtonsoft.Json.Linq;
+
+namespace TerraMours.Framework.Infrastructure.Contracts.Commons
 {
     public class SysSettings
     {
+        /// <summary>
+        /// 新增用户默认角色ID
+        /// </summary>
+        public Initial initial { get; set; }
         public JWT jwt { get; set; }
         public Connection connection { get; set; }
         public Secret secret { get; set; }
@@ -21,7 +27,7 @@
     public class JWT
     {
         /// <summary>
-        /// token 密钥
+        /// Token 密钥
         /// </summary>
         public string SecretKey { get; set; }
         /// <summary>
@@ -80,6 +86,11 @@
         /// 邮箱的授权码而不是密码
         /// </summary>
         public string SenderPassword { get; set; }
+    }
+    public class Initial
+    {
+        public long InitialRoleId { get; set; }
+        public string InitialPassWord { get; set; }
 
     }
 }

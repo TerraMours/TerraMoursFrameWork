@@ -30,5 +30,30 @@
         /// 角色导航属性
         /// </summary>
         public SysRole SysRole { get; set; }
+
+        public SysRolesToMenu() { }
+        /// <summary>
+        /// 新建角色菜单关联关系
+        /// </summary>
+        /// <param name="roleName"></param>
+        public SysRolesToMenu(long roleId,long menuId)
+        {
+            RoleId = roleId;
+            MenuId = menuId;
+            //EntityBase
+            Version = 1;
+            Enable = true;
+            CreateDate = DateTime.Now;
+        }
+        /// <summary>
+        /// 删除
+        /// </summary>
+        /// <returns></returns>
+        public SysRolesToMenu Delete()
+        {
+            this.Enable = false;
+            return this;
+        }
+
     }
 }

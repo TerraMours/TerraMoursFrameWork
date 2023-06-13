@@ -8,7 +8,7 @@
         /// <summary>
         /// 数据版本号 乐观并发控制
         /// </summary>
-        public long Version { get; set; }
+        public uint Version { get; set; }
         /// <summary>
         /// 是否可用 重要
         /// </summary>

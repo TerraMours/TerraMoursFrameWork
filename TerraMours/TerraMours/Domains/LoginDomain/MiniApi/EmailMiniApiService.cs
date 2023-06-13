@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
 using TerraMours.Domains.LoginDomain.IServices;
@@ -11,7 +12,6 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
         public EmailMiniApiService(IServiceCollection services, IEmailService emailService) : base()
         {
             _emailService = emailService;
-            RouteOptions.DisableAutoMapRoute = true;
             //此处/api/v1/Test 这里是swagger显示的路由
             //命名规则取当前的xxxMiniApiService的xxx,然后/api/v1/xxx/方法名
             App.MapPost("/api/v1/Email/CreateCheckCode", CreateCheckCode);

@@ -1,17 +1,9 @@
-﻿using AutoMapper;
-using TerraMours.Domains.LoginDomain.Contracts.Req;
+﻿using System.Text.Json.Serialization;
 
-namespace TerraMours.Framework.Infrastructure.Contracts.SystemModels
+namespace TerraMours.Domains.LoginDomain.Contracts.Req
 {
-    /// <summary>
-    /// 系统菜单表
-    /// </summary>
-    public class SysMenus : BaseEntity
+    public class SysMenuReq: SysMenuBaseReq
     {
-        /// <summary>
-        /// 菜单id 主键 自增
-        /// </summary>
-        public long MenuId { get; set; }
         /// <summary>
         /// 菜单父级id 
         /// </summary>
@@ -58,44 +50,10 @@ namespace TerraMours.Framework.Infrastructure.Contracts.SystemModels
         /// 是否可见，默认true
         /// </summary>
         public bool IsShow { get; set; }
-        /// <summary>
-        /// 每个菜单的按钮 外键就是 MenuId 自己
-        /// </summary>
-        public List<SysMenuButtons>? SysMenuButtons { get; set; }
 
-        public SysMenus()
-        {
-        }
         /// <summary>
-        /// 新建角色 
+        /// 排序
         /// </summary>
-        /// <param name="roleName"></param>
-        public SysMenus(IMapper mapper, SysMenuReq req)
-        {
-            mapper.Map(req, this);
-            HasChildren = false;
-            //EntityBase
-            Version = 1;
-            Enable = true;
-            CreateDate = DateTime.Now;
-        }
-        /// <summary>
-        /// 删除
-        /// </summary>
-        /// <returns></returns>
-        public SysMenus Delete()
-        {
-            this.Enable = false;
-            return this;
-        }
-        /// <summary>
-        /// 修改
-        /// </summary>
-        /// <returns></returns>
-        public SysMenus Change(IMapper mapper, SysMenuReq req)
-        {
-            mapper.Map(req, this);
-            return this;
-        }
+        public int? OrderNo { get; set; }
     }
 }

@@ -15,7 +15,7 @@ namespace TerraMours.Framework.Infrastructure.EFCore
 
         public FrameworkDbContext(DbContextOptions<FrameworkDbContext> options) : base(options)
         {
-
+            
         }
 
         protected override void OnModelCreating(ModelBuilder builder)

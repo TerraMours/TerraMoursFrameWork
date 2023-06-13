@@ -1,4 +1,7 @@
-﻿namespace TerraMours.Framework.Infrastructure.Contracts.SystemModels
+﻿using Microsoft.Extensions.Options;
+using TerraMours.Framework.Infrastructure.Contracts.Commons;
+
+namespace TerraMours.Framework.Infrastructure.Contracts.SystemModels
 {
     /// <summary>
     /// 系统用户表
@@ -61,7 +64,7 @@
         /// <summary>
         /// 角色id
         /// </summary>
-        public string? RoleId { get; set; }
+        public long? RoleId { get; set; }
         /// <summary>
         /// 角色名称
         /// </summary>
@@ -78,6 +81,10 @@
         /// 是否能登陆 账号被锁
         /// </summary>
         public bool EnableLogin { get; set; }
+        /// <summary>
+        /// 是否是超级管理员，默认false
+        /// </summary>
+        public bool IsSuperAdmin { get; set; }
         /// <summary>
         /// 过期时间  记录当时最大失败时候的时间，然后加上十五分钟，如果登陆时候的时间大于这个失效时间即可登陆。然后下次账号再被锁的时候，更新对应的过期时间即可
         /// </summary>
@@ -99,11 +106,14 @@
             EnableLogin = true;
             LoginFailCount = 0;
             IsRegregisterPhone = false;
-
+            IsSuperAdmin = false;
             //EntityBase
-            Version = 1;
             Enable = true;
             CreateDate = DateTime.Now;
+        }
+
+        public SysUser()
+        {
         }
 
         /// <summary>
@@ -145,6 +155,16 @@
         public SysUser Delete()
         {
             this.Enable = false;
+            return this;
+        }
+
+        /// <summary>
+        /// 登出，删除token
+        /// </summary>
+        /// <returns></returns>
+        public SysUser Logout()
+        {
+            this.Token = "";
             return this;
         }
 

@@ -1,10 +1,14 @@
-﻿namespace TerraMours.Domains.LoginDomain.MiniApi;
+﻿using TerraMours.Framework.Infrastructure.Filters;
+
+namespace TerraMours.Domains.LoginDomain.MiniApi;
 
 public class TestMiniApi : ServiceBase
 {
+    private readonly Serilog.ILogger _logger;
 
-    public TestMiniApi(IServiceCollection services) : base(services)
+    public TestMiniApi(IServiceCollection services, Serilog.ILogger logger) : base(services)
     {
+        _logger = logger;
         //此处/api/v1/Test 这里是swagger显示的路由
         App.MapGet("/api/v1/Test", TestMiniApiMethod);
         App.MapGet("/api/v1/Test2", TestMiniApiMethod222);
@@ -13,9 +17,10 @@ public class TestMiniApi : ServiceBase
                 App.MapGet("/api/v1/catalog/types", GetCatalogTypesAsync);*/
     }
 
-
+    [ExceptionFilter]
     public async Task<IResult> TestMiniApiMethod()
     {
+        //throw new NotImplementedException("测试异常");
         return Results.Ok("Hello world");
     }
 
