@@ -23,6 +23,7 @@ using TerraMours.Framework.Infrastructure.Filters;
 using TerraMours.Framework.Infrastructure.Redis;
 using TerraMours.Domains.LoginDomain.Contracts.Res;
 using TerraMours.Framework.Infrastructure.Services;
+using TerraMours_Gpt.Framework.Infrastructure.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -234,7 +235,8 @@ app.UseAuthorization();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
 app.UseCors("MyPolicy");
-
+//请求中间件
+app.UseMiddleware<KeyMiddleware>();
 
 //使用minimal api
 app.MapHealthChecks("/health", new HealthCheckOptions()
