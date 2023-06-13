@@ -104,6 +104,7 @@ builder.Services.AddSwaggerGen(options =>
 // 配置映射规则
 MapperConfiguration mapperConfig = new(cfg => {
     cfg.CreateMap<SysUserDetailRes, SysUser>().ForMember(m => m.UserId, n => n.Ignore());
+    cfg.CreateMap<SysUser, SysUserDetailRes>().ForMember(m => m.UserId, n => n.Ignore());
     cfg.CreateMap<SysUserAddReq, SysUser>().ForMember(m => m.UserId, n => n.Ignore());
     cfg.CreateMap<SysRole, SysRoleRes>();
     cfg.CreateMap<SysMenuReq, SysMenus>().ForMember(m => m.MenuId, n => n.Ignore());

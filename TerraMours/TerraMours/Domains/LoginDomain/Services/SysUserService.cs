@@ -11,6 +11,7 @@ using TerraMours.Domains.LoginDomain.IServices;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 using TerraMours.Framework.Infrastructure.EFCore;
+using TerraMours.Framework.Infrastructure.Redis;
 using TerraMours.Framework.Infrastructure.Utils;
 
 namespace TerraMours.Domains.LoginDomain.Services
@@ -23,11 +24,12 @@ namespace TerraMours.Domains.LoginDomain.Services
         private readonly FrameworkDbContext _dbContext;
         private readonly IOptionsSnapshot<SysSettings> _sysSettings;
         private readonly IMapper _mapper;
-        public SysUserService(FrameworkDbContext dbContext, IOptionsSnapshot<SysSettings> sysSettings, IMapper mapper)
-        {
+        private readonly IDistributedCacheHelper _helper;
+        public SysUserService(FrameworkDbContext dbContext, IOptionsSnapshot<SysSettings> sysSettings, IMapper mapper, IDistributedCacheHelper helper) {
             _dbContext = dbContext;
             _sysSettings = sysSettings;
             _mapper = mapper;
+            _helper = helper;
         }
 
         /// <summary>
@@ -182,16 +184,8 @@ namespace TerraMours.Domains.LoginDomain.Services
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
         public async Task<ApiResponse<List<SysUserDetailRes>>> GetAllUserList() {
-            var userList = await _dbContext.SysUsers.Where(x => x.Enable == true).ToListAsync();
-            var userDetailList = userList.Select(u => new SysUserDetailRes {
-                UserId = u.UserId,
-                UserName = u.UserName,
-                UserEmail = u.UserEmail,
-                UserPhoneNum = u.UserPhoneNum,
-                Gender = u.Gender,
-                EnableLogin = u.EnableLogin,
-                RoleId=u.RoleId
-            }).ToList();
+            var userList = await _helper.GetOrCreateAsync("GetAllUserList", async options => {return await _dbContext.SysUsers.Where(x => x.Enable == true).ToListAsync(); });
+            var userDetailList = _mapper.Map<List<SysUserDetailRes>>(userList);
             return ApiResponse<List<SysUserDetailRes>>.Success(userDetailList);
         }
         /// <summary>

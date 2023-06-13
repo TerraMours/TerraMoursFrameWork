@@ -27,7 +27,7 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
             App.MapPost("/api/v1/User/AddUser", AddUser);
         }
 		/// <summary>
-		/// 全部用户列表 todo：jwt添加权限
+		/// 全部用户列表
 		/// </summary>
 		/// <returns></returns>
 		[Authorize]
