@@ -1,13 +1,13 @@
 ﻿using Microsoft.Extensions.Options;
-using TerraMours.Framework.Infrastructure.Contracts.Commons;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
 
 namespace TerraMours_Gpt.Framework.Infrastructure.Middlewares {
     public class KeyMiddleware {
         private readonly RequestDelegate _next;
         private readonly string[] _list;
         private int _index;
-        public KeyMiddleware(RequestDelegate next, IOptions<OpenAIOptions> options) {
-            var list = options.Value.OpenAI.KeyList;
+        public KeyMiddleware(RequestDelegate next, IOptions<GptOptions> options) {
+            var list = options.Value.OpenAIOptions.OpenAI.KeyList;
             _next = next;
             _list = list ?? throw new ArgumentNullException(nameof(list));
             if (_list.Length == 0) throw new ArgumentException("List cannot be empty.", nameof(list));

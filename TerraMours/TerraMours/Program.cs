@@ -24,6 +24,9 @@ using TerraMours.Framework.Infrastructure.Redis;
 using TerraMours.Domains.LoginDomain.Contracts.Res;
 using TerraMours.Framework.Infrastructure.Services;
 using TerraMours_Gpt.Framework.Infrastructure.Middlewares;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
+using TerraMours_Gpt.Domains.GptDomain.IServices;
+using TerraMours_Gpt.Domains.GptDomain.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,7 +42,7 @@ IConfiguration configuration = builder.Configuration;
 //添加配置文件与实体类绑定
 builder.Services.Configure<SysSettings>(configuration.GetSection("SysSettings"));
 var sysSettings = builder.Configuration.GetSection("SysSettings").Get<SysSettings>() ?? throw new Exception("用户或者密码不正确");
-
+builder.Services.Configure<GptOptions>(configuration.GetSection("GptOptions"));
 //注入日志
 // 配置 Serilog 日志记录器
 
@@ -128,6 +131,9 @@ builder.Services.AddScoped<ISysUserService, SysUserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ISysRoleService, SysRoleService>();
 builder.Services.AddScoped<ISysMenuService, SysMenuService>();
+//gpt
+builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddCors(options => {
     options.AddPolicy(name: "MyPolicy",
                       policy => {

@@ -17,7 +17,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         public ChatMiniApiService(IHttpContextAccessor httpContextAccessor, IChatService chatService) : base() {
             _httpContextAccessor = httpContextAccessor;
             _chatService = chatService;
-            App.MapPost("/api/v2/Chat/ChatStream", ChatStream);
+            App.MapPost("/api/v1/Chat/ChatStream", ChatStream);
         }
         [Authorize]
         [Produces("application/octet-stream")]
@@ -25,7 +25,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             if (_httpContextAccessor.HttpContext?.Items["key"] !=null) {
                 req.Key = _httpContextAccessor.HttpContext?.Items["key"]?.ToString();
             }
-            req.IP = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
+            req.IP = _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.MapToIPv4().ToString();
             var enumerable = _chatService.ChatProcessStream(req);
             var pipe = new Pipe();
             _ = Task.Run(async () => {

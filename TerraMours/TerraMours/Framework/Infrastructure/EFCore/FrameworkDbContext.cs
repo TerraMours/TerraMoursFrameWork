@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels;
 
 namespace TerraMours.Framework.Infrastructure.EFCore
 {
@@ -11,6 +12,11 @@ namespace TerraMours.Framework.Infrastructure.EFCore
         public DbSet<SysMenus> SysMenus { get; set; }
         public DbSet<SysMenuButtons> SysMenuButtons { get; set; }
         public DbSet<SysRolesToMenu> SysRolesToMenus { get; set; }
+        #region 业务
+        public DbSet<ChatRecord> ChatRecords { get; set; }
+        public DbSet<Sensitive> Sensitives { get; set; }
+
+        #endregion
 
 
         public FrameworkDbContext(DbContextOptions<FrameworkDbContext> options) : base(options)
