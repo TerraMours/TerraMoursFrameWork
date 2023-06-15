@@ -20,7 +20,7 @@
         /// <summary>
         /// 创建人id
         /// </summary>
-        public int? CreateID { get; set; }
+        public long? CreateID { get; set; }
         /// <summary>
         /// 创建人名称
         /// </summary>
@@ -28,7 +28,7 @@
         /// <summary>
         /// 修改人id
         /// </summary>
-        public int? ModifyID { get; set; }
+        public long? ModifyID { get; set; }
         /// <summary>
         /// 修改人名称
         /// </summary>

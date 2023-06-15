@@ -4,6 +4,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.AI.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.AI.OpenAI.ChatCompletion;
+using System.Text;
+using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 using TerraMours.Framework.Infrastructure.EFCore;
@@ -21,15 +23,23 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         private readonly IOptionsSnapshot<GptOptions> _options;
         private readonly IMapper _mapper;
         private readonly IDistributedCacheHelper _helper;
+        private readonly Serilog.ILogger _logger;
 
-        public ChatService(FrameworkDbContext dbContext, IOptionsSnapshot<GptOptions> options, IMapper mapper, IDistributedCacheHelper helper)
+        public ChatService(FrameworkDbContext dbContext, IOptionsSnapshot<GptOptions> options, IMapper mapper, IDistributedCacheHelper helper, Serilog.ILogger logger)
         {
             _dbContext = dbContext;
             _options = options;
             _mapper = mapper;
             _helper = helper;
+            _logger = logger;
         }
-
+        #region 聊天
+        /// <summary>
+        /// 聊天接口
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
         public async IAsyncEnumerable<ChatRes> ChatProcessStream(ChatReq req) {
             var user = await getSysUser(req.UserId);
 
@@ -78,7 +88,88 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             }
             throw new NotImplementedException();
         }
+        #endregion
 
+        #region 敏感词
+        /// <summary>
+        /// 导入敏感词
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        public async Task<ApiResponse<bool>> ImportSensitive(IFormFile file, long? userId)
+        {
+            try
+            {
+                using (var context = _dbContext)
+                {
+                    // 打开文本文件
+                    using (StreamReader sr = new StreamReader(file.OpenReadStream()))
+                    {
+                        string line;
+                        // 逐行读取文本内容
+                        while ((line = sr.ReadLine()) != null)
+                        {
+                            // 读取文件内容并Base64解码
+
+                            var decodedContent = Encoding.UTF8.GetString(Convert.FromBase64String(line));
+                            await context.Sensitives.AddAsync(new Sensitive(decodedContent, userId));
+                        }
+                    }
+                    await context.SaveChangesAsync();
+                }
+                return ApiResponse<bool>.Success(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error inserting data into Sensitive table");
+                return ApiResponse<bool>.Fail(ex.ToString());
+            }
+        }
+
+        /// <summary>
+        /// 添加敏感词
+        /// </summary>
+        /// <param name="word"></param>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task<ApiResponse<bool>> AddSensitive(string word, long? userId)
+        {
+            await _dbContext.Sensitives.AddAsync(new Sensitive(word, userId));
+            await _dbContext.SaveChangesAsync();
+            return ApiResponse<bool>.Success(true);
+        }
+        /// <summary>
+        /// 修改敏感词
+        /// </summary>
+        /// <param name="sensitiveId"></param>
+        /// <param name="word"></param>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task<ApiResponse<bool>> ChangeSensitive(long sensitiveId, string word, long? userId)
+        {
+            var sensitive = await _dbContext.Sensitives.FirstOrDefaultAsync(m => m.SensitiveId == sensitiveId && m.Enable == true);
+            sensitive?.Change(word,userId);
+            await _dbContext.SaveChangesAsync();
+            return ApiResponse<bool>.Success(true);
+        }
+        /// <summary>
+        /// 删除敏感词
+        /// </summary>
+        /// <param name="verificationId"></param>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task<ApiResponse<bool>> DeleteSensitive(long sensitiveId, long? userId)
+        {
+            var sensitive= await _dbContext.Sensitives.FirstOrDefaultAsync(m=>m.SensitiveId==sensitiveId && m.Enable==true);
+            sensitive?.Delete(userId);
+            await _dbContext.SaveChangesAsync();
+            return ApiResponse<bool>.Success(true);
+        }
+        #endregion
         #region 私有方法
         /// <summary>
         /// 敏感词检测
@@ -140,6 +231,11 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             }
             return res;
         }
+
+
+
+
+
         #endregion
     }
 }

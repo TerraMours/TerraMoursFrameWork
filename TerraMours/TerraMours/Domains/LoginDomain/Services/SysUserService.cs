@@ -58,7 +58,7 @@ namespace TerraMours.Domains.LoginDomain.Services
                 var claims = new List<Claim>();
                 claims.Add(new Claim(ClaimTypes.Name, user.UserEmail));
                 claims.Add(new Claim(ClaimTypes.Role, user.RoleId.ToString()));
-                claims.Add(new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()));
+                claims.Add(new Claim(ClaimTypes.UserData, user.UserId.ToString()));
 
                 //生成token
                 var token = CreateToken(claims);
