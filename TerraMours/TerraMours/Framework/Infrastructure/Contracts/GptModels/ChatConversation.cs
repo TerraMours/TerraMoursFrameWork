@@ -1,4 +1,6 @@
-﻿using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 
 namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
 {
@@ -21,5 +23,8 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
         /// 用户id
         /// </summary>
         public long? UserId { get; set; }
+
+        public List<ChatRecord>? ChatRecords { get; set; }
     }
+
 }

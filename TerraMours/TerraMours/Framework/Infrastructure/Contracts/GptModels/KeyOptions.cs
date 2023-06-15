@@ -5,7 +5,7 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
     /// <summary>
     ///  key配置和使用情况表
     /// </summary>
-    public class KeyConfig:BaseEntity
+    public class KeyOptions:BaseEntity
     {
         /// <summary>
         /// 主键

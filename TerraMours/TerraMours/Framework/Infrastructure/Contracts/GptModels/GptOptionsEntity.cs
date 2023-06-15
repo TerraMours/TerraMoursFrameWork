@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using System.ComponentModel.DataAnnotations;
 using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 
 namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
@@ -8,6 +9,7 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
     /// </summary>
     public class GptOptionsEntity:BaseEntity
     {
+        [Key]
         public long GptOptionsId { get; set; }
         /// <summary>
         /// AI配置

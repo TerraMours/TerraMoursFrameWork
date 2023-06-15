@@ -11,7 +11,7 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
         /// <summary>
         /// 主键
         /// </summary>
-        public long CollectId { get; set; }
+        public long CollectRecordId { get; set; }
 
         /// <summary>
         /// 用户id

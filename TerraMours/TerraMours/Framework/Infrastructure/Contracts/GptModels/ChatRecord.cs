@@ -1,4 +1,7 @@
-﻿namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
+﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore;
+
+namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
 {
     /// <summary>
     /// 聊天记录
@@ -37,5 +40,8 @@
         /// 修改时间
         /// </summary>
         public DateTime? ModifyDate { get; set; }
+
+        public ChatConversation? ChatConversation { get; set; }
     }
+   
 }

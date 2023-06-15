@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using System.ComponentModel.DataAnnotations;
 using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 
 namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.SystemModels
@@ -8,6 +9,7 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.SystemModels
     /// </summary>
     public class SysSettingsEntity:BaseEntity
     {
+        [Key]
         public long SysSettingsId { get; set; }
         /// <summary>
         /// 新建用户默认信息

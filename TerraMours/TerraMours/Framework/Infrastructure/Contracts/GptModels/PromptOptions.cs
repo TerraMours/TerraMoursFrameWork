@@ -5,7 +5,7 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
     /// <summary>
     /// 提示词管理
     /// </summary>
-    public class PromptConfig:BaseEntity
+    public class PromptOptions:BaseEntity
     {
         /// <summary>
         /// 主键
