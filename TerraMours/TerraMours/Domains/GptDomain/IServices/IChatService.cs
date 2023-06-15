@@ -18,5 +18,13 @@ namespace TerraMours_Gpt.Domains.GptDomain.IServices {
         Task<ApiResponse<bool>> ChangeSensitive(long sensitiveId,string word, long? userId);
         Task<ApiResponse<bool>> DeleteSensitive(long sensitiveId, long? userId);
         #endregion
+
+        #region Key管理
+        Task<ApiResponse<bool>> UpdateKeyOptionsBalance(long? userId);
+        Task<ApiResponse<bool>> AddKeyOptions(string apiKey, long? userId);
+        Task<ApiResponse<bool>> ChangeKeyOptions(long keyId, string apiKey, long? userId);
+        Task<ApiResponse<bool>> DeleteKeyOptions(long keyId, long? userId);
+        Task<ApiResponse<CheckBalanceRes>> CheckBalance(string key);
+        #endregion
     }
 }

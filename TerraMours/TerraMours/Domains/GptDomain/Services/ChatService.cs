@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
+using k8s.KubeConfigModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.AI.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.AI.OpenAI.ChatCompletion;
 using System.Text;
+using System.Text.Json;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
@@ -24,14 +26,16 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         private readonly IMapper _mapper;
         private readonly IDistributedCacheHelper _helper;
         private readonly Serilog.ILogger _logger;
+        private readonly HttpClient _httpClient;
 
-        public ChatService(FrameworkDbContext dbContext, IOptionsSnapshot<GptOptions> options, IMapper mapper, IDistributedCacheHelper helper, Serilog.ILogger logger)
+        public ChatService(FrameworkDbContext dbContext, IOptionsSnapshot<GptOptions> options, IMapper mapper, IDistributedCacheHelper helper, Serilog.ILogger logger, HttpClient httpClient)
         {
             _dbContext = dbContext;
             _options = options;
             _mapper = mapper;
             _helper = helper;
             _logger = logger;
+            _httpClient = httpClient;
         }
         #region 聊天
         /// <summary>
@@ -170,6 +174,112 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             return ApiResponse<bool>.Success(true);
         }
         #endregion
+
+        #region Key管理
+        /// <summary>
+        /// 更新key使用情况
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task<ApiResponse<bool>> UpdateKeyOptionsBalance(long? userId)
+        {
+            var keys = _dbContext.KeyOptions.Where(m => m.Enable == true);
+            foreach(var key in keys)
+            {
+                var balance = await getBalanceByKey(key.ApiKey);
+                key.UpdateUsed(balance.Used,balance.UnUsed,balance.Total,userId);
+            }
+            await _dbContext.SaveChangesAsync();
+            return ApiResponse<bool>.Success(true);
+        }
+        public async Task<ApiResponse<bool>> AddKeyOptions(string apiKey, long? userId)
+        {
+            await _dbContext.KeyOptions.AddAsync(new KeyOptions(apiKey, userId));
+            await _dbContext.SaveChangesAsync();
+            return ApiResponse<bool>.Success(true);
+        }
+
+        public async Task<ApiResponse<bool>> ChangeKeyOptions(long keyId, string apiKey, long? userId)
+        {
+            var sensitive = await _dbContext.KeyOptions.FirstOrDefaultAsync(m => m.KeyId == keyId && m.Enable == true);
+            sensitive?.Change(apiKey, userId);
+            await _dbContext.SaveChangesAsync();
+            return ApiResponse<bool>.Success(true);
+        }
+        /// <summary>
+        /// 删除key，真删除
+        /// </summary>
+        /// <param name="keyId"></param>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        public async Task<ApiResponse<bool>> DeleteKeyOptions(long keyId, long? userId)
+        {
+            var sensitive = await _dbContext.KeyOptions.FirstOrDefaultAsync(m => m.KeyId == keyId);
+            _dbContext.KeyOptions.Remove(sensitive);
+            await _dbContext.SaveChangesAsync();
+            return ApiResponse<bool>.Success(true);
+        }
+        /// <summary>
+        /// 余额查询
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task<ApiResponse<CheckBalanceRes>> CheckBalance(string key)
+        {
+            // 添加token
+            _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + key);
+            //1.调用订阅接口
+            var message = await _httpClient.GetAsync("https://api.openai.com/v1/dashboard/billing/subscription");
+            if (!message.IsSuccessStatusCode)
+            {
+                return ApiResponse<CheckBalanceRes>.Fail($"报错了：{await message.Content.ReadAsStringAsync()}");
+            }
+            string subscriptionsonResponse = await message.Content.ReadAsStringAsync();
+            if (subscriptionsonResponse.Contains("error"))
+            {
+                // 请求失败
+                ErrorRes errorResponse = JsonSerializer.Deserialize<ErrorRes>(subscriptionsonResponse);
+                string errorMessage = errorResponse.Error.Message;
+                return ApiResponse<CheckBalanceRes>.Fail($"报错了：{errorMessage}");
+            }
+            BillingSubscriptionRes billing = await message.Content.ReadFromJsonAsync<BillingSubscriptionRes>();
+
+            var endTime = DateTimeOffset.FromUnixTimeSeconds(billing.AccessUntil).LocalDateTime;
+            var showMsg = "";
+            if (DateTime.Now > endTime)
+            {
+                showMsg = "您的账户额度已过期, 请登录OpenAI进行查看。";
+                return ApiResponse<CheckBalanceRes>.Fail(showMsg);
+            }
+            //2.调用查使用量接口
+            //接口只支持查一百天
+            DateTime now = DateTime.Now;
+            DateTime startDate = now.AddDays(-90);
+            DateTime endDate = now.AddDays(1);
+
+            //总额度
+            var totalAmount = billing.HardLimitUsd;
+            var isSubsrcibed = billing.HasPaymentMethod;
+            //计算余额等信息
+            //计算已使用量
+            // 如果用户绑卡，额度每月会刷新
+            if (isSubsrcibed)
+            {
+                startDate = new DateTime(now.Year, now.Month, 1); // 本月第一天的日期
+            }
+            UsageRes usage = await GetUsage(startDate, endDate);
+            //总使用量，绑卡用户为当月使用量
+            var totalUsage = usage.TotalUsage / 100;
+            // 计算剩余额度
+            var remaining = totalAmount - totalUsage;
+
+            //参考https://github.com/herobrine19/openai-billing/blob/main/index.html
+            _logger.Information($"余额查询接口调用[{DateTime.Now}]：key:{key},总额度{totalAmount}剩余{remaining}");
+            return ApiResponse<CheckBalanceRes>.Success(new CheckBalanceRes(key, endTime, totalUsage, remaining, totalAmount));
+        }
+        #endregion
         #region 私有方法
         /// <summary>
         /// 敏感词检测
@@ -231,8 +341,60 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             }
             return res;
         }
+        /// <summary>
+        /// 调用openai查询使用量接口
+        /// </summary>
+        /// <param name="startDate"></param>
+        /// <param name="endDate"></param>
+        /// <returns></returns>
+        private async Task<UsageRes> GetUsage(DateTime startDate, DateTime endDate)
+        {
+            var usageUrl = $"https://api.openai.com/v1/dashboard/billing/usage?start_date={startDate.ToString("yyyy-MM-dd")}&end_date={endDate.ToString("yyyy-MM-dd")}";
+            var usageMessage = await _httpClient.GetAsync(usageUrl);
+            string usageResponse = await usageMessage.Content.ReadAsStringAsync();
+            return await usageMessage.Content.ReadFromJsonAsync<UsageRes>();
+        }
+        private async Task<CheckBalanceRes> getBalanceByKey(string key)
+        {
+            // 添加token
+            //HttpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + key);
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", key);
+            var billing = await GetSubscription();
+            var endTime = DateTimeOffset.FromUnixTimeSeconds(billing.AccessUntil).LocalDateTime;
+            //接口只支持查一百天
+            DateTime now = DateTime.Now;
+            DateTime startDate = now.AddDays(-90);
+            DateTime endDate = now.AddDays(1);
 
-
+            //总额度
+            var totalAmount = billing.HardLimitUsd;
+            var isSubsrcibed = billing.HasPaymentMethod;
+            //计算余额等信息
+            //计算已使用量
+            // 如果用户绑卡，额度每月会刷新
+            if (isSubsrcibed)
+            {
+                startDate = new DateTime(now.Year, now.Month, 1); // 本月第一天的日期
+            }
+            UsageRes usage = await GetUsage(startDate, endDate);
+            //总使用量，绑卡用户为当月使用量
+            var totalUsage = usage.TotalUsage / 100;
+            // 计算剩余额度
+            var remaining = totalAmount - totalUsage;
+            return new CheckBalanceRes(key, endTime, totalUsage, remaining, totalAmount);
+        }
+        /// <summary>
+        /// 调用openai查询订阅接口
+        /// </summary>
+        /// <param name="startDate"></param>
+        /// <param name="endDate"></param>
+        /// <returns></returns>
+        private async Task<BillingSubscriptionRes> GetSubscription()
+        {
+            var message = await _httpClient.GetAsync("https://api.openai.com/v1/dashboard/billing/subscription");
+            string subscriptionsonResponse = await message.Content.ReadAsStringAsync();
+            return await message.Content.ReadFromJsonAsync<BillingSubscriptionRes>();
+        }
 
 
 

@@ -10,7 +10,9 @@ using System.Text.Json;
 using System.Text.Unicode;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Req;
+using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;
 using TerraMours_Gpt.Domains.GptDomain.IServices;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels;
 
 namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
     public class ChatMiniApiService : ServiceBase {
@@ -80,6 +82,47 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         {
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
             var res =await _chatService.DeleteSensitive(sensitiveId, userId);
+            return Results.Ok(res);
+        }
+        #endregion
+
+        #region Key管理
+        [Authorize]
+        public async Task<IResult> UpdateKeyOptionsBalance()
+        {
+            var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
+            var res = await _chatService.UpdateKeyOptionsBalance(userId);
+            return Results.Ok(res);
+        }
+        [Authorize]
+        public async Task<IResult> AddKeyOptions(string apiKey)
+        {
+            var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
+            var res = await _chatService.AddKeyOptions(apiKey, userId);
+            return Results.Ok(res);
+        }
+        [Authorize]
+        public async Task<IResult> ChangeKeyOptions(long keyId, string apiKey)
+        {
+            var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
+            var res = await _chatService.ChangeKeyOptions(keyId, apiKey, userId);
+            return Results.Ok(res);
+        }
+        [Authorize]
+        public async Task<IResult> DeleteKeyOptions(long keyId)
+        {
+            var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
+            var res = await _chatService.DeleteKeyOptions(keyId, userId);
+            return Results.Ok(res);
+        }
+        /// <summary>
+        /// 检查余额，公共方法
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public async Task<IResult> CheckBalance(string key)
+        {
+            var res = await _chatService.CheckBalance(key);
             return Results.Ok(res);
         }
         #endregion
