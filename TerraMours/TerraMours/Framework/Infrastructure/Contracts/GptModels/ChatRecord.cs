@@ -8,7 +8,7 @@
         /// <summary>
         /// 主键
         /// </summary>
-        public int Id { get; set; }
+        public long ChatRecordId { get; set; }
 
         /// <summary>
         /// 模型类型
@@ -21,7 +21,7 @@
         /// <summary>
         /// 会话id
         /// </summary>
-        public string? ConversationId { get; set; }
+        public long? ConversationId { get; set; }
         public string? IP { get; set; }
         public string? Role { get; set; }
         public string? Message { get; set; }

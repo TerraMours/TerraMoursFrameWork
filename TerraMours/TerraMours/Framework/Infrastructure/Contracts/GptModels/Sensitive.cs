@@ -7,7 +7,7 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
     /// </summary>
     public class Sensitive:BaseEntity
     {
-        public int Id { get; set; }
+        public long SensitiveId { get; set; }
         public string Word { get; set; }
     }
 }
