@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.AI.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.AI.OpenAI.ChatCompletion;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
@@ -16,6 +17,7 @@ using TerraMours_Gpt.Domains.GptDomain.Contracts.Enum;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Req;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;
 using TerraMours_Gpt.Domains.GptDomain.IServices;
+using TerraMours_Gpt.Domains.LoginDomain.Contracts.Common;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels;
 
@@ -52,9 +54,9 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             {
                 yield return new ChatRes("触发了敏感词");
             }
-            else if(!await CodeCanAsk(user))
+            else if (!await CodeCanAsk(user))
             {
-                if (user.VipLevel>0)
+                if (user.VipLevel > 0)
                 {
                     yield return new ChatRes("请勿恶意使用");
                 }
@@ -63,7 +65,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             }
             else
             {
-                IKernel kernel= Kernel.Builder.Build();
+                IKernel kernel = Kernel.Builder.Build();
                 kernel.Config.AddOpenAIChatCompletionService("chat", req.Options.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel,
                 req.Key);
                 var chatCompletion = kernel.GetService<IChatCompletion>();
@@ -80,15 +82,15 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
                 var chatMeg = chatCompletion?.GenerateMessageStreamAsync(chatHistory, options);
                 //接口返回的完整内容
                 string totalMsg = "";
-                await foreach(var msg in chatMeg)
+                await foreach (var msg in chatMeg)
                 {
-                    if(msg != null)
+                    if (msg != null)
                     {
                         totalMsg += msg;
                     }
                     yield return new ChatRes(totalMsg);
                 }
-                   
+
             }
             throw new NotImplementedException();
         }
@@ -155,7 +157,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         public async Task<ApiResponse<bool>> ChangeSensitive(long sensitiveId, string word, long? userId)
         {
             var sensitive = await _dbContext.Sensitives.FirstOrDefaultAsync(m => m.SensitiveId == sensitiveId && m.Enable == true);
-            sensitive?.Change(word,userId);
+            sensitive?.Change(word, userId);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
         }
@@ -168,10 +170,24 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         /// <exception cref="NotImplementedException"></exception>
         public async Task<ApiResponse<bool>> DeleteSensitive(long sensitiveId, long? userId)
         {
-            var sensitive= await _dbContext.Sensitives.FirstOrDefaultAsync(m=>m.SensitiveId==sensitiveId && m.Enable==true);
+            var sensitive = await _dbContext.Sensitives.FirstOrDefaultAsync(m => m.SensitiveId == sensitiveId && m.Enable == true);
             sensitive?.Delete(userId);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
+        }
+        /// <summary>
+        /// 敏感词列表
+        /// </summary>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task<ApiResponse<PagedRes<SensitiveRes>>> SensitiveList(PageReq page)
+        {
+            var query = _dbContext.Sensitives.Where(m=> string.IsNullOrEmpty(page.QueryString) || m.Word.Contains(page.QueryString));
+            var total = await query.CountAsync();
+            var item = await query.Skip((page.PageIndex - 1) * page.PageSize).Take(page.PageSize).ToListAsync();
+            var res = _mapper.Map<IEnumerable<SensitiveRes>>(item);
+            return ApiResponse<PagedRes<SensitiveRes>>.Success(new PagedRes<SensitiveRes>(res, total, page.PageIndex, page.PageSize));
         }
         #endregion
 
@@ -185,10 +201,10 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         public async Task<ApiResponse<bool>> UpdateKeyOptionsBalance(long? userId)
         {
             var keys = _dbContext.KeyOptions.Where(m => m.Enable == true);
-            foreach(var key in keys)
+            foreach (var key in keys)
             {
                 var balance = await getBalanceByKey(key.ApiKey);
-                key.UpdateUsed(balance.Used,balance.UnUsed,balance.Total,userId);
+                key.UpdateUsed(balance.Used, balance.UnUsed, balance.Total, userId);
             }
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
@@ -219,6 +235,20 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             _dbContext.KeyOptions.Remove(sensitive);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
+        }
+        /// <summary>
+        /// key列表
+        /// </summary>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task<ApiResponse<PagedRes<KeyOptionRes>>> KeyOptionsList(PageReq page)
+        {
+            var query = _dbContext.KeyOptions.Where(m => string.IsNullOrEmpty(page.QueryString) || m.ApiKey.Contains(page.QueryString));
+            var total=await query.CountAsync();
+            var item=await query.Skip((page.PageIndex-1)* page.PageSize).Take(page.PageSize).ToListAsync();
+            var res=_mapper.Map<IEnumerable< KeyOptionRes>>(item);
+            return ApiResponse<PagedRes<KeyOptionRes>>.Success(new PagedRes<KeyOptionRes>(res,total,page.PageIndex,page.PageSize));
         }
         /// <summary>
         /// 余额查询
@@ -395,6 +425,10 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             string subscriptionsonResponse = await message.Content.ReadAsStringAsync();
             return await message.Content.ReadFromJsonAsync<BillingSubscriptionRes>();
         }
+
+
+
+
 
 
 

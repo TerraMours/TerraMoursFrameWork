@@ -27,6 +27,8 @@ using TerraMours_Gpt.Framework.Infrastructure.Middlewares;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
 using TerraMours_Gpt.Domains.GptDomain.IServices;
 using TerraMours_Gpt.Domains.GptDomain.Services;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels;
+using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -113,6 +115,8 @@ MapperConfiguration mapperConfig = new(cfg => {
     cfg.CreateMap<SysRole, SysRoleRes>();
     cfg.CreateMap<SysMenuReq, SysMenus>().ForMember(m => m.MenuId, n => n.Ignore());
     cfg.CreateMap<SysMenus, SysMenuRes>();
+    cfg.CreateMap<KeyOptions, KeyOptionRes>();
+    cfg.CreateMap<Sensitive, SensitiveRes>();
 });
 //注册配置
 IMapper mapper = mapperConfig.CreateMapper();

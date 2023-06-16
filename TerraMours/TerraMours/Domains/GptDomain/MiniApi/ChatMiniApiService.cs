@@ -12,6 +12,7 @@ using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Req;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;
 using TerraMours_Gpt.Domains.GptDomain.IServices;
+using TerraMours_Gpt.Domains.LoginDomain.Contracts.Common;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels;
 
 namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
@@ -28,11 +29,13 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             App.MapGet("/api/v1/Chat/AddSensitive", AddSensitive);
             App.MapGet("/api/v1/Chat/ChangeSensitive", ChangeSensitive);
             App.MapGet("/api/v1/Chat/DeleteSensitive", DeleteSensitive);
+            App.MapPost("/api/v1/Chat/SensitiveList", SensitiveList);
 
             App.MapGet("/api/v1/Chat/UpdateKeyOptionsBalance", UpdateKeyOptionsBalance);
             App.MapGet("/api/v1/Chat/AddKeyOptions", AddKeyOptions);
             App.MapGet("/api/v1/Chat/ChangeKeyOptions", ChangeKeyOptions);
             App.MapGet("/api/v1/Chat/DeleteKeyOptions", DeleteKeyOptions);
+            App.MapPost("/api/v1/Chat/KeyOptionsList", KeyOptionsList);
             App.MapGet("/api/v1/Chat/CheckBalance", CheckBalance);
         }
         [Authorize]
@@ -90,6 +93,18 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             var res =await _chatService.DeleteSensitive(sensitiveId, userId);
             return Results.Ok(res);
         }
+
+        /// <summary>
+        /// 敏感词列表
+        /// </summary>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> SensitiveList(PageReq page)
+        {
+            var res = await _chatService.SensitiveList(page);
+            return Results.Ok(res);
+        }
         #endregion
 
         #region Key管理
@@ -119,6 +134,17 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         {
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
             var res = await _chatService.DeleteKeyOptions(keyId, userId);
+            return Results.Ok(res);
+        }
+        /// <summary>
+        /// key配置列表
+        /// </summary>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> KeyOptionsList(PageReq page)
+        {
+            var res = await _chatService.KeyOptionsList(page);
             return Results.Ok(res);
         }
         /// <summary>
