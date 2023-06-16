@@ -28,6 +28,12 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             App.MapGet("/api/v1/Chat/AddSensitive", AddSensitive);
             App.MapGet("/api/v1/Chat/ChangeSensitive", ChangeSensitive);
             App.MapGet("/api/v1/Chat/DeleteSensitive", DeleteSensitive);
+
+            App.MapGet("/api/v1/Chat/UpdateKeyOptionsBalance", UpdateKeyOptionsBalance);
+            App.MapGet("/api/v1/Chat/AddKeyOptions", AddKeyOptions);
+            App.MapGet("/api/v1/Chat/ChangeKeyOptions", ChangeKeyOptions);
+            App.MapGet("/api/v1/Chat/DeleteKeyOptions", DeleteKeyOptions);
+            App.MapGet("/api/v1/Chat/CheckBalance", CheckBalance);
         }
         [Authorize]
         [Produces("application/octet-stream")]

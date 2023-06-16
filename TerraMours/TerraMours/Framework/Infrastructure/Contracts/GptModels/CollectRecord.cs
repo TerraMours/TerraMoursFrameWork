@@ -32,10 +32,6 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
         /// 添加人IP
         /// </summary>
         public string? IP { get; set; }
-        /// <summary>
-        /// 提问词
-        /// </summary>
-        public string? Prompt { get; set; }
 
         /// <summary>
         /// 是否转发
