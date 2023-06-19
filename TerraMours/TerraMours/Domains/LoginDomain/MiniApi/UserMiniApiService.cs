@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Text.Json;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
@@ -25,6 +26,7 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
             App.MapPost("/api/v1/User/DelUser", DelUser);
             App.MapPost("/api/v1/User/UpdateUser", UpdateUser);
             App.MapPost("/api/v1/User/AddUser", AddUser);
+            App.MapGet("/api/v1/User/GetUser", GetUser);
         }
 		/// <summary>
 		/// 全部用户列表
@@ -96,5 +98,17 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
             var obj = JsonConvert.DeserializeObject<List<RouteObject>>(js);
             return Results.Ok(ApiResponse<SysMenuRouteRes>.Success(new SysMenuRouteRes() { Home= home, Routes= obj }));
 		}
+
+        /// <summary>
+        /// 用户信息
+        /// </summary>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> GetUser()
+        {
+            var userId = long.Parse(_httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.UserData)!);
+            var res = await _sysUserService.GetUserInfoById(userId);
+            return Results.Ok(res);
+        }
     }
 }

@@ -24,7 +24,6 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
             //命名规则取当前的xxxMiniApiService的xxx,然后/api/v1/xxx/方法名
             App.MapPost("/api/v1/Login/Login", Login);
             App.MapPost("/api/v1/Login/Register", Register);
-            App.MapGet("/api/v1/Login/GetUserInfo", GetUserInfo);
             App.MapPost("/api/v1/Login/Logout", Logout);
         }
 
@@ -66,13 +65,6 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
             }
 
             var res = await _sysUserService.Register(userReq);
-            return Results.Ok(res);
-        }
-
-        [Authorize]
-        public async Task<IResult> GetUserInfo() {
-            string userEmail = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Name);
-            var res=await _sysUserService.GetUserInfo(userEmail);
             return Results.Ok(res);
         }
 

@@ -166,18 +166,7 @@ namespace TerraMours.Domains.LoginDomain.Services
 
             return jwtToken;
         }
-        /// <summary>
-        /// 获取用户信息（通过用户email）
-        /// </summary>
-        /// <param name="userEmail"></param>
-        /// <returns></returns>
-        public async Task<ApiResponse<SysUserRes>> GetUserInfo(string userEmail) {
-            var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserEmail == userEmail);
-            if (user == null) {
-                return ApiResponse<SysUserRes>.Fail("用户不存在");
-            }
-            return ApiResponse<SysUserRes>.Success(new SysUserRes(user.UserId,user.UserName, user.RoleId));
-        }
+
         /// <summary>
         /// 全部用户列表 todo：jwt添加权限
         /// </summary>
@@ -276,6 +265,15 @@ namespace TerraMours.Domains.LoginDomain.Services
             }
         }
 
-
+        public async Task<ApiResponse<SysUserDetailRes>> GetUserInfoById(long userId)
+        {
+            var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserId == userId);
+            if (user == null)
+            {
+                return ApiResponse<SysUserDetailRes>.Fail("用户不存在");
+            }
+            var userInfo = _mapper.Map<SysUserDetailRes>(user);
+            return ApiResponse<SysUserDetailRes>.Success(userInfo);
+        }
     }
 }
