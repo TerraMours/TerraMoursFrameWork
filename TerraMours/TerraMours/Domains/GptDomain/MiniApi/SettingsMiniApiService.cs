@@ -13,7 +13,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi
         }
 
         /// <summary>
-        /// 初始化数据
+        /// 初始化数据库数据
         /// </summary>
         /// <returns></returns>
         public async Task<IResult> EnsureSeedData()

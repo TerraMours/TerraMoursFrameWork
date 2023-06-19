@@ -16,6 +16,9 @@ namespace TerraMours_Gpt.Domains.GptDomain.Contracts.Req {
         /// </summary>
         public long? ConversationId { get; set; }
 
+        /// <summary>
+        /// 系统提示词
+        /// </summary>
         public string? SystemMessage { get; set; }
         /// <summary>
         /// 模型

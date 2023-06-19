@@ -105,6 +105,8 @@ builder.Services.AddSwaggerGen(options =>
             new string[] { }
         }
     });
+    //配置XML备注文档
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "TerraMours_Gpt.xml"));
 });
 //automapper
 // 配置映射规则

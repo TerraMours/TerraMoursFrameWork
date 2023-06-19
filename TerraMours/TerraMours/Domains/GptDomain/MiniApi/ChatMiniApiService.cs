@@ -44,6 +44,11 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             App.MapGet("/api/v1/Chat/DeleteChatConversation", DeleteChatConversation);
             App.MapPost("/api/v1/Chat/ChatConversationList", ChatConversationList);
         }
+        /// <summary>
+        /// Chat聊天接口
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
         [Authorize]
         [Produces("application/octet-stream")]
         public async IAsyncEnumerable<string> ChatStream(ChatReq req) {
@@ -61,6 +66,12 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             }
         }
         #region 敏感词
+
+        /// <summary>
+        /// 导入敏感词字典
+        /// </summary>
+        /// <param name="file">敏感词字典文件</param>
+        /// <returns></returns>
         [Authorize]
         public async Task<IResult> ImportSensitive(IFormFile file)
         {
@@ -68,6 +79,12 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             var res =await _chatService.ImportSensitive(file, userId);
             return Results.Ok(res);
         }
+
+        /// <summary>
+        /// 添加敏感词
+        /// </summary>
+        /// <param name="word">敏感词</param>
+        /// <returns></returns>
         [Authorize]
         public async Task<IResult> AddSensitive(string word)
         {
@@ -75,6 +92,13 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             var res =await _chatService.AddSensitive(word, userId);
             return Results.Ok(res);
         }
+
+        /// <summary>
+        /// 修改敏感词
+        /// </summary>
+        /// <param name="sensitiveId">主键id</param>
+        /// <param name="word">敏感词</param>
+        /// <returns></returns>
         [Authorize]
         public async Task<IResult> ChangeSensitive(long sensitiveId, string word)
         {
@@ -82,6 +106,11 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             var res =await _chatService.ChangeSensitive(sensitiveId,word, userId);
             return Results.Ok(res);
         }
+        /// <summary>
+        /// 删除敏感词
+        /// </summary>
+        /// <param name="sensitiveId"></param>
+        /// <returns></returns>
         [Authorize]
         public async Task<IResult> DeleteSensitive(long sensitiveId)
         {
@@ -104,6 +133,11 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         #endregion
 
         #region Key管理
+
+        /// <summary>
+        /// 更新key池的额度使用情况
+        /// </summary>
+        /// <returns></returns>
         [Authorize]
         public async Task<IResult> UpdateKeyOptionsBalance()
         {
@@ -111,6 +145,12 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             var res = await _chatService.UpdateKeyOptionsBalance(userId);
             return Results.Ok(res);
         }
+
+        /// <summary>
+        /// 添加key
+        /// </summary>
+        /// <param name="apiKey">apiKey</param>
+        /// <returns></returns>
         [Authorize]
         public async Task<IResult> AddKeyOptions(string apiKey)
         {
@@ -118,6 +158,13 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             var res = await _chatService.AddKeyOptions(apiKey, userId);
             return Results.Ok(res);
         }
+
+        /// <summary>
+        /// 修改key
+        /// </summary>
+        /// <param name="keyId">id</param>
+        /// <param name="apiKey">apiKey</param>
+        /// <returns></returns>
         [Authorize]
         public async Task<IResult> ChangeKeyOptions(long keyId, string apiKey)
         {
@@ -125,6 +172,12 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             var res = await _chatService.ChangeKeyOptions(keyId, apiKey, userId);
             return Results.Ok(res);
         }
+
+        /// <summary>
+        /// 删除指定key
+        /// </summary>
+        /// <param name="keyId">id</param>
+        /// <returns></returns>
         [Authorize]
         public async Task<IResult> DeleteKeyOptions(long keyId)
         {
@@ -146,7 +199,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         /// <summary>
         /// 检查余额，公共方法
         /// </summary>
-        /// <param name="key"></param>
+        /// <param name="key">openai秘钥</param>
         /// <returns></returns>
         public async Task<IResult> CheckBalance(string key)
         {
@@ -157,18 +210,36 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
 
         #region 会话列表
 
+        /// <summary>
+        /// 添加会话
+        /// </summary>
+        /// <param name="conversationName">会话名称</param>
+        /// <returns></returns>
         [Authorize]
         public async Task<IResult> AddChatConversation(string conversationName) {
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
             var res = await _chatService.AddChatConversation(conversationName, userId);
             return Results.Ok(res);
         }
+
+        /// <summary>
+        /// 修改会话
+        /// </summary>
+        /// <param name="conversationId">id</param>
+        /// <param name="conversationName">会话名称</param>
+        /// <returns></returns>
         [Authorize]
         public async Task<IResult> ChangeChatConversation(long conversationId, string conversationName) {
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
             var res = await _chatService.ChangeChatConversation(conversationId, conversationName, userId);
             return Results.Ok(res);
         }
+
+        /// <summary>
+        /// 删除会话
+        /// </summary>
+        /// <param name="conversationId">id</param>
+        /// <returns></returns>
         [Authorize]
         public async Task<IResult> DeleteChatConversation(long conversationId) {
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
