@@ -94,6 +94,20 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             }
         }
 
+        public async Task<ApiResponse<bool>> DeleteChatRecord(long recordId, long? userId) {
+            var record = await _dbContext.ChatRecords.FirstOrDefaultAsync(m => m.ChatRecordId == recordId && m.Enable == true);
+            record?.Delete(userId);
+            await _dbContext.SaveChangesAsync();
+            return ApiResponse<bool>.Success(true);
+        }
+
+        public async Task<ApiResponse<PagedRes<ChatRes>>> ChatRecordList(ChatRecordReq req) {
+            var query = _dbContext.ChatRecords.Where(m => m.UserId == req.UserId && (string.IsNullOrEmpty(req.QueryString) || m.Message.Contains(req.QueryString)));
+            var total = await query.CountAsync();
+            var item = await query.Skip((req.PageIndex - 1) * req.PageSize).Take(req.PageSize).ToListAsync();
+            var res = _mapper.Map<IEnumerable<ChatRes>>(item);
+            return ApiResponse<PagedRes<ChatRes>>.Success(new PagedRes<ChatRes>(res, total, req.PageIndex, req.PageSize));
+        }
         #endregion
 
         #region 敏感词
@@ -454,13 +468,6 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             string subscriptionsonResponse = await message.Content.ReadAsStringAsync();
             return await message.Content.ReadFromJsonAsync<BillingSubscriptionRes>();
         }
-
-       
-
-
-
-
-
 
 
         #endregion

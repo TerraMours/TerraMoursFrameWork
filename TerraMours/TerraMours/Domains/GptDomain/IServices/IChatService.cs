@@ -13,7 +13,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.IServices {
         /// <param name="req"></param>
         /// <returns></returns>
         IAsyncEnumerable<string> ChatProcessStream(ChatReq req);
-
+        Task<ApiResponse<bool>> DeleteChatRecord(long recordId, long? userId);
+        Task<ApiResponse<PagedRes<ChatRes>>> ChatRecordList(ChatRecordReq req);
         #region 敏感词
         Task<ApiResponse<bool>> ImportSensitive(IFormFile file,long? userId);
         Task<ApiResponse<bool>> AddSensitive(string word, long? userId);

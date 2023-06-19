@@ -25,8 +25,19 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
         /// 会话id
         /// </summary>
         public long? ConversationId { get; set; }
+        /// <summary>
+        /// 使用者IP
+        /// </summary>
         public string? IP { get; set; }
+
+        /// <summary>
+        /// 角色
+        /// </summary>
         public string? Role { get; set; }
+
+        /// <summary>
+        /// 信息
+        /// </summary>
         public string? Message { get; set; }
         /// <summary>
         /// 用户id
@@ -41,7 +52,19 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
         /// </summary>
         public DateTime? ModifyDate { get; set; }
 
+        /// <summary>
+        /// 是否可用 重要
+        /// </summary>
+        public bool Enable { get; set; }
+
         public ChatConversation? ChatConversation { get; set; }
+
+        public ChatRecord Delete(long? userId) {
+            this.Enable = false;
+            //EntityBase
+            this.ModifyDate = DateTime.Now;
+            return this;
+        }
     }
    
 }

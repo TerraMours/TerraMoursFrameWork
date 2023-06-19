@@ -43,7 +43,12 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             App.MapGet("/api/v1/Chat/ChangeChatConversation", ChangeChatConversation);
             App.MapGet("/api/v1/Chat/DeleteChatConversation", DeleteChatConversation);
             App.MapPost("/api/v1/Chat/ChatConversationList", ChatConversationList);
+
+            App.MapGet("/api/v1/Chat/DeleteChatRecord", DeleteChatRecord);
+            App.MapPost("/api/v1/Chat/ChatRecordList", ChatRecordList);
         }
+        #region 聊天记录
+
         /// <summary>
         /// Chat聊天接口
         /// </summary>
@@ -65,6 +70,30 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
                 yield return totalMsg;
             }
         }
+
+        /// <summary>
+        /// 删除聊天记录
+        /// </summary>
+        /// <param name="recordId">id</param>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> DeleteChatRecord(long recordId) {
+            var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
+            var res = await _chatService.DeleteChatRecord(recordId, userId);
+            return Results.Ok(res);
+        }
+        /// <summary>
+        /// 聊天记录列表
+        /// </summary>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> ChatRecordList(ChatRecordReq page) {
+            var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
+            var res = await _chatService.ChatRecordList(page);
+            return Results.Ok(res);
+        }
+        #endregion
         #region 敏感词
 
         /// <summary>
@@ -257,7 +286,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             var res = await _chatService.ChatConversationList(page,userId);
             return Results.Ok(res);
         }
-        
+
         #endregion
+
     }
 }

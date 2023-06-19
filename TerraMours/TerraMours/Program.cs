@@ -120,6 +120,7 @@ MapperConfiguration mapperConfig = new(cfg => {
     cfg.CreateMap<KeyOptions, KeyOptionRes>();
     cfg.CreateMap<Sensitive, SensitiveRes>();
     cfg.CreateMap<ChatConversation, ChatConversationRes>();
+    cfg.CreateMap<ChatRecord, ChatRes>();
 });
 //注册配置
 IMapper mapper = mapperConfig.CreateMapper();
