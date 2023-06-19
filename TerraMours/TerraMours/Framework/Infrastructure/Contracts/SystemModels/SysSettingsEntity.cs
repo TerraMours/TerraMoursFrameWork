@@ -1,5 +1,7 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using k8s.KubeConfigModels;
+using Newtonsoft.Json.Linq;
 using System.ComponentModel.DataAnnotations;
+using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 
 namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.SystemModels
@@ -9,18 +11,50 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.SystemModels
     /// </summary>
     public class SysSettingsEntity:BaseEntity
     {
+        /// <summary>
+        /// 主键
+        /// </summary>
         [Key]
         public long SysSettingsId { get; set; }
         /// <summary>
         /// 新建用户默认信息
         /// </summary>
-        public JObject? Initial { get; set; }
+        public Initial? Initial { get; set; }
 
         /// <summary>
         /// 邮箱配置
         /// </summary>
-        public JObject? Email { get; set; }
+        public Email? Email { get; set; }
 
+        public SysSettingsEntity()
+        {
+        }
 
+        public SysSettingsEntity( Initial? initial, Email? email)
+        {
+            Initial = initial;
+            Email = email;
+            //EntityBase
+            Version = 1;
+            Enable = true;
+            CreateDate = DateTime.Now;
+        }
+
+        public SysSettingsEntity Change(long? userId)
+        {
+            //EntityBase
+            this.ModifyDate = DateTime.Now;
+            this.ModifyID = userId;
+            return this;
+        }
+
+        public SysSettingsEntity ChangeEmail(Email? email,long? userId)
+        {
+            //EntityBase
+            this.Email= email;
+            this.ModifyDate = DateTime.Now;
+            this.ModifyID = userId;
+            return this;
+        }
     }
 }

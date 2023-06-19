@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json.Linq;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours.Domains.LoginDomain.Contracts.Res;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
@@ -7,6 +8,7 @@ using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 using TerraMours.Framework.Infrastructure.EFCore;
 using TerraMours.Framework.Infrastructure.Utils;
 using TerraMours_Gpt.Domains.GptDomain.IServices;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.SystemModels;
 
 namespace TerraMours_Gpt.Domains.GptDomain.Services
 {
@@ -33,6 +35,10 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         /// <exception cref="NotImplementedException"></exception>
         public async Task<ApiResponse<bool>> EnsureSeedData()
         {
+            // 清空数据库
+            //await _dbContext.Database.ExecuteSqlRawAsync("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
+
+            //await _dbContext.Database.MigrateAsync();
             if (!await _dbContext.SysMenus.AnyAsync())
             {
                 await _dbContext.SysMenus.AddRangeAsync(new[]
@@ -77,6 +83,11 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 {
                     new SysUser("terramours@163.com","terramours@163.com".EncryptDES(_sysSettings.Value.secret.Encrypt)){UserId=1,RoleId=1}
                 } );
+            }
+            if (!await _dbContext.SysSettings.AnyAsync())
+            {
+                var settins=new SysSettingsEntity(_sysSettings.Value.initial, _sysSettings.Value.email);
+                await _dbContext.SysSettings.AddAsync(settins);
             }
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
