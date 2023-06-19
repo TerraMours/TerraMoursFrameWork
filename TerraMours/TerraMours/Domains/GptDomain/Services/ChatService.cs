@@ -49,7 +49,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         public async IAsyncEnumerable<string> ChatProcessStream(ChatReq req) {
             //创建会话
             if (req.ConversationId ==null || req.ConversationId == -1) {
-                var conversation = await _dbContext.ChatConversations.AddAsync(new ChatConversation() { ConversationName = req.Prompt.Length < 5 ? req.Prompt : $"{req.Prompt.Substring(0,10)}...", UserId = req.UserId });
+                var conversation = await _dbContext.ChatConversations.AddAsync(new ChatConversation(req.Prompt.Length < 5 ? req.Prompt : $"{req.Prompt.Substring(0, 10)}...", req.UserId));
                 await _dbContext.SaveChangesAsync();
                 req.ConversationId= conversation.Entity.ConversationId;
             }
@@ -310,6 +310,36 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             return ApiResponse<CheckBalanceRes>.Success(new CheckBalanceRes(key, endTime, totalUsage, remaining, totalAmount));
         }
         #endregion
+
+        #region 会话列表
+        public async Task<ApiResponse<bool>> AddChatConversation(string conversationName, long? userId) {
+            await _dbContext.ChatConversations.AddAsync(new ChatConversation(conversationName, userId));
+            await _dbContext.SaveChangesAsync();
+            return ApiResponse<bool>.Success(true);
+        }
+
+        public async Task<ApiResponse<bool>> ChangeChatConversation(long conversationId, string conversationName, long? userId) {
+            var sensitive = await _dbContext.ChatConversations.FirstOrDefaultAsync(m => m.ConversationId == conversationId && m.Enable == true);
+            sensitive?.Change(conversationName, userId);
+            await _dbContext.SaveChangesAsync();
+            return ApiResponse<bool>.Success(true);
+        }
+
+        public async Task<ApiResponse<bool>> DeleteChatConversation(long conversationId, long? userId) {
+            var sensitive = await _dbContext.ChatConversations.FirstOrDefaultAsync(m => m.ConversationId == conversationId && m.Enable == true);
+            sensitive?.Delete(userId);
+            await _dbContext.SaveChangesAsync();
+            return ApiResponse<bool>.Success(true);
+        }
+
+        public async Task<ApiResponse<PagedRes<ChatConversationRes>>> ChatConversationList(PageReq page, long? userId) {
+            var query = _dbContext.ChatConversations.Where(m =>m.UserId==userId &&(  string.IsNullOrEmpty(page.QueryString) || m.ConversationName.Contains(page.QueryString)));
+            var total = await query.CountAsync();
+            var item = await query.Skip((page.PageIndex - 1) * page.PageSize).Take(page.PageSize).ToListAsync();
+            var res = _mapper.Map<IEnumerable<ChatConversationRes>>(item);
+            return ApiResponse<PagedRes<ChatConversationRes>>.Success(new PagedRes<ChatConversationRes>(res, total, page.PageIndex, page.PageSize));
+        }
+        #endregion
         #region 私有方法
         /// <summary>
         /// 敏感词检测
@@ -424,6 +454,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             string subscriptionsonResponse = await message.Content.ReadAsStringAsync();
             return await message.Content.ReadFromJsonAsync<BillingSubscriptionRes>();
         }
+
+       
 
 
 

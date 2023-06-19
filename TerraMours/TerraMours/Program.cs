@@ -117,6 +117,7 @@ MapperConfiguration mapperConfig = new(cfg => {
     cfg.CreateMap<SysMenus, SysMenuRes>();
     cfg.CreateMap<KeyOptions, KeyOptionRes>();
     cfg.CreateMap<Sensitive, SensitiveRes>();
+    cfg.CreateMap<ChatConversation, ChatConversationRes>();
 });
 //注册配置
 IMapper mapper = mapperConfig.CreateMapper();

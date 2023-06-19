@@ -3,6 +3,7 @@ using TerraMours.Domains.LoginDomain.Contracts.Req;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Req;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;
 using TerraMours_Gpt.Domains.LoginDomain.Contracts.Common;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels;
 
 namespace TerraMours_Gpt.Domains.GptDomain.IServices {
     public interface IChatService {
@@ -28,6 +29,13 @@ namespace TerraMours_Gpt.Domains.GptDomain.IServices {
         Task<ApiResponse<bool>> DeleteKeyOptions(long keyId, long? userId);
         Task<ApiResponse<PagedRes<KeyOptionRes>>> KeyOptionsList(PageReq page);
         Task<ApiResponse<CheckBalanceRes>> CheckBalance(string key);
+        #endregion
+
+        #region 会话列表
+        Task<ApiResponse<bool>> AddChatConversation(string conversationName, long? userId);
+        Task<ApiResponse<bool>> ChangeChatConversation(long conversationId, string conversationName, long? userId);
+        Task<ApiResponse<bool>> DeleteChatConversation(long conversationId, long? userId);
+        Task<ApiResponse<PagedRes<ChatConversationRes>>> ChatConversationList(PageReq page, long? userId);
         #endregion
     }
 }

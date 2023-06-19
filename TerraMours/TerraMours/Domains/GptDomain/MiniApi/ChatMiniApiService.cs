@@ -38,6 +38,11 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             App.MapGet("/api/v1/Chat/DeleteKeyOptions", DeleteKeyOptions);
             App.MapPost("/api/v1/Chat/KeyOptionsList", KeyOptionsList);
             App.MapGet("/api/v1/Chat/CheckBalance", CheckBalance);
+
+            App.MapGet("/api/v1/Chat/AddChatConversation", AddChatConversation);
+            App.MapGet("/api/v1/Chat/ChangeChatConversation", ChangeChatConversation);
+            App.MapGet("/api/v1/Chat/DeleteChatConversation", DeleteChatConversation);
+            App.MapPost("/api/v1/Chat/ChatConversationList", ChatConversationList);
         }
         [Authorize]
         [Produces("application/octet-stream")]
@@ -148,6 +153,40 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             var res = await _chatService.CheckBalance(key);
             return Results.Ok(res);
         }
+        #endregion
+
+        #region 会话列表
+
+        [Authorize]
+        public async Task<IResult> AddChatConversation(string conversationName) {
+            var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
+            var res = await _chatService.AddChatConversation(conversationName, userId);
+            return Results.Ok(res);
+        }
+        [Authorize]
+        public async Task<IResult> ChangeChatConversation(long conversationId, string conversationName) {
+            var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
+            var res = await _chatService.ChangeChatConversation(conversationId, conversationName, userId);
+            return Results.Ok(res);
+        }
+        [Authorize]
+        public async Task<IResult> DeleteChatConversation(long conversationId) {
+            var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
+            var res = await _chatService.DeleteChatConversation(conversationId, userId);
+            return Results.Ok(res);
+        }
+        /// <summary>
+        /// 会话列表
+        /// </summary>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> ChatConversationList(PageReq page) {
+            var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
+            var res = await _chatService.ChatConversationList(page,userId);
+            return Results.Ok(res);
+        }
+        
         #endregion
     }
 }

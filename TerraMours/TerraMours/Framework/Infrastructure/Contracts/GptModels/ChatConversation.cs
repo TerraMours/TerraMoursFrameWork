@@ -25,6 +25,34 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
         public long? UserId { get; set; }
 
         public List<ChatRecord>? ChatRecords { get; set; }
+
+        public ChatConversation() {
+        }
+
+        public ChatConversation(string? conversationName, long? userId) {
+            ConversationName = conversationName;
+            UserId = userId;
+            //EntityBase
+            Enable = true;
+            CreateDate = DateTime.Now;
+            CreateID = userId;
+        }
+
+        public ChatConversation Delete(long? userId) {
+            this.Enable = false;
+            //EntityBase
+            this.ModifyDate = DateTime.Now;
+            this.ModifyID = userId;
+            return this;
+        }
+
+        public ChatConversation Change(string conversationName, long? userId) {
+            this.ConversationName = conversationName;
+            //EntityBase
+            this.ModifyDate = DateTime.Now;
+            this.ModifyID = userId;
+            return this;
+        }
     }
 
 }
