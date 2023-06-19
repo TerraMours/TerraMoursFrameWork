@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.SemanticKernel.AI.ChatCompletion;
 using Serilog;
 using StackExchange.Redis;
 using System.IO.Pipelines;
@@ -40,29 +41,19 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         }
         [Authorize]
         [Produces("application/octet-stream")]
-        public async Task<IResult> ChatStream(ChatReq req) {
+        public async IAsyncEnumerable<string> ChatStream(ChatReq req) {
             if (_httpContextAccessor.HttpContext?.Items["key"] !=null) {
                 req.Key = _httpContextAccessor.HttpContext?.Items["key"]?.ToString();
             }
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
             req.UserId=userId;
             req.IP = _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.MapToIPv4().ToString();
-            var enumerable = _chatService.ChatProcessStream(req);
-            var pipe = new Pipe();
-            _ = Task.Run(async () => {
-                try {
-                    await foreach (var item in enumerable.WithCancellation(default)) {
-                        var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(item, new JsonSerializerOptions() {
-                            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
-                        }) + "\n");
-                        await pipe.Writer.WriteAsync(bytes, default);
-                    }
-                }
-                finally {
-                    pipe.Writer.Complete();
-                }
-            }, default);
-            return Results.Ok(pipe.Reader.AsStream());
+            //接口返回的完整内容
+            string totalMsg = "";
+            await foreach (string msg in _chatService.ChatProcessStream(req)) {
+                totalMsg += msg;
+                yield return totalMsg;
+            }
         }
         #region 敏感词
         [Authorize]

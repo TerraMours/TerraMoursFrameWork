@@ -11,7 +11,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.IServices {
         /// </summary>
         /// <param name="req"></param>
         /// <returns></returns>
-        IAsyncEnumerable<ChatRes> ChatProcessStream(ChatReq req);
+        IAsyncEnumerable<string> ChatProcessStream(ChatReq req);
 
         #region 敏感词
         Task<ApiResponse<bool>> ImportSensitive(IFormFile file,long? userId);

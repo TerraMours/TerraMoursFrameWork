@@ -11,9 +11,9 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
             //设置表
             builder.ToTable("ChatRecord");
             //设置表主键
-            builder.HasKey(e => e.ConversationId);
+            builder.HasKey(e => e.ChatRecordId);
             //设置主键自增
-            builder.Property(e => e.ConversationId)
+            builder.Property(e => e.ChatRecordId)
                    .UseIdentityColumn();
 
             // 配置角色关系一个菜单对应的对应多个按钮 关系 外键是 MenuId

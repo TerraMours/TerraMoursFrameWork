@@ -46,27 +46,32 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         /// <param name="req"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async IAsyncEnumerable<ChatRes> ChatProcessStream(ChatReq req) {
+        public async IAsyncEnumerable<string> ChatProcessStream(ChatReq req) {
+            //创建会话
+            if (req.ConversationId ==null || req.ConversationId == -1) {
+                var conversation = await _dbContext.ChatConversations.AddAsync(new ChatConversation() { ConversationName = req.Prompt.Length < 5 ? req.Prompt : $"{req.Prompt.Substring(0,10)}...", UserId = req.UserId });
+                await _dbContext.SaveChangesAsync();
+                req.ConversationId= conversation.Entity.ConversationId;
+            }
+
             var user = await getSysUser(req.UserId);
 
             //敏感词检测
-            if (!Sensitive(req))
+            if (!await Sensitive(req))
             {
-                yield return new ChatRes("触发了敏感词");
+                yield return "触发了敏感词";
             }
-            else if (!await CodeCanAsk(user))
-            {
-                if (user.VipLevel > 0)
-                {
-                    yield return new ChatRes("请勿恶意使用");
+            else if (!await CodeCanAsk(user)) {
+                if (user.VipLevel > 0) {
+                    yield return "请勿恶意使用";
                 }
                 else
-                    yield return new ChatRes($"已超过体验账号每天最大提问次数：{_options.Value.OpenAIOptions.OpenAI.MaxQuestions}次");
+                    yield return $"已超过体验账号每天最大提问次数：{_options.Value.OpenAIOptions.OpenAI.MaxQuestions}次";
             }
             else
             {
                 IKernel kernel = Kernel.Builder.Build();
-                kernel.Config.AddOpenAIChatCompletionService("chat", req.Options.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel,
+                kernel.Config.AddOpenAIChatCompletionService("chat", req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel,
                 req.Key);
                 var chatCompletion = kernel.GetService<IChatCompletion>();
                 var options = new ChatRequestSettings()
@@ -79,21 +84,16 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
                 };
                 var chatHistory = new OpenAIChatHistory();
                 chatHistory.AddUserMessage(req.Prompt);
-                var chatMeg = chatCompletion?.GenerateMessageStreamAsync(chatHistory, options);
                 //接口返回的完整内容
                 string totalMsg = "";
-                await foreach (var msg in chatMeg)
-                {
-                    if (msg != null)
-                    {
-                        totalMsg += msg;
-                    }
-                    yield return new ChatRes(totalMsg);
+                await foreach (string msg in chatCompletion.GenerateMessageStreamAsync(chatHistory, options)) {
+                    totalMsg += msg;
+                    yield return totalMsg;
                 }
 
             }
-            throw new NotImplementedException();
         }
+
         #endregion
 
         #region 敏感词
@@ -316,25 +316,23 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         /// </summary>
         /// <param name="req"></param>
         /// <returns></returns>
-        private bool Sensitive(ChatReq req)
+        private async Task<bool> Sensitive(ChatReq req)
         {
             bool res = true;
-            if (_dbContext.Sensitives.Count(m => req.Prompt.Contains(m.Word)) > 0)
+            if (await _dbContext.Sensitives.CountAsync(m => req.Prompt.Contains(m.Word)) > 0)
             {
-                using (var context = _dbContext)
-                {
-                    //保存提问信息
-                    var problem = new ChatRecord();
-                    problem.IP = req.IP;
-                    problem.Message = "敏感提问：" + req.Prompt;
-                    problem.Role = "user";
-                    problem.CreateDate = DateTime.Now;
-                    problem.UserId = req.UserId;
-                    problem.ModelType=req.Options.ModelType ?? ((int)ModelTypeEnum.ChatGpt);
-                    problem.Model =req.Options.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel;
-                    context.Add(problem);
-                    context.SaveChangesAsync();
-                }
+                //保存提问信息
+                var problem = new ChatRecord();
+                problem.IP = req.IP;
+                problem.ConversationId = req.ConversationId;
+                problem.Message = "敏感提问：" + req.Prompt;
+                problem.Role = "user";
+                problem.CreateDate = DateTime.Now;
+                problem.UserId = req.UserId;
+                problem.ModelType = req.ModelType ?? ((int)ModelTypeEnum.ChatGpt);
+                problem.Model = req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel;
+                _dbContext.ChatRecords.Add(problem);
+                await _dbContext.SaveChangesAsync();
                 res = false;
             }
             return res;
@@ -352,9 +350,9 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         /// 获取当前用户当日提问次数
         /// </summary>
         /// <returns></returns>
-        private async Task<int> TodayVisits(long userId)
+        private async Task<int?> TodayVisits(long userId)
         {
-            return await _helper.GetOrCreateAsync($"TodayVisits_{userId}", async options => { return await _dbContext.ChatRecords.CountAsync(m => m.UserId == userId && m.CreateDate.Date == DateTime.Today.Date && m.Role == "user"); });
+            return await _helper.GetOrCreateAsync($"TodayVisits_{userId}", async options => { return await _dbContext.ChatRecords.CountAsync(m => m.UserId == userId && m.CreateDate.Date == DateTime.Now.Date && m.Role == "user"); });
         }
         /// <summary>
         /// 验证码能否提问
@@ -365,7 +363,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         {
             bool res = true;
             int max = user.VipLevel>0 ? 999 : (_options.Value.OpenAIOptions.OpenAI.MaxQuestions);
-            if (await TodayVisits(user.UserId) > max)
+            var todays = await TodayVisits(user.UserId);
+            if (todays > max)
             {
                 res = false;
             }
