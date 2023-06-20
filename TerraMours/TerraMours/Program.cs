@@ -246,11 +246,13 @@ app.UseHealthChecksUI();
 
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+//if (app.Environment.IsDevelopment())
+//{
+//    app.UseSwagger();
+//    app.UseSwaggerUI();
+//}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 //日志
 app.UseSerilogRequestLogging();
@@ -266,7 +268,7 @@ app.UseHangfireDashboard();// 使用 Hangfire 控制面板
 
 //app.UseStaticFiles();
 app.UseStaticFiles(new StaticFileOptions {
-    FileProvider = new PhysicalFileProvider(AppDomain.CurrentDomain.BaseDirectory + "/Images"),
+    FileProvider = new PhysicalFileProvider(AppDomain.CurrentDomain.BaseDirectory + "/images"),
     RequestPath = ""
 });
 

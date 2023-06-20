@@ -185,7 +185,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             var imgList = new List<string>();
             for (int i = 0; i < imgs.Length; i++) {
                 var fileName = $"{Guid.NewGuid()}.png";
-                var folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images");
+                var folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "images");
                 if (!Directory.Exists(folderPath)) {
                     Directory.CreateDirectory(folderPath);
                 }

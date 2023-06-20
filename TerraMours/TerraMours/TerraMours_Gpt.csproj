@@ -40,7 +40,7 @@
     <Folder Include="Domains\EmailDomain\" />
     <Folder Include="Framework\Infrastructure\IServices\" />
     <Folder Include="Migrations\" />
-    <Folder Include="Images\" />
+    <Folder Include="images\" />
   </ItemGroup>
 
 </Project>
