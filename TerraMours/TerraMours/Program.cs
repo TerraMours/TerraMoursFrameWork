@@ -29,6 +29,11 @@ using TerraMours_Gpt.Domains.GptDomain.IServices;
 using TerraMours_Gpt.Domains.GptDomain.Services;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;
+using TerraMours_Gpt.Domains.GptDomain.Hubs;
+using Hangfire;
+using Hangfire.PostgreSql;
+using Masa.BuildingBlocks.Data;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -121,6 +126,7 @@ MapperConfiguration mapperConfig = new(cfg => {
     cfg.CreateMap<Sensitive, SensitiveRes>();
     cfg.CreateMap<ChatConversation, ChatConversationRes>();
     cfg.CreateMap<ChatRecord, ChatRes>();
+    cfg.CreateMap<ImageRecord, ImageRes>();
 });
 //注册配置
 IMapper mapper = mapperConfig.CreateMapper();
@@ -153,6 +159,8 @@ builder.Services.AddCors(options => {
                           //.AllowCredentials();
                       });
 });
+// Add Hangfire services.
+builder.Services.AddHangfire(config => config.UseStorage(new PostgreSqlStorage(sysSettings.connection.DbConnectionString)));
 
 //redis 缓存 这个实现了IDistributedCache
 builder.Services.AddStackExchangeRedisCache(options =>
@@ -209,6 +217,9 @@ builder.Services.Configure<JsonOptions>(options =>
     options.SerializerOptions.PropertyNameCaseInsensitive = true;
 });
 
+// SignalR
+builder.Services.AddSignalR();
+
 //添加限流中间件
 /*var limiterName = "MyLimiterName";
 
@@ -233,6 +244,7 @@ var app = builder.AddServices(opt => {
 app.UseHealthChecksUI();
 
 
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -244,6 +256,19 @@ if (app.Environment.IsDevelopment())
 app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
+
+// Use Hangfire server and dashboard.
+app.UseHangfireServer(new BackgroundJobServerOptions {
+    Queues = new[] { "default", "img-queue" },
+    WorkerCount = 1
+});
+app.UseHangfireDashboard();// 使用 Hangfire 控制面板
+
+//app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions {
+    FileProvider = new PhysicalFileProvider(AppDomain.CurrentDomain.BaseDirectory + "/Images"),
+    RequestPath = ""
+});
 
 //添加jwt验证
 app.UseAuthentication();
@@ -283,6 +308,8 @@ app.UseEndpoints(endpoints =>
     //endpoints.MapHealthChecksUI(options => options.UIPath = "/health-ui");
 });
 */
+// SignalR hub
+app.MapHub<GraphGenerationHub>("/graphhub");
 
 app.Run();
 

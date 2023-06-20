@@ -26,6 +26,20 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
         /// 提问词
         /// </summary>
         public string? Prompt { get; set; }
+
+        /// <summary>
+        /// 翻译后的提问词
+        /// </summary>
+        public string? PranslatePrompt { get; set; }
+
+        /// <summary>
+        /// 图片尺寸 256/512/1024
+        /// </summary>
+        public int? Size { get; set; }
+        /// <summary>
+        /// 生成图片地址
+        /// </summary>
+        public string? ImagUrl { get; set; }
         /// <summary>
         /// 用户id
         /// </summary>
@@ -47,5 +61,46 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
         /// 点赞量
         /// </summary>
         public int? LikeCount { get; set;}
+
+        public ImageRecord() {
+        }
+
+        public ImageRecord(string? prompt, string? pranslatePrompt, string? imagUrl, int? modelType, string? model,int? size,long? userId) {
+            this.Prompt = prompt;
+            this.PranslatePrompt = pranslatePrompt;
+            this.ImagUrl=imagUrl; 
+            this.ModelType = modelType;
+            this.Model = model;
+            this.Size = size;
+            this.UserId = userId;
+            //EntityBase
+            this.Enable = true;
+            this.CreateDate = DateTime.Now;
+            this.CreateID = userId;
+        }
+
+        public ImageRecord Delete(long? userId) {
+            this.Enable = false;
+            //EntityBase
+            this.ModifyDate = DateTime.Now;
+            this.ModifyID = userId;
+            return this;
+        }
+
+        public ImageRecord Change(string? imagUrl, long? userId) {
+            this.ImagUrl = imagUrl;
+            //EntityBase
+            this.ModifyDate = DateTime.Now;
+            this.ModifyID = userId;
+            return this;
+        }
+
+        public ImageRecord Share(long? userId) {
+            this.IsPublic = true;
+            //EntityBase
+            this.ModifyDate = DateTime.Now;
+            this.ModifyID = userId;
+            return this;
+        }
     }
 }

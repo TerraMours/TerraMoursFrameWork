@@ -7,4 +7,4 @@ EXPOSE 80
 FROM base AS final
 WORKDIR /app
 COPY .  /app
-ENTRYPOINT ["dotnet", "TerraMours.dll"]
+ENTRYPOINT ["dotnet", "TerraMours_Gpt.dll"]
