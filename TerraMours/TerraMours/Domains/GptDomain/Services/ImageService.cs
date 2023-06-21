@@ -233,7 +233,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
                 return req.Prompt;
             }
             IKernel kernel = Kernel.Builder.Build();
-            kernel.Config.AddOpenAIChatCompletionService("chat", req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel,
+            kernel.Config.AddOpenAIChatCompletionService(req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel,
             req.Key);
             var chatCompletion = kernel.GetService<IChatCompletion>();
             var options = new ChatRequestSettings() {

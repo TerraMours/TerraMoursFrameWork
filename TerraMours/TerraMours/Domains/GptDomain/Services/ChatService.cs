@@ -70,8 +70,10 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             }
             else
             {
+                _logger.Information($"chat配置：{_options.Value.OpenAIOptions.OpenAI.ChatModel},key:{req.Key}");
+                await _dbContext.ChatRecords.AddAsync(new ChatRecord() { Role = "User", Message = req.Prompt, Model = req.Model, ModelType = req.ModelType, ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId });
                 IKernel kernel = Kernel.Builder.Build();
-                kernel.Config.AddOpenAIChatCompletionService("chat", req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel,
+                kernel.Config.AddOpenAIChatCompletionService(req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel,
                 req.Key);
                 var chatCompletion = kernel.GetService<IChatCompletion>();
                 var options = new ChatRequestSettings()
@@ -90,7 +92,9 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
                     totalMsg += msg;
                     yield return totalMsg;
                 }
-
+                //记录
+                await _dbContext.ChatRecords.AddAsync(new ChatRecord() { Role = "Assistant", Message = totalMsg, Model = req.Model, ModelType = req.ModelType, ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId });
+                await _dbContext.SaveChangesAsync();
             }
         }
 
@@ -102,7 +106,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         }
 
         public async Task<ApiResponse<PagedRes<ChatRes>>> ChatRecordList(ChatRecordReq req) {
-            var query = _dbContext.ChatRecords.Where(m => m.UserId == req.UserId && (string.IsNullOrEmpty(req.QueryString) || m.Message.Contains(req.QueryString)));
+            var query = _dbContext.ChatRecords.Where(m => m.UserId == req.UserId && req.ConversationId==req.ConversationId && (string.IsNullOrEmpty(req.QueryString) || m.Message.Contains(req.QueryString)));
             var total = await query.CountAsync();
             var item = await query.Skip((req.PageIndex - 1) * req.PageSize).Take(req.PageSize).ToListAsync();
             var res = _mapper.Map<IEnumerable<ChatRes>>(item);

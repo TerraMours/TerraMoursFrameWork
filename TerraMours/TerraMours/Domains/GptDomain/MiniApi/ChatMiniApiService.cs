@@ -63,11 +63,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
             req.UserId=userId;
             req.IP = _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.MapToIPv4().ToString();
-            //接口返回的完整内容
-            string totalMsg = "";
             await foreach (string msg in _chatService.ChatProcessStream(req)) {
-                totalMsg += msg;
-                yield return totalMsg;
+                yield return msg;
             }
         }
 
@@ -89,7 +86,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         /// <returns></returns>
         [Authorize]
         public async Task<IResult> ChatRecordList(ChatRecordReq page) {
-            var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
+            page.UserId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
             var res = await _chatService.ChatRecordList(page);
             return Results.Ok(res);
         }

@@ -64,9 +64,9 @@ namespace TerraMours.Domains.LoginDomain.Services
                 var token = CreateToken(claims);
 
                 //更新数据库用户的的token
-                user.Token = token;
-                _dbContext.SysUsers.Update(user);
-                _dbContext.SaveChanges();
+                //user.Token = token;
+                //_dbContext.SysUsers.Update(user);
+                //_dbContext.SaveChanges();
 
                 return ApiResponse<LoginRes>.Success(new LoginRes(token, token));
             }

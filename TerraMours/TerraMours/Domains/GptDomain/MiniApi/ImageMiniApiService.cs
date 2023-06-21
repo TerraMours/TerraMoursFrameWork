@@ -23,6 +23,9 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         /// <returns></returns>
         [Authorize]
         public async Task<IResult> GenerateGraph(ImageReq req) {
+            if (_httpContextAccessor.HttpContext?.Items["key"] != null) {
+                req.Key = _httpContextAccessor.HttpContext?.Items["key"]?.ToString();
+            }
             req.UserId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
             var res = await _imageService.GenerateGraph(req);
             return Results.Ok(res);

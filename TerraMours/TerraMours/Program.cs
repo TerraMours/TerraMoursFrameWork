@@ -153,10 +153,10 @@ builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddCors(options => {
     options.AddPolicy(name: "MyPolicy",
                       policy => {
-                          policy.AllowAnyOrigin()
+                          policy.SetIsOriginAllowed(_ => true)
                                    .AllowAnyMethod()
-                                   .AllowAnyHeader();
-                          //.AllowCredentials();
+                                   .AllowAnyHeader()
+                          .AllowCredentials();
                       });
 });
 // Add Hangfire services.
