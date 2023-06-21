@@ -127,6 +127,7 @@ MapperConfiguration mapperConfig = new(cfg => {
     cfg.CreateMap<ChatConversation, ChatConversationRes>();
     cfg.CreateMap<ChatRecord, ChatRes>();
     cfg.CreateMap<ImageRecord, ImageRes>();
+    cfg.CreateMap<PromptOptions, PromptOptionRes>();
 });
 //注册配置
 IMapper mapper = mapperConfig.CreateMapper();

@@ -358,6 +358,110 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             return ApiResponse<PagedRes<ChatConversationRes>>.Success(new PagedRes<ChatConversationRes>(res, total, page.PageIndex, page.PageSize));
         }
         #endregion
+
+        #region 系统提示词
+        /// <summary>
+        /// 导入系统提示词(文件)
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        public async Task<ApiResponse<bool>> ImportPromptOptionByFile(IFormFile file, long? userId)
+        {
+            try
+            {
+                    // 打开文本文件
+                    using (StreamReader sr = new StreamReader(file.OpenReadStream()))
+                    {
+                        string line=sr.ReadToEnd();
+
+                        await ImportPromptOption(JsonSerializer.Deserialize<List<PromptOptionReq>>(line),userId);
+                    }
+                return ApiResponse<bool>.Success(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error inserting data into PromptOption table");
+                return ApiResponse<bool>.Fail(ex.ToString());
+            }
+        }
+
+        /// <summary>
+        /// 导入系统提示词
+        /// </summary>
+        /// <param name="prompts"></param>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        public async Task<ApiResponse<bool>> ImportPromptOption(List<PromptOptionReq> prompts, long? userId)
+        {
+            try
+            {
+                foreach (var item in prompts)
+                {
+                    _dbContext.PromptOptions.Add(new PromptOptions(item.Act,item.Prompt,userId));
+                }
+                await _dbContext.SaveChangesAsync();
+                return ApiResponse<bool>.Success(true);
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<bool>.Fail(ex.ToString());
+            }
+        }
+        /// <summary>
+        /// 添加系统提示词
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
+        public async Task<ApiResponse<bool>> AddPromptOption(PromptDetailReq req)
+        {
+            var prompt = new PromptOptions(req.Act, req.Prompt, req.UserId);
+            await _dbContext.PromptOptions.AddAsync(prompt);
+            await _dbContext.SaveChangesAsync();
+            return ApiResponse<bool>.Success(true);
+        }
+        /// <summary>
+        /// 修改系统提示词
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
+        public async Task<ApiResponse<bool>> ChangePromptOption(PromptDetailReq req)
+        {
+            var PromptOption = await _dbContext.PromptOptions.FirstOrDefaultAsync(m => m.PromptId == req.PromptId && m.Enable == true);
+            PromptOption?.Change(req.Act, req.Prompt,req.UserId);
+            await _dbContext.SaveChangesAsync();
+            return ApiResponse<bool>.Success(true);
+        }
+        /// <summary>
+        /// 删除系统提示词
+        /// </summary>
+        /// <param name="promptId"></param>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task<ApiResponse<bool>> DeletePromptOption(long promptId, long? userId)
+        {
+            var PromptOption = await _dbContext.PromptOptions.FirstOrDefaultAsync(m => m.PromptId == promptId && m.Enable == true);
+            PromptOption?.Delete(userId);
+            await _dbContext.SaveChangesAsync();
+            return ApiResponse<bool>.Success(true);
+        }
+        /// <summary>
+        /// 系统提示词列表
+        /// </summary>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task<ApiResponse<PagedRes<PromptOptionRes>>> PromptOptionList(PageReq page)
+        {
+            var query = _dbContext.PromptOptions.Where(m => string.IsNullOrEmpty(page.QueryString) || m.Act.Contains(page.QueryString) || m.Prompt.Contains(page.QueryString));
+            var total = await query.CountAsync();
+            var item = await query.Skip((page.PageIndex - 1) * page.PageSize).Take(page.PageSize).ToListAsync();
+            var res = _mapper.Map<IEnumerable<PromptOptionRes>>(item);
+            return ApiResponse<PagedRes<PromptOptionRes>>.Success(new PagedRes<PromptOptionRes>(res, total, page.PageIndex, page.PageSize));
+        }
+        #endregion
+
         #region 私有方法
         /// <summary>
         /// 敏感词检测

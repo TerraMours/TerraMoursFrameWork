@@ -44,6 +44,13 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             App.MapGet("/api/v1/Chat/DeleteChatConversation", DeleteChatConversation);
             App.MapPost("/api/v1/Chat/ChatConversationList", ChatConversationList);
 
+            App.MapPost("/api/v1/Chat/ImportPromptOptionByFile", ImportPromptOptionByFile);
+            App.MapPost("/api/v1/Chat/ImportPromptOption", ImportPromptOption);
+            App.MapPost("/api/v1/Chat/AddPromptOption", AddPromptOption);
+            App.MapPost("/api/v1/Chat/ChangePromptOption", ChangePromptOption);
+            App.MapGet("/api/v1/Chat/DeletePromptOption", DeletePromptOption);
+            App.MapPost("/api/v1/Chat/PromptOptionList", PromptOptionList);
+
             App.MapGet("/api/v1/Chat/DeleteChatRecord", DeleteChatRecord);
             App.MapPost("/api/v1/Chat/ChatRecordList", ChatRecordList);
         }
@@ -286,5 +293,82 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
 
         #endregion
 
+        #region 系统提示词
+        /// <summary>
+        /// 导入系统提示词(文件)
+        /// </summary>
+        /// <param name="file">系统提示词(文件)</param>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> ImportPromptOptionByFile(IFormFile file)
+        {
+            var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
+            var res = await _chatService.ImportPromptOptionByFile(file, userId);
+            return Results.Ok(res);
+        }
+
+        /// <summary>
+        /// 导入系统提示词json
+        /// </summary>
+        /// <param name="prompts">敏感词字典json</param>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> ImportPromptOption(List<PromptOptionReq> prompts)
+        {
+            var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
+            var res = await _chatService.ImportPromptOption(prompts, userId);
+            return Results.Ok(res);
+        }
+
+        /// <summary>
+        /// 添加系统提示词
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> AddPromptOption(PromptDetailReq req)
+        {
+            req.UserId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
+            var res = await _chatService.AddPromptOption(req);
+            return Results.Ok(res);
+        }
+
+        /// <summary>
+        /// 修改系统提示词
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> ChangePromptOption(PromptDetailReq req)
+        {
+            req.UserId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
+            var res = await _chatService.ChangePromptOption(req);
+            return Results.Ok(res);
+        }
+        /// <summary>
+        /// 删除系统提示词
+        /// </summary>
+        /// <param name="promptId"></param>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> DeletePromptOption(long promptId)
+        {
+            var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
+            var res = await _chatService.DeletePromptOption(promptId, userId);
+            return Results.Ok(res);
+        }
+
+        /// <summary>
+        /// 系统提示词列表
+        /// </summary>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> PromptOptionList(PageReq page)
+        {
+            var res = await _chatService.PromptOptionList(page);
+            return Results.Ok(res);
+        }
+        #endregion
     }
 }

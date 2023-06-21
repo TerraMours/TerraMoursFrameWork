@@ -23,6 +23,10 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
         /// </summary>
         public ImagOptions? ImagOptions { get; set; }
 
+        public GptOptionsEntity()
+        {
+        }
+
         public GptOptionsEntity(OpenAIOptions? openAIOptions, ImagOptions? imagOptions)
         {
             OpenAIOptions = openAIOptions;

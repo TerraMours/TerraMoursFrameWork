@@ -38,5 +38,14 @@ namespace TerraMours_Gpt.Domains.GptDomain.IServices {
         Task<ApiResponse<bool>> DeleteChatConversation(long conversationId, long? userId);
         Task<ApiResponse<PagedRes<ChatConversationRes>>> ChatConversationList(PageReq page, long? userId);
         #endregion
+
+        #region 系统提示词
+        Task<ApiResponse<bool>> ImportPromptOptionByFile(IFormFile file, long? userId);
+        Task<ApiResponse<bool>> ImportPromptOption(List<PromptOptionReq> prompts, long? userId);
+        Task<ApiResponse<bool>> AddPromptOption(PromptDetailReq req);
+        Task<ApiResponse<bool>> ChangePromptOption(PromptDetailReq req);
+        Task<ApiResponse<bool>> DeletePromptOption(long promptId, long? userId);
+        Task<ApiResponse<PagedRes<PromptOptionRes>>> PromptOptionList(PageReq page);
+        #endregion
     }
 }
