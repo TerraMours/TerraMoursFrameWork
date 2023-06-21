@@ -15,6 +15,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             _imageService = imageService;
             App.MapPost("/api/v1/Image/GenerateGraph", GenerateGraph);
             App.MapGet("/api/v1/Image/ShareImage", ShareImage);
+            App.MapPost("/api/v1/Image/ShareImageList", ShareImageList);
+            App.MapPost("/api/v1/Image/MyImageList", MyImageList);
         }
         /// <summary>
         /// 生成图片

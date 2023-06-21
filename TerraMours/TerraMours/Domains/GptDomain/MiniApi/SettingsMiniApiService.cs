@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours_Gpt.Domains.GptDomain.IServices;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
 
 namespace TerraMours_Gpt.Domains.GptDomain.MiniApi
 {
@@ -18,6 +19,10 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi
             App.MapGet("/api/v1/Settings/EnsureSeedData", EnsureSeedData);
             App.MapGet("/api/v1/Settings/GetEmailSettings", GetEmailSettings);
             App.MapPost("/api/v1/Settings/ChangeEmailSettings", ChangeEmailSettings);
+            App.MapGet("/api/v1/Settings/GetOpenAIOptions", GetOpenAIOptions);
+            App.MapPost("/api/v1/Settings/ChangeOpenAIOptions", ChangeOpenAIOptions);
+            App.MapGet("/api/v1/Settings/GetImagOptions", GetImagOptions);
+            App.MapPost("/api/v1/Settings/ChangeImagOptions", ChangeImagOptions);
             _httpContextAccessor = httpContextAccessor;
         }
 
@@ -52,6 +57,54 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi
         {
             var userId = long.Parse(_httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.UserData)!);
             var res = await _settingsService.ChangeEmailSettings(email,userId);
+            return Results.Ok(res);
+        }
+
+        /// <summary>
+        /// 获取AI配置
+        /// </summary>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> GetOpenAIOptions()
+        {
+            var res = await _settingsService.GetOpenAIOptions();
+            return Results.Ok(res);
+        }
+
+        /// <summary>
+        /// 修改AI配置
+        /// </summary>
+        /// <param name="email">邮箱信息</param>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> ChangeOpenAIOptions(OpenAIOptions openAIOptions)
+        {
+            var userId = long.Parse(_httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.UserData)!);
+            var res = await _settingsService.ChangeOpenAIOptions(openAIOptions, userId);
+            return Results.Ok(res);
+        }
+
+        /// <summary>
+        /// 获取图片生成配置
+        /// </summary>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> GetImagOptions()
+        {
+            var res = await _settingsService.GetImagOptions();
+            return Results.Ok(res);
+        }
+
+        /// <summary>
+        /// 修改图片生成配置
+        /// </summary>
+        /// <param name="email">邮箱信息</param>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> ChangeImagOptions(ImagOptions imagOptions)
+        {
+            var userId = long.Parse(_httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.UserData)!);
+            var res = await _settingsService.ChangeImagOptions(imagOptions, userId);
             return Results.Ok(res);
         }
     }

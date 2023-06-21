@@ -134,6 +134,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
                 {
                     SaveImg(prompt, pranslatePrompt, item, request.ModelType, request.Model,request.Size, request.UserId);
                 }
+                await _dbContext.SaveChangesAsync();
             }
             return imgList;
         }

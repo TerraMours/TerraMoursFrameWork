@@ -8,6 +8,8 @@ using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 using TerraMours.Framework.Infrastructure.EFCore;
 using TerraMours.Framework.Infrastructure.Utils;
 using TerraMours_Gpt.Domains.GptDomain.IServices;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.SystemModels;
 
 namespace TerraMours_Gpt.Domains.GptDomain.Services
@@ -20,12 +22,14 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         private readonly FrameworkDbContext _dbContext;
         private readonly Serilog.ILogger _logger;
         private readonly IOptionsSnapshot<SysSettings> _sysSettings;
+        private readonly IOptionsSnapshot<GptOptions> _gptOptions;
 
-        public SeedDataService(FrameworkDbContext dbContext, Serilog.ILogger logger, IOptionsSnapshot<SysSettings> sysSettings)
+        public SeedDataService(FrameworkDbContext dbContext, Serilog.ILogger logger, IOptionsSnapshot<SysSettings> sysSettings, IOptionsSnapshot<GptOptions> gptOptions)
         {
             _dbContext = dbContext;
             _logger = logger;
             _sysSettings = sysSettings;
+            _gptOptions = gptOptions;
         }
 
         /// <summary>
@@ -88,6 +92,11 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             {
                 var settins=new SysSettingsEntity(_sysSettings.Value.initial, _sysSettings.Value.email);
                 await _dbContext.SysSettings.AddAsync(settins);
+            }
+            if (!await _dbContext.GptOptions.AnyAsync())
+            {
+                var settins = new GptOptionsEntity(_gptOptions.Value.OpenAIOptions, _gptOptions.Value.ImagOptions);
+                await _dbContext.GptOptions.AddAsync(settins);
             }
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
