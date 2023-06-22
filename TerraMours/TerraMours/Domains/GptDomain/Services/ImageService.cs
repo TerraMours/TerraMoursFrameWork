@@ -170,16 +170,26 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         /// <returns></returns>
         private async Task<List<string>> CreateSDImg(ImageReq form) {
             _logger.Information("CreateSDImg");
+            SDOptions sDOptions = new SDOptions();
+            var imageOption = await _dbContext.GptOptions.FirstOrDefaultAsync();
+            if(imageOption ==null)
+            {
+                sDOptions = _options.Value.ImagOptions.SDOptions.FirstOrDefault();
+            }
+            else
+            {
+                sDOptions = form.Model != null ? imageOption.ImagOptions.SDOptions?.FirstOrDefault(m => m.Label == form.Model) : imageOption.ImagOptions.SDOptions?.FirstOrDefault();
+            }
             var httpClient = new HttpClient();
             SDImgReq dto = new SDImgReq();
             dto.prompt = form.Prompt;
             dto.steps = 20;
-            dto.negative_prompt = _options.Value.ImagOptions.SDOptions?.Negative_Prompt ?? "wrong hands";
-            var requestUrl = $"{_options.Value.ImagOptions.SDOptions?.BaseUrl}/sdapi/v1/txt2img";
+            dto.negative_prompt = sDOptions?.Negative_Prompt ?? "wrong hands";
+            var requestUrl = $"{sDOptions?.BaseUrl}/sdapi/v1/txt2img";
             var content = new StringContent(JsonConvert.SerializeObject(dto), Encoding.UTF8, "application/json");
-            _logger.Information($"调用SD api，参数：{content}");
+            _logger.Information($"调用SD api，url:{requestUrl},参数：{await content.ReadAsStringAsync()}");
             var message = await httpClient.PostAsync(requestUrl, content);
-            _logger.Information($"调用SD api，返回结果：{new StringContent(JsonConvert.SerializeObject(message), Encoding.UTF8, "application/json")}");
+            _logger.Information($"调用SD api，返回结果：{await new StringContent(JsonConvert.SerializeObject(message), Encoding.UTF8, "application/json").ReadAsStringAsync()}");
             SDImgRes response = await message.Content.ReadFromJsonAsync<SDImgRes>();
             //保存文件
             var imgs = response?.images;
@@ -234,7 +244,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
                 return req.Prompt;
             }
             IKernel kernel = Kernel.Builder.Build();
-            kernel.Config.AddOpenAIChatCompletionService(req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel,
+            kernel.Config.AddOpenAIChatCompletionService(_options.Value.OpenAIOptions.OpenAI.ChatModel,
             req.Key);
             var chatCompletion = kernel.GetService<IChatCompletion>();
             var options = new ChatRequestSettings() {

@@ -21,9 +21,10 @@
         /// <summary>
         /// 生成图片的静态文件地址
         /// </summary>
-        public string ImagFileBaseUrl { get; set; }
+        public string? ImagFileBaseUrl { get; set; }
 
-        public SDOptions SDOptions { get; set; }
+        //Stable Diffusion 配置
+        public List<SDOptions>? SDOptions { get; set; }
     }
     /// <summary>
     /// Stable Diffusion 配置
@@ -31,13 +32,17 @@
     public class SDOptions
     {
         /// <summary>
+        /// 标签
+        /// </summary>
+        public string? Label { get; set; }
+        /// <summary>
         /// Stable Diffusion API地址
         /// </summary>
-        public string BaseUrl { get; set; }
+        public string? BaseUrl { get; set; }
         /// <summary>
         /// 反向描述词
         /// </summary>
-        public string Negative_Prompt { get; set; }
+        public string? Negative_Prompt { get; set; }
     }
     /// <summary>
     /// OpenAI配置
