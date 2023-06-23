@@ -85,7 +85,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             {
                 await _dbContext.SysUsers.AddRangeAsync(new[]
                 {
-                    new SysUser("terramours@163.com","terramours@163.com".EncryptDES(_sysSettings.Value.secret.Encrypt)){UserId=1,RoleId=1}
+                    new SysUser("terramours@163.com","terramours@163.com".EncryptDES(_sysSettings.Value.secret.Encrypt)){UserId=1,RoleId=1,Gender="1"}
                 } );
             }
             if (!await _dbContext.SysSettings.AnyAsync())

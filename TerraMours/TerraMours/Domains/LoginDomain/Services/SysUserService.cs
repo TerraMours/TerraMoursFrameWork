@@ -202,7 +202,7 @@ namespace TerraMours.Domains.LoginDomain.Services
         /// <exception cref="NotImplementedException"></exception>
         public async Task<ApiResponse<bool>> UpdateUser(SysUserDetailRes userReq)
         {
-            if(await _dbContext.SysUsers.AnyAsync(m=>m.UserEmail==userReq.UserEmail && m.UserId != userReq.UserId))
+            if(await _dbContext.SysUsers.AnyAsync(m=>m.UserEmail==userReq.UserEmail && m.UserId != userReq.UserId && m.Enable==true))
             {
                 return ApiResponse<bool>.Fail("邮箱已注册！");
             }
