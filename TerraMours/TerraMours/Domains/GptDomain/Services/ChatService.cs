@@ -201,7 +201,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         /// <exception cref="NotImplementedException"></exception>
         public async Task<ApiResponse<PagedRes<SensitiveRes>>> SensitiveList(PageReq page)
         {
-            var query = _dbContext.Sensitives.Where(m=> string.IsNullOrEmpty(page.QueryString) || m.Word.Contains(page.QueryString));
+            var query = _dbContext.Sensitives.Where(m=>m.Enable==true && ( string.IsNullOrEmpty(page.QueryString) || m.Word.Contains(page.QueryString)));
             var total = await query.CountAsync();
             var item = await query.Skip((page.PageIndex - 1) * page.PageSize).Take(page.PageSize).ToListAsync();
             var res = _mapper.Map<IEnumerable<SensitiveRes>>(item);

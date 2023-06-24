@@ -192,6 +192,7 @@ namespace TerraMours.Domains.LoginDomain.Services
             }
             user?.Delete();
             await _dbContext.SaveChangesAsync();
+            await _helper.RemoveAsync("GetAllUserList");
             return ApiResponse<bool>.Success(true);
         }
         /// <summary>
@@ -210,6 +211,7 @@ namespace TerraMours.Domains.LoginDomain.Services
             _mapper.Map(userReq, user);
             _dbContext.SysUsers.Update(user);
             await _dbContext.SaveChangesAsync();
+            await _helper.RemoveAsync("GetAllUserList");
             return ApiResponse<bool>.Success(true);
         }
         /// <summary>
@@ -230,6 +232,7 @@ namespace TerraMours.Domains.LoginDomain.Services
             _mapper.Map(userReq, user);
             await _dbContext.SysUsers.AddAsync(user);
             await _dbContext.SaveChangesAsync();
+            await _helper.RemoveAsync("GetAllUserList");
             return ApiResponse<bool>.Success(true);
         }
 

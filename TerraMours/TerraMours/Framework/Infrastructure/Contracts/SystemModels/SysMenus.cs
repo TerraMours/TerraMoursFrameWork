@@ -70,9 +70,8 @@ namespace TerraMours.Framework.Infrastructure.Contracts.SystemModels
         /// 新建角色 
         /// </summary>
         /// <param name="roleName"></param>
-        public SysMenus(IMapper mapper, SysMenuReq req)
+        public SysMenus(SysMenuReq req)
         {
-            mapper.Map(req, this);
             HasChildren = false;
             //EntityBase
             Version = 1;
