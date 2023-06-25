@@ -108,7 +108,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         public async Task<ApiResponse<PagedRes<ChatRes>>> ChatRecordList(ChatRecordReq req) {
             var query = _dbContext.ChatRecords.Where(m => m.UserId == req.UserId && req.ConversationId==req.ConversationId && (string.IsNullOrEmpty(req.QueryString) || m.Message.Contains(req.QueryString)));
             var total = await query.CountAsync();
-            var item = await query.Skip((req.PageIndex - 1) * req.PageSize).Take(req.PageSize).ToListAsync();
+            var item = await query.Skip((req.PageIndex - 1) * req.PageSize).Take(req.PageSize).OrderByDescending(m=>m.CreateDate).ToListAsync();
             var res = _mapper.Map<IEnumerable<ChatRes>>(item);
             return ApiResponse<PagedRes<ChatRes>>.Success(new PagedRes<ChatRes>(res, total, req.PageIndex, req.PageSize));
         }
