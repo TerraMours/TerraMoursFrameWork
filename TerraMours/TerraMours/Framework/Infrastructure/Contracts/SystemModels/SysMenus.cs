@@ -1,4 +1,7 @@
-﻿namespace TerraMours.Framework.Infrastructure.Contracts.SystemModels
+﻿using AutoMapper;
+using TerraMours.Domains.LoginDomain.Contracts.Req;
+
+namespace TerraMours.Framework.Infrastructure.Contracts.SystemModels
 {
     /// <summary>
     /// 系统菜单表
@@ -59,5 +62,39 @@
         /// 每个菜单的按钮 外键就是 MenuId 自己
         /// </summary>
         public List<SysMenuButtons>? SysMenuButtons { get; set; }
+
+        public SysMenus()
+        {
+        }
+        /// <summary>
+        /// 新建角色 
+        /// </summary>
+        /// <param name="roleName"></param>
+        public SysMenus(SysMenuReq req)
+        {
+            HasChildren = false;
+            //EntityBase
+            Version = 1;
+            Enable = true;
+            CreateDate = DateTime.Now;
+        }
+        /// <summary>
+        /// 删除
+        /// </summary>
+        /// <returns></returns>
+        public SysMenus Delete()
+        {
+            this.Enable = false;
+            return this;
+        }
+        /// <summary>
+        /// 修改
+        /// </summary>
+        /// <returns></returns>
+        public SysMenus Change(IMapper mapper, SysMenuReq req)
+        {
+            mapper.Map(req, this);
+            return this;
+        }
     }
 }

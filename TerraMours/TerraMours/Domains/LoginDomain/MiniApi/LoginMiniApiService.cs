@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
 using TerraMours.Domains.LoginDomain.IServices;
 using TerraMours.Framework.Infrastructure.Redis;
@@ -10,12 +11,13 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
     public class LoginMiniApiService : ServiceBase
     {
         private readonly ISysUserService _sysUserService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly Serilog.ILogger _log;
         private readonly IDistributedCacheHelper _helper;
-
-        public LoginMiniApiService(IServiceCollection services, ISysUserService sysUserService, Serilog.ILogger log, IDistributedCacheHelper helper) : base()
+        public LoginMiniApiService(IServiceCollection services, ISysUserService sysUserService, IHttpContextAccessor httpContextAccessor, Serilog.ILogger log, IDistributedCacheHelper helper) : base() 
         {
             _sysUserService = sysUserService;
+            _httpContextAccessor = httpContextAccessor;
             _log = log;
             _helper = helper;
             //此处/api/v1/Test 这里是swagger显示的路由

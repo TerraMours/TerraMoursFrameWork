@@ -1,4 +1,7 @@
-﻿namespace TerraMours.Framework.Infrastructure.Contracts.SystemModels
+﻿using Microsoft.Extensions.Options;
+using TerraMours.Framework.Infrastructure.Contracts.Commons;
+
+namespace TerraMours.Framework.Infrastructure.Contracts.SystemModels
 {
     /// <summary>
     /// 系统用户表
@@ -61,7 +64,7 @@
         /// <summary>
         /// 角色id
         /// </summary>
-        public string? RoleId { get; set; }
+        public long? RoleId { get; set; }
         /// <summary>
         /// 角色名称
         /// </summary>
@@ -87,6 +90,22 @@
         /// </summary>
         public DateTime? ExpireTime { get; set; }
 
+        #region 扩展字段
+        /// <summary>
+        /// 会员等级
+        /// </summary>
+        public int? VipLevel { get; set; }
+
+        /// <summary>
+        /// 会员过期时间
+        /// </summary>
+        public DateTime? VipExpireTime { get; set; }
+
+        /// <summary>
+        /// 图像剩余次数
+        /// </summary>
+        public int? ImageCount { get; set; }
+        #endregion
         /// <summary>
         /// 
         /// </summary>
@@ -107,6 +126,10 @@
             //EntityBase
             Enable = true;
             CreateDate = DateTime.Now;
+        }
+
+        public SysUser()
+        {
         }
 
         /// <summary>

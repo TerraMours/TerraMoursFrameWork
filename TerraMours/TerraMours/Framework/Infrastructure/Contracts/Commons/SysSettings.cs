@@ -1,7 +1,11 @@
-﻿namespace TerraMours.Framework.Infrastructure.Contracts.Commons
-{
-    public class SysSettings
-    {
+﻿using Newtonsoft.Json.Linq;
+
+namespace TerraMours.Framework.Infrastructure.Contracts.Commons {
+    public class SysSettings {
+        /// <summary>
+        /// 新增用户默认角色ID
+        /// </summary>
+        public Initial initial { get; set; }
         public JWT jwt { get; set; }
         public Connection connection { get; set; }
         public Secret secret { get; set; }
@@ -10,18 +14,16 @@
     }
 
 
-    public class Connection
-    {
+    public class Connection {
         public string DBType { get; set; }
         public string DbConnectionString { get; set; }
         public string RedisHost { get; set; }
         public string RedisInstanceName { get; set; }
     }
 
-    public class JWT
-    {
+    public class JWT {
         /// <summary>
-        /// token 密钥
+        /// Token 密钥
         /// </summary>
         public string SecretKey { get; set; }
         /// <summary>
@@ -42,8 +44,7 @@
     /// <summary>
     /// 加解密配置key
     /// </summary>
-    public class Secret
-    {
+    public class Secret {
         /// <summary>
         /// 加密key
         /// </summary>
@@ -54,8 +55,7 @@
     /// <summary>
     /// 邮箱配置
     /// </summary>
-    public class Email
-    {
+    public class Email {
         /// <summary>
         /// 邮箱host qq是 smtp.qq.com
         /// </summary>
@@ -80,6 +80,19 @@
         /// 邮箱的授权码而不是密码
         /// </summary>
         public string SenderPassword { get; set; }
+    }
+    /// <summary>
+    /// 初始化参数
+    /// </summary>
+    public class Initial {
+        /// <summary>
+        /// 默认角色
+        /// </summary>
+        public long InitialRoleId { get; set; }
+        /// <summary>
+        /// 初始密码
+        /// </summary>
+        public string InitialPassWord { get; set; }
 
     }
 }

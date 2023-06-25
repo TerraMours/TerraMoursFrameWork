@@ -1,4 +1,6 @@
-﻿namespace TerraMours.Domains.LoginDomain.Contracts.Req
+﻿using System.Text.Json.Serialization;
+
+namespace TerraMours.Domains.LoginDomain.Contracts.Req
 {
     public class SysUserReq
     {

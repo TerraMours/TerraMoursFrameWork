@@ -1,9 +1,10 @@
-﻿using TerraMours.Domains.LoginDomain.Contracts.Req;
+﻿using TerraMours.Domains.LoginDomain.Contracts.Common;
+using TerraMours.Domains.LoginDomain.Contracts.Req;
 
 namespace TerraMours.Domains.LoginDomain.IServices
 {
     public interface IEmailService
     {
-        Task<string> CreateCheckCode(EmailReq req);
+        Task<ApiResponse<bool>> CreateCheckCode(EmailReq req);
     }
 }
