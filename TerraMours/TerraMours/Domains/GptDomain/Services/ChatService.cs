@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Azure;
 using k8s.KubeConfigModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -88,9 +89,15 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
                 chatHistory.AddUserMessage(req.Prompt);
                 //接口返回的完整内容
                 string totalMsg = "";
-                await foreach (string msg in chatCompletion.GenerateMessageStreamAsync(chatHistory, options)) {
-                    totalMsg += msg;
-                    yield return totalMsg;
+                var messageStream = chatCompletion.GenerateMessageStreamAsync(chatHistory, options);
+                if (messageStream == null) {
+                    yield return "服务器发生了未知的错误";
+                }
+                await foreach (string msg in messageStream) {
+                    if (msg != null) {
+                        totalMsg += msg;
+                        yield return totalMsg;
+                    }
                 }
                 //记录
                 await _dbContext.ChatRecords.AddAsync(new ChatRecord() { Role = "Assistant", Message = totalMsg, Model = req.Model, ModelType = req.ModelType, ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId });
@@ -496,7 +503,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         /// <returns></returns>
         private async Task<SysUser?> getSysUser(long userId)
         {
-            return await _helper.GetOrCreateAsync($"SysUser_{userId}", async options => { return await _dbContext.SysUsers.FirstOrDefaultAsync(m => m.UserId == userId); });
+            return await _dbContext.SysUsers.FirstOrDefaultAsync(m => m.UserId == userId);
+            //return await _helper.GetOrCreateAsync($"SysUser_{userId}", async options => { return await _dbContext.SysUsers.FirstOrDefaultAsync(m => m.UserId == userId); });
         }
         /// <summary>
         /// 获取当前用户当日提问次数
@@ -504,7 +512,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         /// <returns></returns>
         private async Task<int?> TodayVisits(long userId)
         {
-            return await _helper.GetOrCreateAsync($"TodayVisits_{userId}", async options => { return await _dbContext.ChatRecords.CountAsync(m => m.UserId == userId && m.CreateDate.Date == DateTime.Now.Date && m.Role == "user"); });
+            return await _dbContext.ChatRecords.CountAsync(m => m.UserId == userId && m.CreateDate.Date == DateTime.Now.Date && m.Role == "user");
+            //return await _helper.GetOrCreateAsync($"TodayVisits_{userId}", async options => { return await _dbContext.ChatRecords.CountAsync(m => m.UserId == userId && m.CreateDate.Date == DateTime.Now.Date && m.Role == "user"); });
         }
         /// <summary>
         /// 验证码能否提问

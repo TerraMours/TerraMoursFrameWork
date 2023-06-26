@@ -63,28 +63,26 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         /// <returns></returns>
         [Authorize]
         [Produces("application/octet-stream")]
-        public async Task<IResult> ChatStream(ChatReq req) {
-            if (_httpContextAccessor.HttpContext?.Items["key"] !=null) {
+        public async Task ChatStream(ChatReq req, CancellationToken cancellationToken = default) {
+            if (_httpContextAccessor.HttpContext?.Items["key"] != null) {
                 req.Key = _httpContextAccessor.HttpContext?.Items["key"]?.ToString();
             }
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
-            req.UserId=userId;
+            req.UserId = userId;
             req.IP = _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.MapToIPv4().ToString();
-            var enumerable = _chatService.ChatProcessStream(req);
-            var pipe = new Pipe();
-            _ = Task.Run(async () => {
-                try {
-                    await foreach (var item in enumerable.WithCancellation(default)) {
-                        var bytes = Encoding.UTF8.GetBytes(item);
-                        await pipe.Writer.WriteAsync(bytes, default);
-                    }
-                }
-                finally {
-                    pipe.Writer.Complete();
-                }
-            }, default);
-            return Results.Ok(pipe.Reader.AsStream());
+
+            var response = _httpContextAccessor.HttpContext.Response;
+            response.ContentType = "application/octet-stream";
+
+            await foreach (string msg in _chatService.ChatProcessStream(req)) {
+                var buffer = Encoding.UTF8.GetBytes(msg + Environment.NewLine);
+                await response.Body.WriteAsync(buffer.AsMemory(0, buffer.Length), cancellationToken);
+                await response.Body.FlushAsync(cancellationToken);
+            }
+
+            await response.Body.DisposeAsync();
         }
+
 
         /// <summary>
         /// 删除聊天记录
