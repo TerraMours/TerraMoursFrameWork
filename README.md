@@ -108,7 +108,7 @@ docker run --name terramours_gpt_server -v /data/terramoursgpt/server/images:/ap
   <div style="display:flex;">
   	<div style="padding-right:24px;">
   		<p>QQ交流群</p>
-      <img src="https://www.raokun.top/upload/2023/06/qq.png" style="width:200px" />
+      <img src="https://www.raokun.top/upload/2023/06/%E4%BA%A4%E6%B5%81%E7%BE%A4.png" style="width:200px" />
   	</div>
 		<div>
 			<p>添加本人微信，欢迎来技术交流，业务咨询</p>
@@ -125,8 +125,12 @@ docker run --name terramours_gpt_server -v /data/terramoursgpt/server/images:/ap
   		<p>微信</p>
       <img src="https://www.raokun.top/upload/2023/04/%E5%BE%AE%E4%BF%A1%E6%94%B6%E6%AC%BE.jpg" style="width:200px" />
   	</div>
+	<div style="padding-right:24px;">
+  		<p>支付宝</p>
+      <img src="https://www.raokun.top/upload/2023/04/%E6%94%AF%E4%BB%98%E5%AE%9D%E6%94%B6%E6%AC%BE.jpg" style="width:200px" />
+  	</div>
   </div>
 
 ## License
 
-[MIT © TerraMours-2023](./LICENSE)
+[Apache License © TerraMours-2023](./LICENSE)
