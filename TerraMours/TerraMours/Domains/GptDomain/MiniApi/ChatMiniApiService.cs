@@ -63,16 +63,27 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         /// <returns></returns>
         [Authorize]
         [Produces("application/octet-stream")]
-        public async IAsyncEnumerable<string> ChatStream(ChatReq req) {
+        public async Task<IResult> ChatStream(ChatReq req) {
             if (_httpContextAccessor.HttpContext?.Items["key"] !=null) {
                 req.Key = _httpContextAccessor.HttpContext?.Items["key"]?.ToString();
             }
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
             req.UserId=userId;
             req.IP = _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.MapToIPv4().ToString();
-            await foreach (string msg in _chatService.ChatProcessStream(req)) {
-                yield return msg;
-            }
+            var enumerable = _chatService.ChatProcessStream(req);
+            var pipe = new Pipe();
+            _ = Task.Run(async () => {
+                try {
+                    await foreach (var item in enumerable.WithCancellation(default)) {
+                        var bytes = Encoding.UTF8.GetBytes(item);
+                        await pipe.Writer.WriteAsync(bytes, default);
+                    }
+                }
+                finally {
+                    pipe.Writer.Complete();
+                }
+            }, default);
+            return Results.Ok(pipe.Reader.AsStream());
         }
 
         /// <summary>
