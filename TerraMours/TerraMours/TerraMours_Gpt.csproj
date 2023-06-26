@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>0ba3b4a1-682e-475d-afde-df860f98f856</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,12 +31,16 @@
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageReference Include="Serilog.Sinks.Seq" Version="5.2.2" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+    <PackageReference Include="Microsoft.SemanticKernel" Version="0.15.230609.2-preview" />
+	<PackageReference Include="Hangfire" Version="1.8.2" />
+	<PackageReference Include="Hangfire.PostgreSql" Version="1.19.12" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Domains\EmailDomain\" />
     <Folder Include="Framework\Infrastructure\IServices\" />
     <Folder Include="Migrations\" />
+    <Folder Include="images\" />
   </ItemGroup>
 
 </Project>

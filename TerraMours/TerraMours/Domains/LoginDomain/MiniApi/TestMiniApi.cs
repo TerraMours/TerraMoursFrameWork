@@ -6,7 +6,7 @@ public class TestMiniApi : ServiceBase
 {
     private readonly Serilog.ILogger _logger;
 
-    public TestMiniApi(IServiceCollection services, Serilog.ILogger logger) : base(services)
+    public TestMiniApi(IServiceCollection services, Serilog.ILogger logger) : base()
     {
         _logger = logger;
         //此处/api/v1/Test 这里是swagger显示的路由

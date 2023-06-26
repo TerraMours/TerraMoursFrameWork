@@ -90,6 +90,22 @@ namespace TerraMours.Framework.Infrastructure.Contracts.SystemModels
         /// </summary>
         public DateTime? ExpireTime { get; set; }
 
+        #region 扩展字段
+        /// <summary>
+        /// 会员等级
+        /// </summary>
+        public int? VipLevel { get; set; }
+
+        /// <summary>
+        /// 会员过期时间
+        /// </summary>
+        public DateTime? VipExpireTime { get; set; }
+
+        /// <summary>
+        /// 图像剩余次数
+        /// </summary>
+        public int? ImageCount { get; set; }
+        #endregion
         /// <summary>
         /// 
         /// </summary>

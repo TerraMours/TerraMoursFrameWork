@@ -1,69 +1,132 @@
-# TerraMours
+<div align="center">
+	<h1>TerraMours Gpt Api</h1>
+</div>
 
-#### 官方文档地址如下：
+![](https://img.shields.io/github/stars/TerraMours/TerraMours_Gpt_Api) ![](https://img.shields.io/github/forks/TerraMours/TerraMours_Gpt_Api)
 
-[中文 ](https://terramours.site/)| [English](https://terramours.site/en/)
+中文简介 | [English](README-EN.md)
 
-#### 简单的说明：
+## 简介
 
-系统通用框架：通过实际项目来学习各个技术栈：
+[TerraMours Gpt Api](https://github.com/TerraMours/TerraMours_Gpt_Api) 是基于[TerraMoursFrameWork](https://github.com/TerraMours/TerraMoursFrameWork) 开发完善的智能助手项目。技术包括 Net7+MinimalApi+EF Core+Postgresql+Seq+FluentApi ...... 
 
-包括但不限于：
+核心功能：
 
-后端：Net7+MinimalApi+EF Core+Postgresql+Seq+FluentApi ......
+1.对https://ai.terramours.site/基于Semantic Kernel的重构，实现多AI模型的聊天
 
-前端：Vue + TS
+2.Stable Diffusion和chatgpt的dallE模型的图片生成
 
-## 如何贡献
+## 特性
 
-1. Fork & Clone
-2. Create Feature/name(your github id)/issuexxx branch
-3. Commit with commit message, like `solve issue xxx，add xxx`
-4. Create Pull Request
+##### 1.SignalR+Hangfire 实现后台任务队列和实时通讯
 
-如果你希望参与贡献，欢迎 [Pull Requests](https://github.com/firstsaofan/TerraMours/pulls),或给我们 [Issues](https://github.com/firstsaofan/TerraMours/issues)
+##### 2.automapper 模型自动映射
+
+##### 3.对接口统一返回结果中间件ApiResponse{code,message,data}封装
+
+##### 4.Semantic Kernel 调用chatgpt
+
+##### 5.日志服务Seq
+
+##### 6.Stable Diffusion 图片生成
+
+## 开发功能
+- **AI聊天**：发起聊天，基于Semantic Kernel，目前写了chatgpt，常用模型：gpt-3.5-turbo，可支持gpt-3.5-turbo-16K,gpt-4
+- **AI绘图**：基于Stable Diffusion和chatgpt的dallE模型的图片生成
+- **聊天记录**：聊天记录管理，查询使用者会话信息。（todo：创建微调模型）
+- **敏感词管理**: 敏感词管理，自定义敏感词过滤，加强系统安全
+- **Key池管理**：Key池管理，支持管理者添加多个key组成Key池，调用ai接口时轮询，加强稳定性
+- **系统提示词**：系统提示词，添加各种角色提示词，让使用者能更好的使用ai对话。
 
 
+## 在线预览
 
-## todo:
+- [TerraMours Admin 预览地址](https://demo.terramours.site/)
 
-##### 1.将对应的模型改为充血模型，对实体类初始化的时候自动对时间，创建人，username也初始化为xxxx,后面用户可以修改
+## 文档
 
-##### 2.引入automapper 对模型自动映射
-
-##### 3.对接口统一返回结果ApiResponse{code,message,data}封装，写自定义中间件即可
-
-##### 4.基于aop编程，编写工作单元或者filter或者fody对所有进行数据库操作的方法进行自动savechange() //==不一定做==
-
-##### 5.引入日志服务Seq，
-
-##### 6.增加审计表，对所有的数据库的非查操作进行记录
-
-##### 7.完成整个登录注册用户角色权限模块
-
-##### 8.引入ES以及OpenTelemetry
-
-### 计划
-
-##### 基于现在的GptWeb项目https://ai.terramours.site/基于Semantic Kernel重构，剩下的就是功能性的开发了。
-
-##### 计划此项目也会开源
-
-##### 后续协议可能会添加上996.iuc协议，如果需要使用该项目代码请注意。
-
-## 开源协议
-
-### MIT
-
-[![LICENSE](https://camo.githubusercontent.com/8e53c4e75f0baf3b1cb6815fef6dc3648d0bb6b0d5fcda5a82a88b678893caf8/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f6c6963656e73652d416e74692532303939362d626c75652e7376673f7374796c653d666c61742d737175617265)](https://github.com/996icu/996.ICU/blob/master/LICENSE) 
-
-## 个人博客地址：
-
-firstsaofan:https://www.firstsaofan.top/
-
-raokun:https://www.raokun.top/
+- [项目文档地址](https://terramours.site/)
 
 
 
-## 贡献者
+## 前端服务
 
+- [TerraMours_Gpt_Web](https://github.com/TerraMours/TerraMours_Gpt_Web)
+
+
+## 安装使用
+
+- 环境配置
+  **.net7 SDK**
+
+- 克隆代码
+
+```bash
+git clone https://github.com/TerraMours/TerraMours_Admin_Web.git
+```
+
+
+
+## Docker 部署
+
+* 构建镜像
+
+```bash
+docker build -t terramours_gpt_server .
+```
+
+* 创建挂载目录（目录自定义）
+
+```bash
+mkdir /data/terramoursgpt/server/images
+```
+
+- Docker 部署 terramoursweb
+
+```bash
+docker run --name terramours_gpt_server -v /data/terramoursgpt/server/images:/app/images  -p 3115:80  -d terramours_gpt_server
+```
+
+- 访问 swagger
+
+打开本地浏览器访问`http://localhost/swagger/index.html`
+
+
+
+## 开源作者
+
+[@Raokun](https://github.com/raokun)
+
+[@firstsaofan](https://github.com/orgs/TerraMours/people/firstsaofan)
+
+
+
+## 交流
+
+`TerraMours Admin` 是完全开源免费的项目，在帮助开发者更方便地进行中大型管理系统开发，同时也提供微信和 QQ 交流群，使用问题欢迎在群内提问。
+
+  <div style="display:flex;">
+  	<div style="padding-right:24px;">
+  		<p>QQ交流群</p>
+      <img src="https://www.raokun.top/upload/2023/06/qq.png" style="width:200px" />
+  	</div>
+		<div>
+			<p>添加本人微信，欢迎来技术交流，业务咨询</p>
+			<img src="https://www.raokun.top/upload/2023/04/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20230405192146.jpg" style="width:180px" />
+		</div>
+  </div>
+
+## 捐赠
+
+如果你觉得这个项目对你有帮助，可以请 TerraMours 组员喝杯咖啡表示支持，TerraMours 开源的动力离不开各位的支持和鼓励。
+
+  <div style="display:flex;">
+  	<div style="padding-right:24px;">
+  		<p>微信</p>
+      <img src="https://www.raokun.top/upload/2023/04/%E5%BE%AE%E4%BF%A1%E6%94%B6%E6%AC%BE.jpg" style="width:200px" />
+  	</div>
+  </div>
+
+## License
+
+[MIT © TerraMours-2023](./LICENSE)

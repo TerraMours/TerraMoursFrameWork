@@ -12,7 +12,7 @@
         /// <summary>
         /// 角色
         /// </summary>
-        public string? RoleId { get; set; }
+        public long? RoleId { get; set; }
         /// <summary>
         /// 邮箱 可以登录使用
         /// </summary>

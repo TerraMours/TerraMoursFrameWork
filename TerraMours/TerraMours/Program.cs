@@ -23,6 +23,17 @@ using TerraMours.Framework.Infrastructure.Filters;
 using TerraMours.Framework.Infrastructure.Redis;
 using TerraMours.Domains.LoginDomain.Contracts.Res;
 using TerraMours.Framework.Infrastructure.Services;
+using TerraMours_Gpt.Framework.Infrastructure.Middlewares;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
+using TerraMours_Gpt.Domains.GptDomain.IServices;
+using TerraMours_Gpt.Domains.GptDomain.Services;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels;
+using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;
+using TerraMours_Gpt.Domains.GptDomain.Hubs;
+using Hangfire;
+using Hangfire.PostgreSql;
+using Masa.BuildingBlocks.Data;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,7 +49,7 @@ IConfiguration configuration = builder.Configuration;
 //添加配置文件与实体类绑定
 builder.Services.Configure<SysSettings>(configuration.GetSection("SysSettings"));
 var sysSettings = builder.Configuration.GetSection("SysSettings").Get<SysSettings>() ?? throw new Exception("用户或者密码不正确");
-
+builder.Services.Configure<GptOptions>(configuration.GetSection("GptOptions"));
 //注入日志
 // 配置 Serilog 日志记录器
 
@@ -99,16 +110,24 @@ builder.Services.AddSwaggerGen(options =>
             new string[] { }
         }
     });
+    //配置XML备注文档
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "TerraMours_Gpt.xml"));
 });
 //automapper
 // 配置映射规则
 MapperConfiguration mapperConfig = new(cfg => {
     cfg.CreateMap<SysUserDetailRes, SysUser>().ForMember(m => m.UserId, n => n.Ignore());
-    cfg.CreateMap<SysUser, SysUserDetailRes>().ForMember(m => m.UserId, n => n.Ignore());
+    cfg.CreateMap<SysUser, SysUserDetailRes>();
     cfg.CreateMap<SysUserAddReq, SysUser>().ForMember(m => m.UserId, n => n.Ignore());
     cfg.CreateMap<SysRole, SysRoleRes>();
     cfg.CreateMap<SysMenuReq, SysMenus>().ForMember(m => m.MenuId, n => n.Ignore());
     cfg.CreateMap<SysMenus, SysMenuRes>();
+    cfg.CreateMap<KeyOptions, KeyOptionRes>();
+    cfg.CreateMap<Sensitive, SensitiveRes>();
+    cfg.CreateMap<ChatConversation, ChatConversationRes>();
+    cfg.CreateMap<ChatRecord, ChatRes>();
+    cfg.CreateMap<ImageRecord, ImageRes>();
+    cfg.CreateMap<PromptOptions, PromptOptionRes>();
 });
 //注册配置
 IMapper mapper = mapperConfig.CreateMapper();
@@ -127,15 +146,22 @@ builder.Services.AddScoped<ISysUserService, SysUserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ISysRoleService, SysRoleService>();
 builder.Services.AddScoped<ISysMenuService, SysMenuService>();
+builder.Services.AddScoped<ISeedDataService, SeedDataService>();
+builder.Services.AddScoped<ISettingsService, SettingsService>();
+//gpt
+builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddCors(options => {
     options.AddPolicy(name: "MyPolicy",
                       policy => {
-                          policy.AllowAnyOrigin()
+                          policy.SetIsOriginAllowed(_ => true)
                                    .AllowAnyMethod()
-                                   .AllowAnyHeader();
-                          //.AllowCredentials();
+                                   .AllowAnyHeader()
+                          .AllowCredentials();
                       });
 });
+// Add Hangfire services.
+builder.Services.AddHangfire(config => config.UseStorage(new PostgreSqlStorage(sysSettings.connection.DbConnectionString)));
 
 //redis 缓存 这个实现了IDistributedCache
 builder.Services.AddStackExchangeRedisCache(options =>
@@ -192,6 +218,9 @@ builder.Services.Configure<JsonOptions>(options =>
     options.SerializerOptions.PropertyNameCaseInsensitive = true;
 });
 
+// SignalR
+builder.Services.AddSignalR();
+
 //添加限流中间件
 /*var limiterName = "MyLimiterName";
 
@@ -207,24 +236,42 @@ builder.Services.AddSingleton(options);
 //很简单的只是将miniapi代替以前的传统的controller而已,
 //var app = builder.Build();
 //添加masa miniapi
-var app = builder.AddServices();
+var app = builder.AddServices(opt => {
+    opt.DisableAutoMapRoute = true;
+});
 
 //健康检查
 //app.UseHealthChecks("/health");
 app.UseHealthChecksUI();
 
 
+
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+//if (app.Environment.IsDevelopment())
+//{
+//    app.UseSwagger();
+//    app.UseSwaggerUI();
+//}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 //日志
 app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
+
+// Use Hangfire server and dashboard.
+app.UseHangfireServer(new BackgroundJobServerOptions {
+    Queues = new[] { "default", "img-queue" },
+    WorkerCount = 1
+});
+app.UseHangfireDashboard();// 使用 Hangfire 控制面板
+
+//app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions {
+    FileProvider = new PhysicalFileProvider(AppDomain.CurrentDomain.BaseDirectory + "/images"),
+    RequestPath = ""
+});
 
 //添加jwt验证
 app.UseAuthentication();
@@ -234,7 +281,8 @@ app.UseAuthorization();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
 app.UseCors("MyPolicy");
-
+//请求中间件
+app.UseMiddleware<KeyMiddleware>();
 
 //使用minimal api
 app.MapHealthChecks("/health", new HealthCheckOptions()
@@ -263,6 +311,8 @@ app.UseEndpoints(endpoints =>
     //endpoints.MapHealthChecksUI(options => options.UIPath = "/health-ui");
 });
 */
+// SignalR hub
+app.MapHub<GraphGenerationHub>("/graphhub");
 
 app.Run();
 

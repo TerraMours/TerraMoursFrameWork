@@ -58,15 +58,15 @@ namespace TerraMours.Domains.LoginDomain.Services
                 var claims = new List<Claim>();
                 claims.Add(new Claim(ClaimTypes.Name, user.UserEmail));
                 claims.Add(new Claim(ClaimTypes.Role, user.RoleId.ToString()));
-                //claims.Add(new Claim(ClaimTypes.NameIdentifier, user.));
+                claims.Add(new Claim(ClaimTypes.UserData, user.UserId.ToString()));
 
                 //生成token
                 var token = CreateToken(claims);
 
                 //更新数据库用户的的token
-                user.Token = token;
-                _dbContext.SysUsers.Update(user);
-                _dbContext.SaveChanges();
+                //user.Token = token;
+                //_dbContext.SysUsers.Update(user);
+                //_dbContext.SaveChanges();
 
                 return ApiResponse<LoginRes>.Success(new LoginRes(token, token));
             }
@@ -166,18 +166,7 @@ namespace TerraMours.Domains.LoginDomain.Services
 
             return jwtToken;
         }
-        /// <summary>
-        /// 获取用户信息（通过用户email）
-        /// </summary>
-        /// <param name="userEmail"></param>
-        /// <returns></returns>
-        public async Task<ApiResponse<SysUserRes>> GetUserInfo(string userEmail) {
-            var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserEmail == userEmail);
-            if (user == null) {
-                return ApiResponse<SysUserRes>.Fail("用户不存在");
-            }
-            return ApiResponse<SysUserRes>.Success(new SysUserRes(user.UserId,user.UserName, user.RoleId));
-        }
+
         /// <summary>
         /// 全部用户列表 todo：jwt添加权限
         /// </summary>
@@ -203,6 +192,7 @@ namespace TerraMours.Domains.LoginDomain.Services
             }
             user?.Delete();
             await _dbContext.SaveChangesAsync();
+            await _helper.RemoveAsync("GetAllUserList");
             return ApiResponse<bool>.Success(true);
         }
         /// <summary>
@@ -213,7 +203,7 @@ namespace TerraMours.Domains.LoginDomain.Services
         /// <exception cref="NotImplementedException"></exception>
         public async Task<ApiResponse<bool>> UpdateUser(SysUserDetailRes userReq)
         {
-            if(await _dbContext.SysUsers.AnyAsync(m=>m.UserEmail==userReq.UserEmail && m.UserId != userReq.UserId))
+            if(await _dbContext.SysUsers.AnyAsync(m=>m.UserEmail==userReq.UserEmail && m.UserId != userReq.UserId && m.Enable==true))
             {
                 return ApiResponse<bool>.Fail("邮箱已注册！");
             }
@@ -221,6 +211,7 @@ namespace TerraMours.Domains.LoginDomain.Services
             _mapper.Map(userReq, user);
             _dbContext.SysUsers.Update(user);
             await _dbContext.SaveChangesAsync();
+            await _helper.RemoveAsync("GetAllUserList");
             return ApiResponse<bool>.Success(true);
         }
         /// <summary>
@@ -241,6 +232,7 @@ namespace TerraMours.Domains.LoginDomain.Services
             _mapper.Map(userReq, user);
             await _dbContext.SysUsers.AddAsync(user);
             await _dbContext.SaveChangesAsync();
+            await _helper.RemoveAsync("GetAllUserList");
             return ApiResponse<bool>.Success(true);
         }
 
@@ -276,6 +268,15 @@ namespace TerraMours.Domains.LoginDomain.Services
             }
         }
 
-
+        public async Task<ApiResponse<SysUserDetailRes>> GetUserInfoById(long userId)
+        {
+            var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserId == userId);
+            if (user == null)
+            {
+                return ApiResponse<SysUserDetailRes>.Fail("用户不存在");
+            }
+            var userInfo = _mapper.Map<SysUserDetailRes>(user);
+            return ApiResponse<SysUserDetailRes>.Success(userInfo);
+        }
     }
 }

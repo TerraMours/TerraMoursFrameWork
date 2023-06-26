@@ -30,8 +30,9 @@ namespace TerraMours.Domains.LoginDomain.Services
         /// <returns></returns>
         public async Task<ApiResponse<bool>> AddMenu(SysMenuReq req)
         {
-            var menu = new SysMenus(_mapper,req);
-            _dbContext.SysMenus.Add(menu);
+            var menu =new SysMenus(req);
+            _mapper.Map(req, menu);
+            await _dbContext.SysMenus.AddAsync(menu);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
         }
@@ -88,7 +89,7 @@ namespace TerraMours.Domains.LoginDomain.Services
         /// <exception cref="NotImplementedException"></exception>
         public async Task<ApiResponse<List<SysMenuRes>>> GetMenuTree(long? roleId)
         {
-            var menusModels = await _dbContext.SysMenus.ToListAsync(); // 获取所有菜单
+            var menusModels = await _dbContext.SysMenus.Where(m => m.Enable == true).ToListAsync(); // 获取所有菜单
             //角色已有的菜单
             var userMenusIds = await _dbContext.SysRolesToMenus.Where(m => m.RoleId == roleId && m.Enable == true).Select(m => m.MenuId).ToListAsync();
             var menus = _mapper.Map<List<SysMenuRes>>(menusModels);
