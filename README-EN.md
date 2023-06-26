@@ -91,7 +91,7 @@ Open the local browser and access `http://localhost/swagger/index.html`
   <div style="display:flex;">
   	<div style="padding-right:24px;">
   		<p>QQ Communication Group</p>
-      <img src="https://www.raokun.top/upload/2023/06/qq.png" style="width:200px" />
+      <img src="https://www.raokun.top/upload/2023/06/%E4%BA%A4%E6%B5%81%E7%BE%A4.png" style="width:200px" />
   	</div>
 		<div>
 			<p>Add me to WeChat for technical exchange and business consultation.</p>
@@ -108,8 +108,12 @@ If you find this project helpful, you can buy a drink for the TerraMours team to
   		<p>WeChat</p>
       <img src="https://www.raokun.top/upload/2023/04/%E5%BE%AE%E4%BF%A1%E6%94%B6%E6%AC%BE.jpg" style="width:200px" />
   	</div>
+	  <div style="padding-right:24px;">
+  		<p>AliPay</p>
+      <img src="https://www.raokun.top/upload/2023/04/%E6%94%AF%E4%BB%98%E5%AE%9D%E6%94%B6%E6%AC%BE.jpg" style="width:200px" />
+  	</div>
   </div>
 
 ## License
 
-[MIT © TerraMours-2023](./LICENSE)
+[Apache License © TerraMours-2023](./LICENSE)
