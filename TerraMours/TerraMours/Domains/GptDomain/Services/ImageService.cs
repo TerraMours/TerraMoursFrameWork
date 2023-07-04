@@ -1,5 +1,4 @@
-﻿using Azure.AI.OpenAI;
-using Hangfire;
+﻿using Hangfire;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel.AI.ChatCompletion;
@@ -23,6 +22,10 @@ using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using TerraMours_Gpt.Domains.LoginDomain.Contracts.Common;
 using k8s.KubeConfigModels;
+using OpenAI.GPT3.Managers;
+using OpenAI.GPT3;
+using OpenAI.GPT3.ObjectModels.RequestModels;
+using OpenAI.GPT3.ObjectModels;
 
 namespace TerraMours_Gpt.Domains.GptDomain.Services {
     public class ImageService : IImageService {
@@ -118,12 +121,12 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             string pranslatePrompt= string.Empty;
             switch (request.ModelType) {
                 case 0:
-                    imgList = await CreateGptImg(request);
+                    imgList = await CreateGptImgOpenAi(request);
                     break;
                 case 1:
                 default:
                     //判断用户输入的是不是中文，是中文调用chatgpt翻译
-                    pranslatePrompt= await Translate(request);
+                    pranslatePrompt= await TranslateOpenAi(request);
                     request.Prompt = pranslatePrompt;
                     imgList = await CreateSDImg(request);
                     break;
@@ -231,6 +234,56 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             }
             return imgList;
         }
+
+        /// <summary>
+        /// chatgpt生成图片(OpenAi)
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
+        private async Task<List<string>> CreateGptImgOpenAi(ImageReq req)
+        {
+            var size = StaticValues.ImageStatics.Size.Size512;
+            switch (req.Size)
+            {
+                case 256:
+                    size = StaticValues.ImageStatics.Size.Size256; break;
+                case 1024:
+                    size = StaticValues.ImageStatics.Size.Size1024; break;
+                default:
+                    size = StaticValues.ImageStatics.Size.Size1024; break;
+            }
+            var openAiService = new OpenAIService(new OpenAiOptions()
+            {
+                ApiKey = req.Key,
+                BaseDomain = _options.Value.OpenAIOptions.OpenAI.BaseUrl
+            });
+            //接受传进来的prompt生成一张或者多张图片
+            var imageResult = await openAiService.Image.CreateImage(new ImageCreateRequest
+            {
+                //提示词
+                Prompt = req.Prompt,
+                //生成图片数量
+                N = req.Count,
+                Size = size,
+                //返回url或者base64,url更合适 
+                ResponseFormat = StaticValues.ImageStatics.ResponseFormat.Url,
+                User = "user"
+            });
+            string jsonContent = System.Text.Json.JsonSerializer.Serialize(imageResult, new JsonSerializerOptions
+            {
+                IgnoreNullValues = true
+            });
+            _logger.Information("生成图片结果：" + jsonContent);
+            List<string> res = new List<string>();
+            if (imageResult.Successful)
+            {
+                foreach (var item in imageResult.Results)
+                {
+                    res.Add(item.Url);
+                }
+            }
+            return res;
+        }
         /// <summary>
         /// 翻译文本
         /// </summary>
@@ -259,6 +312,38 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             chatHistory.AddUserMessage(req.Prompt);
             var res=await chatCompletion.GenerateMessageAsync(chatHistory);
             return res;
+        }
+
+        /// <summary>
+        /// 翻译文本openai
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
+        private async Task<string> TranslateOpenAi(ImageReq req)
+        {
+            // 定义正则表达式
+            Regex regex = new Regex(@"[\u4e00-\u9fa5]+");
+            if (!regex.IsMatch(req.Prompt))
+            {
+                _logger.Information("SD prompt无需翻译。");
+                return req.Prompt;
+            }
+            var openAiService = new OpenAIService(new OpenAiOptions()
+            {
+                ApiKey = req.Key,
+                BaseDomain = _options.Value.OpenAIOptions.OpenAI.BaseUrl
+            });
+            var messegs = new List<ChatMessage>();
+            messegs.Add(ChatMessage.FromSystem("Translate Chinese into English"));
+            messegs.Add(ChatMessage.FromUser(req.Prompt));
+            //调用SDK
+            var response = await openAiService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest
+            {
+                Messages = messegs,
+                Model = _options.Value.OpenAIOptions.OpenAI.ChatModel,
+                MaxTokens = 500,
+            });
+            return response.Choices[0].Message.Content;
         }
         /// <summary>
         /// 推送队列的等待信息

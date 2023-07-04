@@ -71,6 +71,19 @@
         /// 最大提问数量
         /// </summary>
         public int MaxQuestions { get; set; }
+
+        /// <summary>
+        /// 代理地址
+        /// </summary>
+        public string BaseUrl { get; set; }
+        /// <summary>
+        /// Gpt4Url
+        /// </summary>
+        public string Gpt4Url { get; set; }
+        /// <summary>
+        /// Gpt4Key
+        /// </summary>
+        public string Gpt4Key { get; set; }
     }
     /// <summary>
     /// AzureOpenAI配置

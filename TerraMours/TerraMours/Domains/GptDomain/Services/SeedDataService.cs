@@ -58,7 +58,17 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                     new SysMenus(){MenuId=5,ParentId=3,HasChildren=false,MenuName="角色管理",MenuUrl="/management/role",
                     Icon="ic:baseline-security",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=1,ExternalUrl=false,IsHome=false,IsShow=true},
                     new SysMenus(){MenuId=6,ParentId=3,HasChildren=false,MenuName="菜单管理",MenuUrl="/management/route",
-                    Icon="ic:baseline-security",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=2,ExternalUrl=false,IsHome=false,IsShow=true}
+                    Icon="ic:baseline-security",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=2,ExternalUrl=false,IsHome=false,IsShow=true},
+                    new SysMenus(){MenuId=7,HasChildren=false,MenuName="聊天记录",MenuUrl="/management/chat",
+                    Icon="mdi:file-document-multiple-outline",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true},
+                    new SysMenus(){MenuId=8,HasChildren=false,MenuName="数据看板",MenuUrl="/dashboard/analysis",
+                    Icon="icon-park-outline:analysis",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true},
+                    new SysMenus(){MenuId=9,HasChildren=false,MenuName="敏感词管理",MenuUrl="/management/sensitive",
+                    Icon="mdi:card-outline",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true},
+                    new SysMenus(){MenuId=10,HasChildren=false,MenuName="系统提示词",MenuUrl="/management/promptOption",
+                    Icon="mdi:table-large",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true},
+                    new SysMenus(){MenuId=11,HasChildren=false,MenuName="Key池管理",MenuUrl="/management/keyOption",
+                    Icon="mdi:monitor-dashboard",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true}
                 });
             }
             if (!await _dbContext.SysRolesToMenus.AnyAsync())
@@ -70,7 +80,12 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                     new SysRolesToMenu(1,3),
                     new SysRolesToMenu(1,4),
                     new SysRolesToMenu(1,5),
-                    new SysRolesToMenu(1,6)
+                    new SysRolesToMenu(1,6),
+                    new SysRolesToMenu(1,7),
+                    new SysRolesToMenu(1,8),
+                    new SysRolesToMenu(1,9),
+                    new SysRolesToMenu(1,10),
+                    new SysRolesToMenu(1,11)
                 });
             }
             if (!await _dbContext.SysRoles.AnyAsync())

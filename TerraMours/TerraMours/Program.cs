@@ -126,6 +126,7 @@ MapperConfiguration mapperConfig = new(cfg => {
     cfg.CreateMap<Sensitive, SensitiveRes>();
     cfg.CreateMap<ChatConversation, ChatConversationRes>();
     cfg.CreateMap<ChatRecord, ChatRes>();
+    cfg.CreateMap<ChatRes, ChatRecord>();
     cfg.CreateMap<ImageRecord, ImageRes>();
     cfg.CreateMap<PromptOptions, PromptOptionRes>();
 });
