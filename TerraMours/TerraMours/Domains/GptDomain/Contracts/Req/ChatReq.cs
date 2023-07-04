@@ -24,6 +24,11 @@ namespace TerraMours_Gpt.Domains.GptDomain.Contracts.Req {
         /// 模型
         /// </summary>
         public string? Model { get; set; }
+
+        /// <summary>
+        /// 上下文数量
+        /// </summary>
+        public int? ContextCount { get; set; }
         /// <summary>
         /// 模型类型
         /// </summary>

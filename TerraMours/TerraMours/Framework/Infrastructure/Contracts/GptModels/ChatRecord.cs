@@ -57,6 +57,21 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
         /// </summary>
         public bool Enable { get; set; }
 
+        /// <summary>
+        /// 提问词Tokens
+        /// </summary>
+        public int? PromptTokens { get; set; }
+        /// <summary>
+        /// 回答Tokens
+        /// </summary>
+
+        public int? CompletionTokens { get; set; }
+        /// <summary>
+        /// 总Tokens
+        /// </summary>
+
+        public int? TotalTokens { get; set; }
+
         public ChatConversation? ChatConversation { get; set; }
 
         public ChatRecord Delete(long? userId) {

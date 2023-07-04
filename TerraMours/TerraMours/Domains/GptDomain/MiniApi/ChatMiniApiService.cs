@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Azure.AI.OpenAI;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.SemanticKernel.AI.ChatCompletion;
 using Serilog;
@@ -9,7 +10,9 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
+using System.Threading;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
+using TerraMours_Gpt.Domains.GptDomain.Contracts.Common;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Req;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;
 using TerraMours_Gpt.Domains.GptDomain.IServices;
@@ -20,12 +23,15 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
     public class ChatMiniApiService : ServiceBase {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IChatService _chatService;
+        private readonly Serilog.ILogger _logger;
 
-        public ChatMiniApiService(IHttpContextAccessor httpContextAccessor, IChatService chatService) : base() {
+        public ChatMiniApiService(IHttpContextAccessor httpContextAccessor, IChatService chatService, Serilog.ILogger logger) : base()
+        {
             _httpContextAccessor = httpContextAccessor;
             _chatService = chatService;
             App.MapPost("/api/v1/Chat/ChatStream", ChatStream);
-
+            App.MapPost("/api/v1/Chat/ChatStream1", ChatStream1);
+            App.MapPost("/api/v1/Chat/ChatCompletion", ChatCompletion);
             App.MapPost("/api/v1/Chat/ImportSensitive", ImportSensitive);
             App.MapGet("/api/v1/Chat/AddSensitive", AddSensitive);
             App.MapGet("/api/v1/Chat/ChangeSensitive", ChangeSensitive);
@@ -53,6 +59,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
 
             App.MapGet("/api/v1/Chat/DeleteChatRecord", DeleteChatRecord);
             App.MapPost("/api/v1/Chat/ChatRecordList", ChatRecordList);
+            _logger = logger;
         }
         #region 聊天记录
 
@@ -83,7 +90,74 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             await response.Body.DisposeAsync();
         }
 
+        /// <summary>
+        /// Chat聊天接口
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
+        [Authorize]
+        [Produces("application/octet-stream")]
+        public async Task ChatStream1(ChatReq req, CancellationToken cancellationToken = default)
+        {
+            _logger.Information($"ChatStream1开始时间：{DateTime.Now}");
+            if (_httpContextAccessor.HttpContext?.Items["key"] != null)
+            {
+                req.Key = _httpContextAccessor.HttpContext?.Items["key"]?.ToString();
+            }
+            var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
+            req.UserId = userId;
+            req.IP = _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.MapToIPv4().ToString();
 
+            var response = _httpContextAccessor.HttpContext.Response;
+            response.ContentType = "application/octet-stream";
+
+            await foreach (ApiResponse<ChatRes> item in _chatService.ChatStream(req))
+            {
+                var buffer = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(item, new JsonSerializerOptions()
+                {
+                    Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
+                }) + Environment.NewLine);
+                await response.Body.WriteAsync(buffer.AsMemory(0, buffer.Length), cancellationToken);
+                await response.Body.FlushAsync(cancellationToken);
+                _logger.Information($"ChatStream1返回时间：{DateTime.Now}");
+            }
+
+            await response.Body.DisposeAsync();
+            _logger.Information($"ChatStream1结束时间：{DateTime.Now}");
+        }
+        /// <summary>
+        /// 聊天接口（gpt-4）
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
+        [Authorize]
+        [Produces("application/octet-stream")]
+        public async Task ChatCompletion(ChatReq req, CancellationToken cancellationToken = default)
+        {
+            if (_httpContextAccessor.HttpContext?.Items["key"] != null)
+            {
+                req.Key = _httpContextAccessor.HttpContext?.Items["key"]?.ToString();
+            }
+            var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
+            req.UserId = userId;
+            req.IP = _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.MapToIPv4().ToString();
+            var response = _httpContextAccessor.HttpContext.Response;
+            response.ContentType = "application/octet-stream";
+
+            await foreach (ApiResponse<ChatRes> item in _chatService.ChatCompletion(req))
+            {
+                var buffer = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(item, new JsonSerializerOptions()
+                {
+                    Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
+                }) + Environment.NewLine);
+                await response.Body.WriteAsync(buffer.AsMemory(0, buffer.Length), cancellationToken);
+                await response.Body.FlushAsync(cancellationToken);
+                _logger.Information($"ChatStream1返回时间：{DateTime.Now}");
+            }
+
+            await response.Body.DisposeAsync();
+            _logger.Information($"ChatStream1结束时间：{DateTime.Now}");
+        }
         /// <summary>
         /// 删除聊天记录
         /// </summary>
