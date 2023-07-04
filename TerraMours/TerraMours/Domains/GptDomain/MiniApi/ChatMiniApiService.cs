@@ -29,8 +29,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         {
             _httpContextAccessor = httpContextAccessor;
             _chatService = chatService;
-            App.MapPost("/api/v1/Chat/ChatStream", ChatStream);
-            App.MapPost("/api/v1/Chat/ChatStream1", ChatStream1);
+            //App.MapPost("/api/v1/Chat/ChatStream", ChatStream);
+            //App.MapPost("/api/v1/Chat/ChatStream1", ChatStream1);
             App.MapPost("/api/v1/Chat/ChatCompletion", ChatCompletion);
             App.MapPost("/api/v1/Chat/ImportSensitive", ImportSensitive);
             App.MapGet("/api/v1/Chat/AddSensitive", AddSensitive);
