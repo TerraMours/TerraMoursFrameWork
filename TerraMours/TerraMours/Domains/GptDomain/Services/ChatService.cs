@@ -19,7 +19,6 @@ using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 using TerraMours.Framework.Infrastructure.EFCore;
 using TerraMours.Framework.Infrastructure.Redis;
-using TerraMours_Gpt.Domains.GptDomain.Contracts.Common;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Enum;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Req;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;

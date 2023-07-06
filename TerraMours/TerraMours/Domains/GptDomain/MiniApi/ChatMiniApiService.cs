@@ -12,7 +12,6 @@ using System.Text.Json;
 using System.Text.Unicode;
 using System.Threading;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
-using TerraMours_Gpt.Domains.GptDomain.Contracts.Common;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Req;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;
 using TerraMours_Gpt.Domains.GptDomain.IServices;
