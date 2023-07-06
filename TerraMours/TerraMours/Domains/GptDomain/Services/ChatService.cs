@@ -1,21 +1,16 @@
 ﻿using AutoMapper;
-using Azure;
-using k8s.KubeConfigModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.AI.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.AI.OpenAI.ChatCompletion;
-using OpenAI.GPT3.Managers;
-using OpenAI.GPT3;
-using OpenAI.GPT3.ObjectModels.RequestModels;
-using System.Linq;
+using OpenAI.Managers;
+using OpenAI.ObjectModels.RequestModels;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
-using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 using TerraMours.Framework.Infrastructure.EFCore;
 using TerraMours.Framework.Infrastructure.Redis;
@@ -26,10 +21,9 @@ using TerraMours_Gpt.Domains.GptDomain.IServices;
 using TerraMours_Gpt.Domains.LoginDomain.Contracts.Common;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels;
-using static OpenAI.GPT3.ObjectModels.StaticValues;
-using System;
 
-namespace TerraMours_Gpt.Domains.GptDomain.Services {
+namespace TerraMours_Gpt.Domains.GptDomain.Services
+{
     public class ChatService : IChatService {
         private readonly FrameworkDbContext _dbContext;
         private readonly IOptionsSnapshot<GptOptions> _options;
@@ -218,7 +212,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
                 yield break;
             }
             //上下文
-            List<ChatMessage> messegs = BuildMsgList(req);
+            List<ChatMessage> messegs =await BuildMsgList(req);
             int maxtoken;
             switch (req.Model)
             {
@@ -238,7 +232,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             else 
                 apikey=req.Key;
 
-            var openAiOpetions = new OpenAiOptions()
+            var openAiOpetions = new OpenAI.OpenAiOptions()
             {
                 ApiKey = req.Key,
                 BaseDomain= _options.Value.OpenAIOptions.OpenAI.BaseUrl
@@ -259,7 +253,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             });
             //接口返回的完整内容
             string totalMsg = "";
-            var chatRes = new ChatRes() { Role = "Assistant", Message = totalMsg, Model = req.Model, ModelType = req.ModelType, ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId };
+            var chatRes = new ChatRes() { Role = "assistant", Message = totalMsg, Model = req.Model, ModelType = req.ModelType, ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId };
             await foreach (var itemMsg in response)
             {
                 if (itemMsg != null)
@@ -270,9 +264,9 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
                     }
                     totalMsg += itemMsg?.Choices?.FirstOrDefault().Message.Content;
                     chatRes.Message = totalMsg;
-                    chatRes.PromptTokens = itemMsg.Usage.PromptTokens;
-                    chatRes.CompletionTokens = itemMsg.Usage.CompletionTokens;
-                    chatRes.TotalTokens = itemMsg.Usage.TotalTokens;
+                    chatRes.PromptTokens = itemMsg.Usage?.PromptTokens;
+                    chatRes.CompletionTokens = itemMsg.Usage?.CompletionTokens;
+                    chatRes.TotalTokens = itemMsg.Usage?.TotalTokens;
                     if (!string.IsNullOrEmpty(itemMsg.Model))
                         chatRes.Model = itemMsg?.Model;
                     if (itemMsg.Choices != null && itemMsg.Choices.FirstOrDefault() != null && itemMsg.Choices.FirstOrDefault().Message != null && !string.IsNullOrEmpty(itemMsg.Choices.FirstOrDefault().Message.Role))
@@ -772,7 +766,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         /// </summary>
         /// <param name="req"></param>
         /// <returns></returns>
-        private List<ChatMessage> BuildMsgList(ChatReq req)
+        private async Task<List<ChatMessage>> BuildMsgList(ChatReq req)
         {
             //根据配置中的CONTEXT_COUNT 查询上下文
             var messegs = new List<ChatMessage>();
@@ -803,6 +797,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
                 {
                     Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
                 })}");
+            var chat = new ChatRecord() { Role = "user", Message = req.Prompt, Model = req.Model, ModelType = req.ModelType, ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId };
+            await _dbContext.ChatRecords.AddAsync(chat);
             return messegs;
         }
         #endregion
