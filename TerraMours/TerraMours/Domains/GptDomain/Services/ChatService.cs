@@ -182,7 +182,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         /// <param name="req"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async IAsyncEnumerable<ApiResponse<ChatRes>> ChatCompletion(ChatReq req)
+        public async IAsyncEnumerable<ApiResponse<ChatRes>> ChatCompletionStream(ChatReq req)
         {
             //创建会话
             if (req.ConversationId == null || req.ConversationId == 0)
@@ -281,6 +281,81 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             await _dbContext.SaveChangesAsync();
         }
 
+
+        public async Task<ApiResponse<ChatRes>> ChatCompletion(ChatReq req) {
+            //创建会话
+            if (req.ConversationId == null || req.ConversationId == 0) {
+                var conversation = await _dbContext.ChatConversations.AddAsync(new ChatConversation(req.Prompt.Length < 5 ? req.Prompt : $"{req.Prompt.Substring(0, 5)}...", req.UserId));
+                await _dbContext.SaveChangesAsync();
+                req.ConversationId = conversation.Entity.ConversationId;
+            }
+
+            var user = await getSysUser(req.UserId);
+            //敏感词检测
+            if (!await Sensitive(req)) {
+                 return ApiResponse<ChatRes>.Fail("触发了敏感词");
+            }
+            else if (!await CodeCanAsk(user)) {
+                if (user.VipLevel > 0) {
+                     return ApiResponse<ChatRes>.Fail("请勿恶意使用");
+                }
+                else {
+                     return ApiResponse<ChatRes>.Fail($"已超过体验账号每天最大提问次数：{_options.Value.OpenAIOptions.OpenAI.MaxQuestions}次");
+                }
+            }
+            //上下文
+            List<ChatMessage> messegs = await BuildMsgList(req);
+            int maxtoken;
+            switch (req.Model) {
+                case "gpt-4":
+                    maxtoken = 4000;
+                    break;
+                case "gpt-3.5-turbo-16k":
+                    maxtoken = 4000;
+                    break;
+                default:
+                    maxtoken = _options.Value.OpenAIOptions.OpenAI.MaxTokens;
+                    break;
+            }
+            string apikey;
+            if (req.Model == "gpt-4")
+                apikey = _options.Value.OpenAIOptions.OpenAI.Gpt4Key;
+            else
+                apikey = req.Key;
+
+            var openAiOpetions = new OpenAI.OpenAiOptions() {
+                ApiKey = req.Key,
+                BaseDomain = _options.Value.OpenAIOptions.OpenAI.BaseUrl
+            };
+            //gpt-4走的第三方
+            if (req.Model == "gpt-4") {
+                openAiOpetions.ApiKey = _options.Value.OpenAIOptions.OpenAI.Gpt4Key;
+                openAiOpetions.BaseDomain = _options.Value.OpenAIOptions.OpenAI.Gpt4Url;
+            }
+            var openAiService = new OpenAIService(openAiOpetions);
+            //调用SDK
+            var response = openAiService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest {
+                Messages = messegs,
+                Model = req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel,
+                MaxTokens = maxtoken,
+            });
+            if (response == null)
+                return ApiResponse<ChatRes>.Fail("接口调用失败");
+            if (!response.Result.Successful) {
+                _logger.Error($"接口调用失败，key：{req.Key},报错内容：{response.Result.Error.Message}");
+                return ApiResponse<ChatRes>.Fail(response.Result.Error.Message);
+            }
+
+            var chatRes = new ChatRes() { Role = "assistant", Message = response.Result.Choices.FirstOrDefault().Message.Content, Model = req.Model, ModelType = req.ModelType, ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId };
+            chatRes.PromptTokens = response.Result.Usage?.PromptTokens;
+            chatRes.CompletionTokens = response.Result.Usage?.CompletionTokens;
+            chatRes.TotalTokens = response.Result.Usage?.TotalTokens;
+            
+            var chatRecord = _mapper.Map<ChatRecord>(chatRes);
+            await _dbContext.ChatRecords.AddAsync(chatRecord);
+            await _dbContext.SaveChangesAsync();
+            return ApiResponse<ChatRes>.Success(chatRes);
+        }
         public async Task<ApiResponse<bool>> DeleteChatRecord(long recordId, long? userId) {
             var record = await _dbContext.ChatRecords.FirstOrDefaultAsync(m => m.ChatRecordId == recordId && m.Enable == true);
             record?.Delete(userId);

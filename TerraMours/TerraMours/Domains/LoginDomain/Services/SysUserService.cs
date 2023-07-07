@@ -113,7 +113,7 @@ namespace TerraMours.Domains.LoginDomain.Services
 
                     //更新数据库
 
-                    var res = _dbContext.SaveChanges();
+                    var res =await _dbContext.SaveChangesAsync();
 
                     return ApiResponse<string>.Success("注册成功");
                 }
