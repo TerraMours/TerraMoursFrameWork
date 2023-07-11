@@ -6,6 +6,7 @@ using Microsoft.SemanticKernel.AI.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.AI.OpenAI.ChatCompletion;
 using OpenAI.Managers;
 using OpenAI.ObjectModels.RequestModels;
+using Serilog;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -273,6 +274,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                     {
                         chatRes.Role = itemMsg.Choices.FirstOrDefault().Message.Role;
                     }
+                    Log.Information($"[时间：{DateTime.Now}]stream输出：{itemMsg?.Choices?.FirstOrDefault().Message.Content}");
                     yield return ApiResponse<ChatRes>.Success(chatRes);
                 }
             }
