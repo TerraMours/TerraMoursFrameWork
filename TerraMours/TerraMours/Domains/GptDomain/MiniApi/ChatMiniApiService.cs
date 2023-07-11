@@ -1,10 +1,12 @@
 ﻿using Azure.AI.OpenAI;
+using k8s.KubeConfigModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.SemanticKernel.AI.ChatCompletion;
 using Serilog;
 using StackExchange.Redis;
 using System.IO.Pipelines;
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -144,19 +146,15 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             req.IP = _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.MapToIPv4().ToString();
             var response = _httpContextAccessor.HttpContext.Response;
             response.ContentType = "application/octet-stream";
-
-            await foreach (ApiResponse<ChatRes> item in _chatService.ChatCompletionStream(req))
+            var enumerable = _chatService.ChatCompletionStream(req);
+            await foreach (var item in enumerable)
             {
-                var buffer = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(item, new JsonSerializerOptions()
+                var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(item, new JsonSerializerOptions()
                 {
                     Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
-                }) + Environment.NewLine);
-                await response.Body.WriteAsync(buffer.AsMemory(0, buffer.Length), cancellationToken);
-                await response.Body.FlushAsync(cancellationToken);
-                _logger.Information($"ChatStream1返回时间：{DateTime.Now}");
+                }) + "\n");
+                await response.BodyWriter.WriteAsync(bytes);
             }
-
-            await response.Body.DisposeAsync();
             _logger.Information($"ChatStream1结束时间：{DateTime.Now}");
         }
         /// <summary>
