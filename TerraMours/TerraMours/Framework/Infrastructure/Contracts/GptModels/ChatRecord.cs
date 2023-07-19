@@ -72,7 +72,7 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
 
         public int? TotalTokens { get; set; }
 
-        public ChatConversation? ChatConversation { get; set; }
+        //public ChatConversation? ChatConversation { get; set; }
 
         public ChatRecord Delete(long? userId) {
             this.Enable = false;
