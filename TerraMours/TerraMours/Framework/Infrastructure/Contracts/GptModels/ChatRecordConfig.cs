@@ -17,9 +17,9 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
                    .UseIdentityColumn();
 
             // 配置角色关系一个菜单对应的对应多个按钮 关系 外键是 MenuId
-            builder.HasOne<ChatConversation>(e => e.ChatConversation)
-                .WithMany(e => e.ChatRecords)
-                .HasForeignKey(e => e.ConversationId);
+            //builder.HasOne<ChatConversation>(e => e.ChatConversation)
+            //    .WithMany(e => e.ChatRecords)
+            //    .HasForeignKey(e => e.ConversationId);
 
         }
     }

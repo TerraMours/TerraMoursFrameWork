@@ -4,7 +4,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel.AI.ChatCompletion;
 using Microsoft.SemanticKernel;
 using Newtonsoft.Json;
-using Org.BouncyCastle.Ocsp;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -21,13 +20,13 @@ using Microsoft.SemanticKernel.Connectors.AI.OpenAI.ChatCompletion;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using TerraMours_Gpt.Domains.LoginDomain.Contracts.Common;
-using k8s.KubeConfigModels;
-using OpenAI.GPT3.Managers;
-using OpenAI.GPT3;
-using OpenAI.GPT3.ObjectModels.RequestModels;
-using OpenAI.GPT3.ObjectModels;
+using OpenAI.ObjectModels;
+using OpenAI.ObjectModels.RequestModels;
+using OpenAI.Managers;
+using OpenAI;
 
-namespace TerraMours_Gpt.Domains.GptDomain.Services {
+namespace TerraMours_Gpt.Domains.GptDomain.Services
+{
     public class ImageService : IImageService {
         private readonly FrameworkDbContext _dbContext;
         private readonly IOptionsSnapshot<GptOptions> _options;
