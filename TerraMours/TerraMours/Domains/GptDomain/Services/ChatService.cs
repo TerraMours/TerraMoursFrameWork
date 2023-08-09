@@ -254,7 +254,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             });
             //接口返回的完整内容
             string totalMsg = "";
-            var chatRes = new ChatRes() { Role = "assistant", Message = totalMsg, Model = req.Model, ModelType = req.ModelType, ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId };
+            var chatRes = new ChatRes() { Role = "assistant", Message = totalMsg, Model = req.Model, ModelType = req.ModelType, ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId,Enable = true};
             await foreach (var itemMsg in response)
             {
                 if (itemMsg != null)
@@ -348,7 +348,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 return ApiResponse<ChatRes>.Fail(response.Result.Error.Message);
             }
 
-            var chatRes = new ChatRes() { Role = "assistant", Message = response.Result.Choices.FirstOrDefault().Message.Content, Model = req.Model, ModelType = req.ModelType, ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId };
+            var chatRes = new ChatRes() { Role = "assistant", Message = response.Result.Choices.FirstOrDefault().Message.Content, Model = req.Model, ModelType = req.ModelType, ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId, Enable = true };
             chatRes.PromptTokens = response.Result.Usage?.PromptTokens;
             chatRes.CompletionTokens = response.Result.Usage?.CompletionTokens;
             chatRes.TotalTokens = response.Result.Usage?.TotalTokens;
@@ -366,7 +366,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         }
 
         public async Task<ApiResponse<PagedRes<ChatRes>>> ChatRecordList(ChatRecordReq req) {
-            var query = _dbContext.ChatRecords.Where(m => m.UserId == req.UserId && m.ConversationId==req.ConversationId && (string.IsNullOrEmpty(req.QueryString) || m.Message.Contains(req.QueryString)));
+            var query = _dbContext.ChatRecords.Where(m =>m.Enable==true && m.UserId == req.UserId && m.ConversationId==req.ConversationId && (string.IsNullOrEmpty(req.QueryString) || m.Message.Contains(req.QueryString)));
             var total = await query.CountAsync();
             var item = await query.OrderByDescending(m => m.CreateDate).Skip((req.PageIndex - 1) * req.PageSize).Take(req.PageSize).OrderBy(m=>m.CreateDate).ToListAsync();
             var res = _mapper.Map<IEnumerable<ChatRes>>(item);
@@ -874,7 +874,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 {
                     Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
                 })}");
-            var chat = new ChatRecord() { Role = "user", Message = req.Prompt, Model = req.Model, ModelType = req.ModelType, ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId };
+            var chat = new ChatRecord() { Role = "user", Message = req.Prompt, Model = req.Model, ModelType = req.ModelType, ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId, Enable = true };
             await _dbContext.ChatRecords.AddAsync(chat);
             return messegs;
         }
