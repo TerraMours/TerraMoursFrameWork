@@ -215,16 +215,15 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             //上下文
             List<ChatMessage> messegs =await BuildMsgList(req);
             int maxtoken;
-            switch (req.Model)
-            {
+            switch (req.Model) {
                 case "gpt-4":
-                    maxtoken = 4000;
+                    maxtoken = (int)((req.MaxTokens != null && req.MaxTokens < 4000) ? req.MaxTokens : 4000);
                     break;
                 case "gpt-3.5-turbo-16k":
-                    maxtoken = 4000;
+                    maxtoken = (int)((req.MaxTokens != null && req.MaxTokens < 4000) ? req.MaxTokens : 4000);
                     break;
                 default:
-                    maxtoken=_options.Value.OpenAIOptions.OpenAI.MaxTokens;
+                    maxtoken = (int)((req.MaxTokens != null && req.MaxTokens < _options.Value.OpenAIOptions.OpenAI.MaxTokens) ? req.MaxTokens : _options.Value.OpenAIOptions.OpenAI.MaxTokens);
                     break;
             }
             string apikey;
@@ -249,8 +248,15 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             var response = openAiService.ChatCompletion.CreateCompletionAsStream(new ChatCompletionCreateRequest
             {
                 Messages = messegs,
-                Model =req.Model?? _options.Value.OpenAIOptions.OpenAI.ChatModel,
+                Model = req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel,
                 MaxTokens = maxtoken,
+                TopP = req.TopP,
+                N = req.N,
+                PresencePenalty = req.PresencePenalty,
+                FrequencyPenalty = req.FrequencyPenalty,
+                Stop = req.Stop,
+                Temperature = req.Temperature,
+                LogitBias = req.LogitBias,
             });
             //接口返回的完整内容
             string totalMsg = "";
@@ -310,13 +316,13 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             int maxtoken;
             switch (req.Model) {
                 case "gpt-4":
-                    maxtoken = 4000;
+                    maxtoken = (int)((req.MaxTokens !=null && req.MaxTokens<4000)? req.MaxTokens: 4000);
                     break;
                 case "gpt-3.5-turbo-16k":
-                    maxtoken = 4000;
+                    maxtoken = (int)((req.MaxTokens != null && req.MaxTokens < 4000) ? req.MaxTokens : 4000);
                     break;
                 default:
-                    maxtoken = _options.Value.OpenAIOptions.OpenAI.MaxTokens;
+                    maxtoken = (int)((req.MaxTokens != null && req.MaxTokens < _options.Value.OpenAIOptions.OpenAI.MaxTokens) ? req.MaxTokens : _options.Value.OpenAIOptions.OpenAI.MaxTokens) ;
                     break;
             }
             string apikey;
@@ -340,6 +346,13 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 Messages = messegs,
                 Model = req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel,
                 MaxTokens = maxtoken,
+                TopP =req.TopP,
+                N = req.N,
+                PresencePenalty = req.PresencePenalty,
+                FrequencyPenalty = req.FrequencyPenalty,
+                Stop = req.Stop,
+                Temperature = req.Temperature,
+                LogitBias = req.LogitBias,
             });
             if (response == null)
                 return ApiResponse<ChatRes>.Fail("接口调用失败");
@@ -838,6 +851,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             string subscriptionsonResponse = await message.Content.ReadAsStringAsync();
             return await message.Content.ReadFromJsonAsync<BillingSubscriptionRes>();
         }
+
         /// <summary>
         /// 构建对话信息
         /// </summary>
@@ -847,37 +861,49 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         {
             //根据配置中的CONTEXT_COUNT 查询上下文
             var messegs = new List<ChatMessage>();
-            if(!string.IsNullOrEmpty( req.SystemMessage))
+            if (!string.IsNullOrEmpty(req.SystemMessage))
             {
                 messegs.Add(ChatMessage.FromSystem(req.SystemMessage));
             }
-                var parentMessages=_dbContext.ChatRecords.Where(m=>m.UserId ==req.UserId && m.Enable==true && m.ConversationId==req.ConversationId).OrderByDescending(m => m.CreateDate).Take(req.ContextCount?? _options.Value.OpenAIOptions.OpenAI.ContextCount).OrderBy(m=>m.ChatRecordId).ToList();
-                //保证前后顺序，用for而不用foreach
-                for (int i = 0; i < parentMessages.Count; i++)
+
+            var parentMessages = _dbContext.ChatRecords
+                .Where(m => m.UserId == req.UserId && m.Enable == true && m.ConversationId == req.ConversationId)
+                .OrderByDescending(m => m.CreateDate)
+                .Take(req.ContextCount ?? _options.Value.OpenAIOptions.OpenAI.ContextCount).OrderBy(m => m.ChatRecordId)
+                .ToList();
+            //保证前后顺序，用for而不用foreach
+            for (int i = 0; i < parentMessages.Count; i++)
+            {
+                switch (parentMessages[i].Role)
                 {
-                    switch (parentMessages[i].Role)
-                    {
-                        case "assistant":
-                            messegs.Add(ChatMessage.FromAssistant(parentMessages[i].Message));
-                            break;
-                        case "system":
-                            messegs.Add(ChatMessage.FromSystem(parentMessages[i].Message));
-                            break;
-                        case "user":
-                            messegs.Add(ChatMessage.FromUser(parentMessages[i].Message));
-                            break;
-                    }
+                    case "assistant":
+                        messegs.Add(ChatMessage.FromAssistant(parentMessages[i].Message));
+                        break;
+                    case "system":
+                        messegs.Add(ChatMessage.FromSystem(parentMessages[i].Message));
+                        break;
+                    case "user":
+                        messegs.Add(ChatMessage.FromUser(parentMessages[i].Message));
+                        break;
                 }
-                //当前问题
-                messegs.Add(ChatMessage.FromUser(req.Prompt));
-                _logger.Information($"[{DateTime.Now.ToString()}]{req.UserId} 提问内容：{JsonSerializer.Serialize(req.Prompt, new JsonSerializerOptions()
+            }
+
+            //当前问题
+            messegs.Add(ChatMessage.FromUser(req.Prompt));
+            _logger.Information(
+                $"[{DateTime.Now.ToString()}]{req.UserId} 提问内容：{JsonSerializer.Serialize(req.Prompt, new JsonSerializerOptions()
                 {
                     Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
                 })}");
-            var chat = new ChatRecord() { Role = "user", Message = req.Prompt, Model = req.Model, ModelType = req.ModelType, ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId, Enable = true };
+            var chat = new ChatRecord()
+            {
+                Role = "user", Message = req.Prompt, Model = req.Model, ModelType = req.ModelType,
+                ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId, Enable = true
+            };
             await _dbContext.ChatRecords.AddAsync(chat);
             return messegs;
         }
+
         #endregion
     }
 }
