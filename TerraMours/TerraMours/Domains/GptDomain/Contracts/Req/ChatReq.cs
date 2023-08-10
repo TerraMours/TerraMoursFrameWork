@@ -5,7 +5,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Contracts.Req {
     /// <summary>
     /// AI聊天参数
     /// </summary>
-    public class ChatReq {
+    public class ChatReq : ChatCompletionBaseReq {
         /// <summary>
         /// 提问词
         /// </summary>
@@ -20,10 +20,6 @@ namespace TerraMours_Gpt.Domains.GptDomain.Contracts.Req {
         /// 系统提示词
         /// </summary>
         public string? SystemMessage { get; set; }
-        /// <summary>
-        /// 模型
-        /// </summary>
-        public string? Model { get; set; }
 
         /// <summary>
         /// 上下文数量
