@@ -186,7 +186,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             SDImgReq dto = new SDImgReq();
             dto.prompt = form.Prompt;
             dto.steps = 20;
-            dto.negative_prompt = sDOptions?.Negative_Prompt ?? "wrong hands";
+            dto.batch_size = form.Count;
+            dto.negative_prompt =form.NegativePrompt ?? sDOptions?.Negative_Prompt ?? "wrong hands";
             var requestUrl = $"{sDOptions?.BaseUrl}/sdapi/v1/txt2img";
             var content = new StringContent(JsonConvert.SerializeObject(dto), Encoding.UTF8, "application/json");
             _logger.Information($"调用SD api，url:{requestUrl},参数：{await content.ReadAsStringAsync()}");

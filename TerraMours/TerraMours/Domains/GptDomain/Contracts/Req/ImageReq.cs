@@ -33,6 +33,11 @@ namespace TerraMours_Gpt.Domains.GptDomain.Contracts.Req {
         /// </summary>
         public int? ModelType { get; set; }
 
+        /// <summary>
+        /// 反向提示词
+        /// </summary>
+        public string? NegativePrompt { get; set; }
+
         [JsonIgnore]
         public string? Key { get; set; }
         [JsonIgnore]
