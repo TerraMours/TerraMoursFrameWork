@@ -39,9 +39,9 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         /// <param name="ImageRecordId"></param>
         /// <returns></returns>
         [Authorize]
-        public async Task<IResult> ShareImage(long ImageRecordId) {
+        public async Task<IResult> ShareImage(long ImageRecordId,bool IsPublic) {
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
-            var res = await _imageService.ShareImage(ImageRecordId,userId);
+            var res = await _imageService.ShareImage(ImageRecordId, IsPublic, userId);
             return Results.Ok(res);
         }
 
