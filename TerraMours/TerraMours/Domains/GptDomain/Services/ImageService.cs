@@ -52,12 +52,12 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             return ApiResponse<string?>.Success(message);
         }
 
-        public async Task<ApiResponse<bool>> ShareImage(long ImageRecordId, long? userId) {
+        public async Task<ApiResponse<bool>> ShareImage(long ImageRecordId, bool IsPublic, long? userId) {
             var image = await _dbContext.ImageRecords.FirstOrDefaultAsync(m => m.ImageRecordId == ImageRecordId && m.Enable == true);
             if (image == null) {
                 return ApiResponse<bool>.Fail("图片不存在");
             }
-            image.Share(userId);
+            image.Share(IsPublic,userId);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
         }
@@ -68,6 +68,10 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             var total = await query.CountAsync();
             var item = await query.OrderByDescending(m => m.CreateDate).Skip((page.PageIndex - 1) * page.PageSize).Take(page.PageSize).ToListAsync();
             var res = _mapper.Map<IEnumerable<ImageRes>>(item);
+            foreach (var r in res)
+            {
+                r.IsPublic = null;
+            }
             return ApiResponse<PagedRes<ImageRes>>.Success(new PagedRes<ImageRes>(res, total, page.PageIndex, page.PageSize));
         }
 
