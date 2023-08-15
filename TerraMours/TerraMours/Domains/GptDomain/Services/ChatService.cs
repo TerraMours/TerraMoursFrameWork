@@ -1,25 +1,20 @@
 ﻿using AutoMapper;
-using Azure;
-using k8s.KubeConfigModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.AI.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.AI.OpenAI.ChatCompletion;
-using OpenAI.GPT3.Managers;
 using OpenAI.GPT3;
+using OpenAI.GPT3.Managers;
 using OpenAI.GPT3.ObjectModels.RequestModels;
-using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
-using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 using TerraMours.Framework.Infrastructure.EFCore;
 using TerraMours.Framework.Infrastructure.Redis;
-using TerraMours_Gpt.Domains.GptDomain.Contracts.Common;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Enum;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Req;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;
@@ -27,11 +22,11 @@ using TerraMours_Gpt.Domains.GptDomain.IServices;
 using TerraMours_Gpt.Domains.LoginDomain.Contracts.Common;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels;
-using static OpenAI.GPT3.ObjectModels.StaticValues;
-using System;
 
-namespace TerraMours_Gpt.Domains.GptDomain.Services {
-    public class ChatService : IChatService {
+namespace TerraMours_Gpt.Domains.GptDomain.Services
+{
+    public class ChatService : IChatService
+    {
         private readonly FrameworkDbContext _dbContext;
         private readonly IOptionsSnapshot<GptOptions> _options;
         private readonly IMapper _mapper;
@@ -55,12 +50,14 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         /// <param name="req"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async IAsyncEnumerable<string> ChatProcessStream(ChatReq req) {
+        public async IAsyncEnumerable<string> ChatProcessStream(ChatReq req)
+        {
             //创建会话
-            if (req.ConversationId ==null || req.ConversationId == 0) {
+            if (req.ConversationId == null || req.ConversationId == 0)
+            {
                 var conversation = await _dbContext.ChatConversations.AddAsync(new ChatConversation(req.Prompt.Length < 5 ? req.Prompt : $"{req.Prompt.Substring(0, 10)}...", req.UserId));
                 await _dbContext.SaveChangesAsync();
-                req.ConversationId= conversation.Entity.ConversationId;
+                req.ConversationId = conversation.Entity.ConversationId;
             }
 
             var user = await getSysUser(req.UserId);
@@ -70,8 +67,10 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             {
                 yield return "触发了敏感词";
             }
-            else if (!await CodeCanAsk(user)) {
-                if (user.VipLevel > 0) {
+            else if (!await CodeCanAsk(user))
+            {
+                if (user.VipLevel > 0)
+                {
                     yield return "请勿恶意使用";
                 }
                 else
@@ -98,11 +97,14 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
                 //接口返回的完整内容
                 string totalMsg = "";
                 var messageStream = chatCompletion.GenerateMessageStreamAsync(chatHistory, options);
-                if (messageStream == null) {
+                if (messageStream == null)
+                {
                     yield return "服务器发生了未知的错误";
                 }
-                await foreach (string msg in messageStream) {
-                    if (msg != null) {
+                await foreach (string msg in messageStream)
+                {
+                    if (msg != null)
+                    {
                         totalMsg += msg;
                         yield return totalMsg;
                     }
@@ -162,7 +164,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
                 chatHistory.AddUserMessage(req.Prompt);
                 //接口返回的完整内容
                 string totalMsg = "";
-                var chatRes= new ChatRes() { Role = "Assistant", Message = totalMsg, Model = req.Model, ModelType = req.ModelType, ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId };
+                var chatRes = new ChatRes() { Role = "Assistant", Message = totalMsg, Model = req.Model, ModelType = req.ModelType, ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId };
                 var messageStream = chatCompletion.GenerateMessageStreamAsync(chatHistory, options);
                 if (messageStream == null)
                 {
@@ -178,7 +180,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
                     }
                 }
                 //记录
-                var chatRecord=_mapper.Map<ChatRecord>(chatRes);
+                var chatRecord = _mapper.Map<ChatRecord>(chatRes);
                 await _dbContext.ChatRecords.AddAsync(chatRecord);
                 await _dbContext.SaveChangesAsync();
             }
@@ -230,32 +232,32 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
                     maxtoken = 4000;
                     break;
                 default:
-                    maxtoken=_options.Value.OpenAIOptions.OpenAI.MaxTokens;
+                    maxtoken = _options.Value.OpenAIOptions.OpenAI.MaxTokens;
                     break;
             }
             string apikey;
             if (req.Model == "gpt-4")
                 apikey = _options.Value.OpenAIOptions.OpenAI.Gpt4Key;
-            else 
-                apikey=req.Key;
+            else
+                apikey = req.Key;
 
             var openAiOpetions = new OpenAiOptions()
             {
                 ApiKey = req.Key,
-                BaseDomain= _options.Value.OpenAIOptions.OpenAI.BaseUrl
+                BaseDomain = _options.Value.OpenAIOptions.OpenAI.BaseUrl
             };
             //gpt-4走的第三方
             if (req.Model == "gpt-4")
             {
-                openAiOpetions.ApiKey= _options.Value.OpenAIOptions.OpenAI.Gpt4Key;
-                openAiOpetions.BaseDomain = _options.Value.OpenAIOptions.OpenAI.Gpt4Url ;
+                openAiOpetions.ApiKey = _options.Value.OpenAIOptions.OpenAI.Gpt4Key;
+                openAiOpetions.BaseDomain = _options.Value.OpenAIOptions.OpenAI.Gpt4Url;
             }
-                var openAiService = new OpenAIService(openAiOpetions);
+            var openAiService = new OpenAIService(openAiOpetions);
             //调用SDK
             var response = openAiService.ChatCompletion.CreateCompletionAsStream(new ChatCompletionCreateRequest
             {
                 Messages = messegs,
-                Model =req.Model?? _options.Value.OpenAIOptions.OpenAI.ChatModel,
+                Model = req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel,
                 MaxTokens = maxtoken,
             });
             //接口返回的完整内容
@@ -288,17 +290,19 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<ApiResponse<bool>> DeleteChatRecord(long recordId, long? userId) {
+        public async Task<ApiResponse<bool>> DeleteChatRecord(long recordId, long? userId)
+        {
             var record = await _dbContext.ChatRecords.FirstOrDefaultAsync(m => m.ChatRecordId == recordId && m.Enable == true);
             record?.Delete(userId);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
         }
 
-        public async Task<ApiResponse<PagedRes<ChatRes>>> ChatRecordList(ChatRecordReq req) {
-            var query = _dbContext.ChatRecords.Where(m => m.UserId == req.UserId && req.ConversationId==req.ConversationId && (string.IsNullOrEmpty(req.QueryString) || m.Message.Contains(req.QueryString)));
+        public async Task<ApiResponse<PagedRes<ChatRes>>> ChatRecordList(ChatRecordReq req)
+        {
+            var query = _dbContext.ChatRecords.Where(m => m.UserId == req.UserId && req.ConversationId == req.ConversationId && (string.IsNullOrEmpty(req.QueryString) || m.Message.Contains(req.QueryString)));
             var total = await query.CountAsync();
-            var item = await query.Skip((req.PageIndex - 1) * req.PageSize).Take(req.PageSize).OrderByDescending(m=>m.CreateDate).ToListAsync();
+            var item = await query.Skip((req.PageIndex - 1) * req.PageSize).Take(req.PageSize).OrderByDescending(m => m.CreateDate).ToListAsync();
             var res = _mapper.Map<IEnumerable<ChatRes>>(item);
             return ApiResponse<PagedRes<ChatRes>>.Success(new PagedRes<ChatRes>(res, total, req.PageIndex, req.PageSize));
         }
@@ -391,7 +395,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         /// <exception cref="NotImplementedException"></exception>
         public async Task<ApiResponse<PagedRes<SensitiveRes>>> SensitiveList(PageReq page)
         {
-            var query = _dbContext.Sensitives.Where(m=>m.Enable==true && ( string.IsNullOrEmpty(page.QueryString) || m.Word.Contains(page.QueryString)));
+            var query = _dbContext.Sensitives.Where(m => m.Enable == true && (string.IsNullOrEmpty(page.QueryString) || m.Word.Contains(page.QueryString)));
             var total = await query.CountAsync();
             var item = await query.Skip((page.PageIndex - 1) * page.PageSize).Take(page.PageSize).ToListAsync();
             var res = _mapper.Map<IEnumerable<SensitiveRes>>(item);
@@ -453,10 +457,10 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         public async Task<ApiResponse<PagedRes<KeyOptionRes>>> KeyOptionsList(PageReq page)
         {
             var query = _dbContext.KeyOptions.Where(m => string.IsNullOrEmpty(page.QueryString) || m.ApiKey.Contains(page.QueryString));
-            var total=await query.CountAsync();
-            var item=await query.Skip((page.PageIndex-1)* page.PageSize).Take(page.PageSize).ToListAsync();
-            var res=_mapper.Map<IEnumerable< KeyOptionRes>>(item);
-            return ApiResponse<PagedRes<KeyOptionRes>>.Success(new PagedRes<KeyOptionRes>(res,total,page.PageIndex,page.PageSize));
+            var total = await query.CountAsync();
+            var item = await query.Skip((page.PageIndex - 1) * page.PageSize).Take(page.PageSize).ToListAsync();
+            var res = _mapper.Map<IEnumerable<KeyOptionRes>>(item);
+            return ApiResponse<PagedRes<KeyOptionRes>>.Success(new PagedRes<KeyOptionRes>(res, total, page.PageIndex, page.PageSize));
         }
         /// <summary>
         /// 余额查询
@@ -520,28 +524,32 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         #endregion
 
         #region 会话列表
-        public async Task<ApiResponse<bool>> AddChatConversation(string conversationName, long? userId) {
+        public async Task<ApiResponse<bool>> AddChatConversation(string conversationName, long? userId)
+        {
             await _dbContext.ChatConversations.AddAsync(new ChatConversation(conversationName, userId));
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
         }
 
-        public async Task<ApiResponse<bool>> ChangeChatConversation(long conversationId, string conversationName, long? userId) {
+        public async Task<ApiResponse<bool>> ChangeChatConversation(long conversationId, string conversationName, long? userId)
+        {
             var sensitive = await _dbContext.ChatConversations.FirstOrDefaultAsync(m => m.ConversationId == conversationId && m.Enable == true);
             sensitive?.Change(conversationName, userId);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
         }
 
-        public async Task<ApiResponse<bool>> DeleteChatConversation(long conversationId, long? userId) {
+        public async Task<ApiResponse<bool>> DeleteChatConversation(long conversationId, long? userId)
+        {
             var sensitive = await _dbContext.ChatConversations.FirstOrDefaultAsync(m => m.ConversationId == conversationId && m.Enable == true);
             sensitive?.Delete(userId);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
         }
 
-        public async Task<ApiResponse<PagedRes<ChatConversationRes>>> ChatConversationList(PageReq page, long? userId) {
-            var query = _dbContext.ChatConversations.Where(m =>m.UserId==userId &&(  string.IsNullOrEmpty(page.QueryString) || m.ConversationName.Contains(page.QueryString)));
+        public async Task<ApiResponse<PagedRes<ChatConversationRes>>> ChatConversationList(PageReq page, long? userId)
+        {
+            var query = _dbContext.ChatConversations.Where(m => m.UserId == userId && (string.IsNullOrEmpty(page.QueryString) || m.ConversationName.Contains(page.QueryString)));
             var total = await query.CountAsync();
             var item = await query.Skip((page.PageIndex - 1) * page.PageSize).Take(page.PageSize).ToListAsync();
             var res = _mapper.Map<IEnumerable<ChatConversationRes>>(item);
@@ -560,13 +568,13 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         {
             try
             {
-                    // 打开文本文件
-                    using (StreamReader sr = new StreamReader(file.OpenReadStream()))
-                    {
-                        string line=sr.ReadToEnd();
+                // 打开文本文件
+                using (StreamReader sr = new StreamReader(file.OpenReadStream()))
+                {
+                    string line = sr.ReadToEnd();
 
-                        await ImportPromptOption(JsonSerializer.Deserialize<List<PromptOptionReq>>(line),userId);
-                    }
+                    await ImportPromptOption(JsonSerializer.Deserialize<List<PromptOptionReq>>(line), userId);
+                }
                 return ApiResponse<bool>.Success(true);
             }
             catch (Exception ex)
@@ -588,7 +596,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             {
                 foreach (var item in prompts)
                 {
-                    _dbContext.PromptOptions.Add(new PromptOptions(item.Act,item.Prompt,userId));
+                    _dbContext.PromptOptions.Add(new PromptOptions(item.Act, item.Prompt, userId));
                 }
                 await _dbContext.SaveChangesAsync();
                 return ApiResponse<bool>.Success(true);
@@ -618,7 +626,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         public async Task<ApiResponse<bool>> ChangePromptOption(PromptDetailReq req)
         {
             var PromptOption = await _dbContext.PromptOptions.FirstOrDefaultAsync(m => m.PromptId == req.PromptId && m.Enable == true);
-            PromptOption?.Change(req.Act, req.Prompt,req.UserId);
+            PromptOption?.Change(req.Act, req.Prompt, req.UserId);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
         }
@@ -706,7 +714,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         private async Task<bool> CodeCanAsk(SysUser user)
         {
             bool res = true;
-            int max = user.VipLevel>0 ? 999 : (_options.Value.OpenAIOptions.OpenAI.MaxQuestions);
+            int max = user.VipLevel > 0 ? 999 : (_options.Value.OpenAIOptions.OpenAI.MaxQuestions);
             var todays = await TodayVisits(user.UserId);
             if (todays > max)
             {
@@ -777,33 +785,33 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
         {
             //根据配置中的CONTEXT_COUNT 查询上下文
             var messegs = new List<ChatMessage>();
-            if(!string.IsNullOrEmpty( req.SystemMessage))
+            if (!string.IsNullOrEmpty(req.SystemMessage))
             {
                 messegs.Add(ChatMessage.FromSystem(req.SystemMessage));
             }
-                var parentMessages=_dbContext.ChatRecords.Where(m=>m.UserId ==req.UserId && m.Enable==true && m.ConversationId==req.ConversationId).OrderByDescending(m => m.CreateDate).Take(req.ContextCount?? _options.Value.OpenAIOptions.OpenAI.ContextCount).OrderBy(m=>m.ChatRecordId).ToList();
-                //保证前后顺序，用for而不用foreach
-                for (int i = 0; i < parentMessages.Count; i++)
+            var parentMessages = _dbContext.ChatRecords.Where(m => m.UserId == req.UserId && m.Enable == true && m.ConversationId == req.ConversationId).OrderByDescending(m => m.CreateDate).Take(req.ContextCount ?? _options.Value.OpenAIOptions.OpenAI.ContextCount).OrderBy(m => m.ChatRecordId).ToList();
+            //保证前后顺序，用for而不用foreach
+            for (int i = 0; i < parentMessages.Count; i++)
+            {
+                switch (parentMessages[i].Role)
                 {
-                    switch (parentMessages[i].Role)
-                    {
-                        case "assistant":
-                            messegs.Add(ChatMessage.FromAssistant(parentMessages[i].Message));
-                            break;
-                        case "system":
-                            messegs.Add(ChatMessage.FromSystem(parentMessages[i].Message));
-                            break;
-                        case "user":
-                            messegs.Add(ChatMessage.FromUser(parentMessages[i].Message));
-                            break;
-                    }
+                    case "assistant":
+                        messegs.Add(ChatMessage.FromAssistant(parentMessages[i].Message));
+                        break;
+                    case "system":
+                        messegs.Add(ChatMessage.FromSystem(parentMessages[i].Message));
+                        break;
+                    case "user":
+                        messegs.Add(ChatMessage.FromUser(parentMessages[i].Message));
+                        break;
                 }
-                //当前问题
-                messegs.Add(ChatMessage.FromUser(req.Prompt));
-                _logger.Information($"[{DateTime.Now.ToString()}]{req.UserId} 提问内容：{JsonSerializer.Serialize(req.Prompt, new JsonSerializerOptions()
-                {
-                    Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
-                })}");
+            }
+            //当前问题
+            messegs.Add(ChatMessage.FromUser(req.Prompt));
+            _logger.Information($"[{DateTime.Now.ToString()}]{req.UserId} 提问内容：{JsonSerializer.Serialize(req.Prompt, new JsonSerializerOptions()
+            {
+                Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
+            })}");
             return messegs;
         }
         #endregion

@@ -1,26 +1,20 @@
-﻿using Azure.AI.OpenAI;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.SemanticKernel.AI.ChatCompletion;
-using Serilog;
-using StackExchange.Redis;
-using System.IO.Pipelines;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
-using System.Threading;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
-using TerraMours_Gpt.Domains.GptDomain.Contracts.Common;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Req;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;
 using TerraMours_Gpt.Domains.GptDomain.IServices;
 using TerraMours_Gpt.Domains.LoginDomain.Contracts.Common;
-using TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels;
 
-namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
-    public class ChatMiniApiService : ServiceBase {
+namespace TerraMours_Gpt.Domains.GptDomain.MiniApi
+{
+    public class ChatMiniApiService : ServiceBase
+    {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IChatService _chatService;
         private readonly Serilog.ILogger _logger;
@@ -70,8 +64,10 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         /// <returns></returns>
         [Authorize]
         [Produces("application/octet-stream")]
-        public async Task ChatStream(ChatReq req, CancellationToken cancellationToken = default) {
-            if (_httpContextAccessor.HttpContext?.Items["key"] != null) {
+        public async Task ChatStream(ChatReq req, CancellationToken cancellationToken = default)
+        {
+            if (_httpContextAccessor.HttpContext?.Items["key"] != null)
+            {
                 req.Key = _httpContextAccessor.HttpContext?.Items["key"]?.ToString();
             }
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
@@ -81,7 +77,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             var response = _httpContextAccessor.HttpContext.Response;
             response.ContentType = "application/octet-stream";
 
-            await foreach (string msg in _chatService.ChatProcessStream(req)) {
+            await foreach (string msg in _chatService.ChatProcessStream(req))
+            {
                 var buffer = Encoding.UTF8.GetBytes(msg + Environment.NewLine);
                 await response.Body.WriteAsync(buffer.AsMemory(0, buffer.Length), cancellationToken);
                 await response.Body.FlushAsync(cancellationToken);
@@ -164,7 +161,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         /// <param name="recordId">id</param>
         /// <returns></returns>
         [Authorize]
-        public async Task<IResult> DeleteChatRecord(long recordId) {
+        public async Task<IResult> DeleteChatRecord(long recordId)
+        {
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
             var res = await _chatService.DeleteChatRecord(recordId, userId);
             return Results.Ok(res);
@@ -175,7 +173,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         /// <param name="page"></param>
         /// <returns></returns>
         [Authorize]
-        public async Task<IResult> ChatRecordList(ChatRecordReq page) {
+        public async Task<IResult> ChatRecordList(ChatRecordReq page)
+        {
             page.UserId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
             var res = await _chatService.ChatRecordList(page);
             return Results.Ok(res);
@@ -192,7 +191,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         public async Task<IResult> ImportSensitive(IFormFile file)
         {
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
-            var res =await _chatService.ImportSensitive(file, userId);
+            var res = await _chatService.ImportSensitive(file, userId);
             return Results.Ok(res);
         }
 
@@ -205,7 +204,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         public async Task<IResult> AddSensitive(string word)
         {
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
-            var res =await _chatService.AddSensitive(word, userId);
+            var res = await _chatService.AddSensitive(word, userId);
             return Results.Ok(res);
         }
 
@@ -219,7 +218,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         public async Task<IResult> ChangeSensitive(long sensitiveId, string word)
         {
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
-            var res =await _chatService.ChangeSensitive(sensitiveId,word, userId);
+            var res = await _chatService.ChangeSensitive(sensitiveId, word, userId);
             return Results.Ok(res);
         }
         /// <summary>
@@ -231,7 +230,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         public async Task<IResult> DeleteSensitive(long sensitiveId)
         {
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
-            var res =await _chatService.DeleteSensitive(sensitiveId, userId);
+            var res = await _chatService.DeleteSensitive(sensitiveId, userId);
             return Results.Ok(res);
         }
 
@@ -332,7 +331,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         /// <param name="conversationName">会话名称</param>
         /// <returns></returns>
         [Authorize]
-        public async Task<IResult> AddChatConversation(string conversationName) {
+        public async Task<IResult> AddChatConversation(string conversationName)
+        {
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
             var res = await _chatService.AddChatConversation(conversationName, userId);
             return Results.Ok(res);
@@ -345,7 +345,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         /// <param name="conversationName">会话名称</param>
         /// <returns></returns>
         [Authorize]
-        public async Task<IResult> ChangeChatConversation(long conversationId, string conversationName) {
+        public async Task<IResult> ChangeChatConversation(long conversationId, string conversationName)
+        {
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
             var res = await _chatService.ChangeChatConversation(conversationId, conversationName, userId);
             return Results.Ok(res);
@@ -357,7 +358,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         /// <param name="conversationId">id</param>
         /// <returns></returns>
         [Authorize]
-        public async Task<IResult> DeleteChatConversation(long conversationId) {
+        public async Task<IResult> DeleteChatConversation(long conversationId)
+        {
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
             var res = await _chatService.DeleteChatConversation(conversationId, userId);
             return Results.Ok(res);
@@ -368,9 +370,10 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         /// <param name="page"></param>
         /// <returns></returns>
         [Authorize]
-        public async Task<IResult> ChatConversationList(PageReq page) {
+        public async Task<IResult> ChatConversationList(PageReq page)
+        {
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
-            var res = await _chatService.ChatConversationList(page,userId);
+            var res = await _chatService.ChatConversationList(page, userId);
             return Results.Ok(res);
         }
 
