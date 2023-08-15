@@ -92,7 +92,7 @@
         /// <param name="description"></param>
         /// <param name="price"></param>
         /// <param name="userId"></param>
-        public Order(long productId, string name, string description, decimal price, long userId)
+        public Order(long productId, string name, string description, decimal price, string userId)
         {
             //初始化用户 ：以下是有用的字段
             this.ProductId = productId;

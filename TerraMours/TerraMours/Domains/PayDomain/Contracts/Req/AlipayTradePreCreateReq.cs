@@ -49,7 +49,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.Contracts.Req
         /// <summary>
         /// 用户ID
         /// </summary>
-        public long UserId { get; set; }
+        public string UserId { get; set; }
 
     }
 }
