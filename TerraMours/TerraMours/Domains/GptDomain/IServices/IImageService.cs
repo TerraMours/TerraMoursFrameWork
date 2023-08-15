@@ -7,7 +7,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.IServices {
     public interface IImageService {
         Task<ApiResponse<string?>> GenerateGraph(ImageReq req);
 
-        Task<ApiResponse<bool>> ShareImage(long ImageRecordId, long? userId);
+        Task<ApiResponse<bool>> ShareImage(long ImageRecordId,bool IsPublic, long? userId);
         Task<ApiResponse<bool>> DeleteImage(long ImageRecordId, long? userId);
         Task<ApiResponse<PagedRes<ImageRes>>> ShareImageList(PageReq page);
 

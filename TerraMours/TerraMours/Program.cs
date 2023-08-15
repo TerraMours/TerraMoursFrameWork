@@ -62,7 +62,7 @@ Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
     .WriteTo.Console()
     //.WriteTo.File()
-    .WriteTo.Seq("http://localhost:5341/")
+    .WriteTo.Seq(sysSettings.SeqUrl)
     .CreateLogger();
 builder.Host.UseSerilog(Log.Logger);
 

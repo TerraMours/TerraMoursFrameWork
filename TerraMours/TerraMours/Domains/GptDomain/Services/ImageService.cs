@@ -4,7 +4,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel.AI.ChatCompletion;
 using Microsoft.SemanticKernel;
 using Newtonsoft.Json;
-using Org.BouncyCastle.Ocsp;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -21,13 +20,13 @@ using Microsoft.SemanticKernel.Connectors.AI.OpenAI.ChatCompletion;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using TerraMours_Gpt.Domains.LoginDomain.Contracts.Common;
-using k8s.KubeConfigModels;
-using OpenAI.GPT3.Managers;
-using OpenAI.GPT3;
-using OpenAI.GPT3.ObjectModels.RequestModels;
-using OpenAI.GPT3.ObjectModels;
+using OpenAI.ObjectModels;
+using OpenAI.ObjectModels.RequestModels;
+using OpenAI.Managers;
+using OpenAI;
 
-namespace TerraMours_Gpt.Domains.GptDomain.Services {
+namespace TerraMours_Gpt.Domains.GptDomain.Services
+{
     public class ImageService : IImageService {
         private readonly FrameworkDbContext _dbContext;
         private readonly IOptionsSnapshot<GptOptions> _options;
@@ -53,12 +52,12 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             return ApiResponse<string?>.Success(message);
         }
 
-        public async Task<ApiResponse<bool>> ShareImage(long ImageRecordId, long? userId) {
+        public async Task<ApiResponse<bool>> ShareImage(long ImageRecordId, bool IsPublic, long? userId) {
             var image = await _dbContext.ImageRecords.FirstOrDefaultAsync(m => m.ImageRecordId == ImageRecordId && m.Enable == true);
             if (image == null) {
                 return ApiResponse<bool>.Fail("图片不存在");
             }
-            image.Share(userId);
+            image.Share(IsPublic,userId);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
         }
@@ -69,6 +68,10 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             var total = await query.CountAsync();
             var item = await query.OrderByDescending(m => m.CreateDate).Skip((page.PageIndex - 1) * page.PageSize).Take(page.PageSize).ToListAsync();
             var res = _mapper.Map<IEnumerable<ImageRes>>(item);
+            foreach (var r in res)
+            {
+                r.IsPublic = null;
+            }
             return ApiResponse<PagedRes<ImageRes>>.Success(new PagedRes<ImageRes>(res, total, page.PageIndex, page.PageSize));
         }
 
@@ -187,7 +190,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services {
             SDImgReq dto = new SDImgReq();
             dto.prompt = form.Prompt;
             dto.steps = 20;
-            dto.negative_prompt = sDOptions?.Negative_Prompt ?? "wrong hands";
+            dto.batch_size = form.Count;
+            dto.negative_prompt =form.NegativePrompt ?? sDOptions?.Negative_Prompt ?? "wrong hands";
             var requestUrl = $"{sDOptions?.BaseUrl}/sdapi/v1/txt2img";
             var content = new StringContent(JsonConvert.SerializeObject(dto), Encoding.UTF8, "application/json");
             _logger.Information($"调用SD api，url:{requestUrl},参数：{await content.ReadAsStringAsync()}");

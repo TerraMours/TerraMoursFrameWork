@@ -77,6 +77,7 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
             this.Enable = true;
             this.CreateDate = DateTime.Now;
             this.CreateID = userId;
+            this.IsPublic = false;
         }
 
         public ImageRecord Delete(long? userId) {
@@ -95,8 +96,8 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
             return this;
         }
 
-        public ImageRecord Share(long? userId) {
-            this.IsPublic = true;
+        public ImageRecord Share(bool IsPublic,long? userId) {
+            this.IsPublic = IsPublic;
             //EntityBase
             this.ModifyDate = DateTime.Now;
             this.ModifyID = userId;

@@ -11,6 +11,10 @@ namespace TerraMours.Framework.Infrastructure.Contracts.Commons {
         public Secret secret { get; set; }
 
         public Email email { get; set; }
+        /// <summary>
+        /// seq的url
+        /// </summary>
+        public string SeqUrl { get; set; }
     }
 
 

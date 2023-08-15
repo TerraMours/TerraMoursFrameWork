@@ -14,7 +14,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.IServices {
         /// <returns></returns>
         IAsyncEnumerable<string> ChatProcessStream(ChatReq req);
         IAsyncEnumerable<ApiResponse<ChatRes>> ChatStream(ChatReq req);
-        IAsyncEnumerable<ApiResponse<ChatRes>> ChatCompletion(ChatReq req);
+        IAsyncEnumerable<ApiResponse<ChatRes>> ChatCompletionStream(ChatReq req);
+        Task<ApiResponse<ChatRes>> ChatCompletion(ChatReq req);
         Task<ApiResponse<bool>> DeleteChatRecord(long recordId, long? userId);
         Task<ApiResponse<PagedRes<ChatRes>>> ChatRecordList(ChatRecordReq req);
         #region 敏感词
