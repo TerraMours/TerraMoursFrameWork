@@ -188,10 +188,10 @@ namespace TerraMours_Gpt.Migrations
                     ProductId = table.Column<long>(type: "bigint", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false),
-                    Price = table.Column<decimal>(type: "numeric", nullable: false),
+                    Price = table.Column<decimal>(type: "numeric(18,6)", precision: 18, scale: 6, nullable: false),
                     Stock = table.Column<int>(type: "integer", nullable: true),
                     ImagePath = table.Column<string>(type: "text", nullable: true),
-                    UserId = table.Column<long>(type: "bigint", nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: false),
                     Status = table.Column<string>(type: "text", nullable: false),
                     CreatedTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     PaidTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
@@ -383,6 +383,7 @@ namespace TerraMours_Gpt.Migrations
                     VipLevel = table.Column<int>(type: "integer", nullable: true),
                     VipExpireTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     ImageCount = table.Column<int>(type: "integer", nullable: true),
+                    Balance = table.Column<decimal>(type: "numeric(18,6)", precision: 18, scale: 6, nullable: true),
                     xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false, computedColumnSql: "xmin"),
                     Enable = table.Column<bool>(type: "boolean", nullable: false),
                     CreateDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -433,7 +434,7 @@ namespace TerraMours_Gpt.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false),
-                    Price = table.Column<decimal>(type: "numeric", nullable: false),
+                    Price = table.Column<decimal>(type: "numeric(18,6)", precision: 18, scale: 6, nullable: false),
                     Discount = table.Column<decimal>(type: "numeric", nullable: false),
                     ImagePath = table.Column<string>(type: "text", nullable: false),
                     Stock = table.Column<int>(type: "integer", nullable: true),
@@ -478,14 +479,15 @@ namespace TerraMours_Gpt.Migrations
                     Enable = table.Column<bool>(type: "boolean", nullable: false),
                     PromptTokens = table.Column<int>(type: "integer", nullable: true),
                     CompletionTokens = table.Column<int>(type: "integer", nullable: true),
-                    TotalTokens = table.Column<int>(type: "integer", nullable: true)
+                    TotalTokens = table.Column<int>(type: "integer", nullable: true),
+                    ChatConversationConversationId = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ChatRecord", x => x.ChatRecordId);
                     table.ForeignKey(
-                        name: "FK_ChatRecord_ChatConversation_ConversationId",
-                        column: x => x.ConversationId,
+                        name: "FK_ChatRecord_ChatConversation_ChatConversationConversationId",
+                        column: x => x.ChatConversationConversationId,
                         principalTable: "ChatConversation",
                         principalColumn: "ConversationId");
                 });
@@ -559,9 +561,9 @@ namespace TerraMours_Gpt.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ChatRecord_ConversationId",
+                name: "IX_ChatRecord_ChatConversationConversationId",
                 table: "ChatRecord",
-                column: "ConversationId");
+                column: "ChatConversationConversationId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Product_CategoryId",

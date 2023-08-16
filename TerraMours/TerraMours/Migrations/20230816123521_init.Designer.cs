@@ -15,7 +15,7 @@ using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
 namespace TerraMours_Gpt.Migrations
 {
     [DbContext(typeof(FrameworkDbContext))]
-    [Migration("20230813152844_init")]
+    [Migration("20230816123521_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -301,6 +301,10 @@ namespace TerraMours_Gpt.Migrations
                     b.Property<string>("Address")
                         .HasColumnType("text");
 
+                    b.Property<decimal?>("Balance")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)");
+
                     b.Property<DateTime?>("CreateDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -466,6 +470,9 @@ namespace TerraMours_Gpt.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("ChatRecordId"));
 
+                    b.Property<long?>("ChatConversationConversationId")
+                        .HasColumnType("bigint");
+
                     b.Property<int?>("CompletionTokens")
                         .HasColumnType("integer");
 
@@ -507,7 +514,7 @@ namespace TerraMours_Gpt.Migrations
 
                     b.HasKey("ChatRecordId");
 
-                    b.HasIndex("ConversationId");
+                    b.HasIndex("ChatConversationConversationId");
 
                     b.ToTable("ChatRecord", (string)null);
                 });
@@ -975,7 +982,8 @@ namespace TerraMours_Gpt.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)");
 
                     b.Property<long>("ProductId")
                         .HasColumnType("bigint");
@@ -990,8 +998,9 @@ namespace TerraMours_Gpt.Migrations
                     b.Property<string>("TradeNo")
                         .HasColumnType("text");
 
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -1104,7 +1113,8 @@ namespace TerraMours_Gpt.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)");
 
                     b.Property<string>("Remark")
                         .HasColumnType("text");
@@ -1259,11 +1269,9 @@ namespace TerraMours_Gpt.Migrations
 
             modelBuilder.Entity("TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels.ChatRecord", b =>
                 {
-                    b.HasOne("TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels.ChatConversation", "ChatConversation")
+                    b.HasOne("TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels.ChatConversation", null)
                         .WithMany("ChatRecords")
-                        .HasForeignKey("ConversationId");
-
-                    b.Navigation("ChatConversation");
+                        .HasForeignKey("ChatConversationConversationId");
                 });
 
             modelBuilder.Entity("TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels.Product", b =>

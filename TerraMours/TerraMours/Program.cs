@@ -30,11 +30,14 @@ using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;
 using TerraMours_Gpt.Domains.GptDomain.Hubs;
 using TerraMours_Gpt.Domains.GptDomain.IServices;
 using TerraMours_Gpt.Domains.GptDomain.Services;
+using TerraMours_Gpt.Domains.PayDomain.Contracts.Req;
+using TerraMours_Gpt.Domains.PayDomain.Contracts.Res;
 using TerraMours_Gpt.Domains.PayDomain.Hubs;
 using TerraMours_Gpt.Domains.PayDomain.IServices;
 using TerraMours_Gpt.Domains.PayDomain.Services;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels;
 using TerraMours_Gpt.Framework.Infrastructure.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -133,6 +136,10 @@ MapperConfiguration mapperConfig = new(cfg =>
     cfg.CreateMap<ChatRes, ChatRecord>();
     cfg.CreateMap<ImageRecord, ImageRes>();
     cfg.CreateMap<PromptOptions, PromptOptionRes>();
+    cfg.CreateMap<ProductReq, Product>();
+    cfg.CreateMap<Product, ProductRes>();
+    cfg.CreateMap<CategoryReq, Category>();
+    cfg.CreateMap<Category, CategoryRes>();
 });
 //注册配置
 IMapper mapper = mapperConfig.CreateMapper();
