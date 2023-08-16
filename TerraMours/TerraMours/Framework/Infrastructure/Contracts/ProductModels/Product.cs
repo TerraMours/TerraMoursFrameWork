@@ -26,11 +26,11 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels
         /// <summary>
         /// 商品折扣 默认不打折
         /// </summary>
-        public decimal Discount { get; set; }
+        public decimal? Discount { get; set; }
         /// <summary>
         /// 商品图片路径
         /// </summary>
-        public string ImagePath { get; set; }
+        public string? ImagePath { get; set; }
         /// <summary>
         /// 商品库存
         /// </summary>
