@@ -15,8 +15,8 @@ using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
 namespace TerraMours_Gpt.Migrations
 {
     [DbContext(typeof(FrameworkDbContext))]
-    [Migration("20230816133144_not_null")]
-    partial class not_null
+    [Migration("20230817135157_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -480,7 +480,7 @@ namespace TerraMours_Gpt.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("CreateDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp");
 
                     b.Property<bool>("Enable")
                         .HasColumnType("boolean");
@@ -961,7 +961,7 @@ namespace TerraMours_Gpt.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -1016,7 +1016,8 @@ namespace TerraMours_Gpt.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime?>("CreateDate")
-                        .HasColumnType("timestamp with time zone");
+                        .IsRequired()
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<long?>("CreateID")
                         .HasColumnType("bigint");
@@ -1035,7 +1036,8 @@ namespace TerraMours_Gpt.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("ModifyDate")
-                        .HasColumnType("timestamp with time zone");
+                        .IsRequired()
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<long?>("ModifyID")
                         .HasColumnType("bigint");
@@ -1074,7 +1076,8 @@ namespace TerraMours_Gpt.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<DateTime?>("CreateDate")
-                        .HasColumnType("timestamp with time zone");
+                        .IsRequired()
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<long?>("CreateID")
                         .HasColumnType("bigint");
@@ -1099,7 +1102,8 @@ namespace TerraMours_Gpt.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("ModifyDate")
-                        .HasColumnType("timestamp with time zone");
+                        .IsRequired()
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<long?>("ModifyID")
                         .HasColumnType("bigint");

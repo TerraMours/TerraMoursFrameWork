@@ -23,8 +23,20 @@
         /// </summary>
         public decimal Discount { get; set; }
         /// <summary>
+        /// 商品库存
+        /// </summary>
+        public int? Stock { get; set; }
+        /// <summary>
         /// 商品分类Id
         /// </summary>
         public long CategoryId { get; set; }
+        /// <summary>
+        /// 分类名称
+        /// </summary>
+        public string CategoryName { get; set; }
+        /// <summary>
+        /// 分类描述
+        /// </summary>
+        public string CategoryDescription { get; set; }
     }
 }

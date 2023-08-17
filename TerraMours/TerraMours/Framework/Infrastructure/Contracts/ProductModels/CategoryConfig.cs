@@ -16,6 +16,16 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels
             builder.Property(e => e.Id)
                    .UseIdentityColumn();
 
+            // 映射 CreateDate 字段
+            builder.Property(e => e.CreateDate)
+                .HasColumnType("timestamp without time zone");
+
+            // 映射 ModifyDate 字段
+            builder.Property(e => e.ModifyDate)
+                .HasColumnType("timestamp without time zone");
+            //在对应的实体的config类文件里面的config方法加上
+            builder.HasQueryFilter(e => e.Enable);
+
             //将 Version 属性设置为每次插入或更新时自增，并且将其设置为乐观并发标识。
             //builder.Property(e => e.Version).ValueGeneratedOnAddOrUpdate().IsConcurrencyToken();
             //使用pqsql自带的xmin隐式字段为版本控制

@@ -57,7 +57,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.MiniApi
         }
 
         /// <summary>
-        /// 查询所有分类信息
+        /// 查询所有商品信息
         /// </summary>
         /// <returns></returns>
         [Authorize]

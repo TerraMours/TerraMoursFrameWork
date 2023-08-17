@@ -2,15 +2,15 @@
 {
     public class CategoryReq
     {
-        public long Id { get; set; }
+        public long? Id { get; set; }
         /// <summary>
         /// 分类名称
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
         /// <summary>
         /// 分类描述
         /// </summary>
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
     }
 }

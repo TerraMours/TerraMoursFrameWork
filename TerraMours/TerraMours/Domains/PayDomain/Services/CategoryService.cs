@@ -61,6 +61,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
                 return ApiResponse<bool>.Fail("该分类不存在");
             }
             category.DeleteCategory();
+            _dbContext.Categorys.Update(category);
             await _dbContext.SaveChangesAsync();
             await _helper.RemoveAsync("GetAllCategoryList");
             return ApiResponse<bool>.Success(true);
@@ -100,7 +101,8 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
         public async Task<ApiResponse<bool>> UpdateCategory(CategoryReq categoryReq)
         {
             var category = await _dbContext.Categorys.FirstOrDefaultAsync(x => x.Id == categoryReq.Id) ?? throw new Exception("该分类不存在");
-            _mapper.Map(categoryReq, category);
+            //_mapper.Map(categoryReq, category);
+            category.UpdateCategory(categoryReq.Name, categoryReq.Description);
             _dbContext.Categorys.Update(category);
             var res = await _dbContext.SaveChangesAsync();
             //删除过期的缓存
