@@ -20,6 +20,14 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.PaymentModels
             builder.Property(e => e.Price)
            .HasPrecision(18, 6); // 设置 Precision 和 Scale，例子中 Scale 为8
 
+            // 映射 CreateDate 字段
+            builder.Property(e => e.CreatedTime)
+                .HasColumnType("timestamp without time zone");
+
+            // 映射 ModifyDate 字段
+            builder.Property(e => e.PaidTime)
+                .HasColumnType("timestamp without time zone");
+
             /*builder.Property(e => e.Status)
             .HasConversion<string>(); // 通过HasConversion指定将枚举类型映射为字符串类型的列*/
 

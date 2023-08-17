@@ -21,7 +21,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.MiniApi
             _categoryService = categoryService;
             App.MapPost("/api/v1/Category/AddCategory", AddCategory);
             App.MapGet("/api/v1/Category/GetCategoryById", GetCategoryById);
-            App.MapGet("/api/v1/Category/GetAllUserList", GetAllCategoryList);
+            App.MapGet("/api/v1/Category/GetAllCategoryList", GetAllCategoryList);
             App.MapPut("/api/v1/Category/DeleteCategory", DeleteCategory);
             App.MapPut("/api/v1/Category/UpdateCategory", UpdateCategory);
         }

@@ -56,6 +56,7 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels
         public Category DeleteCategory()
         {
             this.Enable = false;
+            this.ModifyDate = DateTime.Now;
             return this;
         }
 

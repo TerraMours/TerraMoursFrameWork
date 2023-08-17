@@ -24,7 +24,7 @@
         /// <summary>
         /// 商品折扣 默认不打折
         /// </summary>
-        public decimal Discount { get; set; }
+        public decimal? Discount { get; set; }
         /// <summary>
         /// 商品分类Id
         /// </summary>
