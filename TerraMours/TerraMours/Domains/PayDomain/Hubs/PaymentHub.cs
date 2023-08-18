@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using TerraMours.Framework.Infrastructure.EFCore;
 using TerraMours_Gpt.Domains.PayDomain.Contracts.Req;
+using ILogger = Serilog.ILogger;
 
 namespace TerraMours_Gpt.Domains.PayDomain.Hubs
 {
@@ -20,12 +21,14 @@ namespace TerraMours_Gpt.Domains.PayDomain.Hubs
         private readonly IAlipayClient _client;
         private readonly IOptions<AlipayOptions> _optionsAccessor;
         private readonly FrameworkDbContext _dbContext;
+        private readonly Serilog.ILogger _logger;
 
-        public PaymentHub(IAlipayClient client, IOptions<AlipayOptions> optionsAccessor, FrameworkDbContext dbContext)
+        public PaymentHub(IAlipayClient client, IOptions<AlipayOptions> optionsAccessor, FrameworkDbContext dbContext, ILogger logger)
         {
             _client = client;
             _optionsAccessor = optionsAccessor;
             _dbContext = dbContext;
+            _logger = logger;
         }
 
         /// <summary>
@@ -35,6 +38,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.Hubs
         /// <returns></returns>
         public async Task QueryPaymentStatus(AlipayTradeQueryReq req)
         {
+            _logger.Warning($"即时查询状态，订单号:{req.OutTradeNo}");
             //获取当前连接id
             var connectionId = this.Context.ConnectionId;
 
@@ -55,12 +59,14 @@ namespace TerraMours_Gpt.Domains.PayDomain.Hubs
             var startTime = DateTime.Now;
             //先查一次 以免使用未赋值的变量
             AlipayTradeQueryResponse queryPayRes = await _client.ExecuteAsync(request, _optionsAccessor.Value);
+            _logger.Warning($"第一次查询返回:{req.OutTradeNo},交易状态：{queryPayRes.TradeStatus}");
             while ((DateTime.Now - startTime).TotalMinutes <= 3)
             {
                 queryPayRes = await _client.ExecuteAsync(request, _optionsAccessor.Value);
 
                 if (queryPayRes.TradeStatus != "WAIT_BUYER_PAY")
                 {
+                    _logger.Warning($"订单号状态改变:{req.OutTradeNo},交易状态：{queryPayRes.TradeStatus}");
                     //交易状态：WAIT_BUYER_PAY（交易创建，等待买家付款）、TRADE_CLOSED（未付款交易超时关闭，或支付完成后全额退款）、TRADE_SUCCESS（交易支付成功）、TRADE_FINISHED（交易结束，不可退款）
                     break;
                 }

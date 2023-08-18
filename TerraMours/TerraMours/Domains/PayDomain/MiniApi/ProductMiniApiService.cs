@@ -14,7 +14,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.MiniApi
             _productService = productService;
             App.MapPost("/api/v1/Product/AddProduct", AddProduct);
             App.MapGet("/api/v1/Product/GetProductById", GetProductById);
-            App.MapGet("/api/v1/Product/GetAllCategoryList", GetAllCategoryList);
+            App.MapGet("/api/v1/Product/GetAllProductList", GetAllProductList);
             App.MapGet("/api/v1/Product/GetProductByCategoryId", GetProductByCategoryId);
             App.MapPut("/api/v1/Product/DeleteProduct", DeleteProduct);
             App.MapPut("/api/v1/Product/UpdateProduct", UpdateProduct);
@@ -61,7 +61,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.MiniApi
         /// </summary>
         /// <returns></returns>
         [Authorize]
-        public async Task<IResult> GetAllCategoryList()
+        public async Task<IResult> GetAllProductList()
         {
             var res = await _productService.GetAllProductList();
             return Results.Ok(res);

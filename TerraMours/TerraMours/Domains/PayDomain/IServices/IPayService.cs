@@ -24,6 +24,13 @@ namespace TerraMours_Gpt.Domains.PayDomain.IServices
         Task<ApiResponse<AlipayTradeQueryResponse>> Query(AlipayTradeQueryReq req);
 
         /// <summary>
+        /// 支付宝回调
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
+        Task Callback(AlipayPayCallbackReq req);
+
+        /// <summary>
         /// 根据订单号或者交易号查询订单状态，判断用户是否支付
         /// </summary>
         /// <param name="req"></param>
