@@ -68,8 +68,14 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
         /// <returns></returns>
         public async Task<ApiResponse<List<ProductRes>>> GetAllProductList()
         {
-            var productList = await _helper.GetOrCreateAsync("GetAllProductList", async options => { return await _dbContext.Products.Include(x => x.Category).ToListAsync(); });
-            var productResList = _mapper.Map<List<ProductRes>>(productList);
+            //直接转化成Res之后存入Redis
+            var productResList = await _helper.GetOrCreateAsync("GetAllProductList", async options =>
+            {
+                var productList = await _dbContext.Products.Include(x => x.Category).ToListAsync();
+                var productRedisList = _mapper.Map<List<ProductRes>>(productList);
+                return productRedisList;
+            });
+
             return ApiResponse<List<ProductRes>>.Success(productResList);
         }
 
@@ -81,10 +87,14 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
         /// <exception cref="Exception"></exception>
         public async Task<ApiResponse<List<ProductRes>>> GetProductByCategoryId(long categoryId)
         {
-            //to do
-            //所有使用includ 后面逻辑需要修改或者说修改序列号哪里的逻辑 或者加个DTO 来存储然后再序列化之后再放进redis
-            var productList = await _helper.GetOrCreateAsync("GetAllProductList", async options => { return await _dbContext.Products.Include(x => x.Category).ToListAsync(); });
-            var productResList = productList?.FindAll(x => x.CategoryId == categoryId) ?? throw new Exception("该商品不存在");
+            //直接转化成Res之后存入Redis
+            var productResList = await _helper.GetOrCreateAsync("GetAllProductList", async options =>
+            {
+                var productList = await _dbContext.Products.Include(x => x.Category).ToListAsync();
+                var productRedisList = _mapper.Map<List<ProductRes>>(productList);
+                return productRedisList;
+            });
+            productResList = productResList?.FindAll(x => x.CategoryId == categoryId) ?? throw new Exception("该商品不存在");
             var res = _mapper.Map<List<ProductRes>>(productResList);
             return ApiResponse<List<ProductRes>>.Success(res);
         }
@@ -97,10 +107,14 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
         /// <exception cref="Exception"></exception>
         public async Task<ApiResponse<ProductRes>> GetProductById(long id)
         {
-            var productList = await _helper.GetOrCreateAsync("GetAllProductList", async options => { return await _dbContext.Products.Include(x => x.Category).ToListAsync(); }) ?? throw new Exception("该商品不存在");
-            var product = productList.Find(x => x.Id == id);
-            var res = _mapper.Map<ProductRes>(product);
-            return ApiResponse<ProductRes>.Success(res);
+            var productResList = await _helper.GetOrCreateAsync("GetAllProductList", async options =>
+            {
+                var productList = await _dbContext.Products.Include(x => x.Category).ToListAsync();
+                var productRedisList = _mapper.Map<List<ProductRes>>(productList);
+                return productRedisList;
+            }) ?? throw new Exception("该商品不存在");
+            var product = productResList.FirstOrDefault(x => x.Id == id);
+            return ApiResponse<ProductRes>.Success(product);
         }
 
         /// <summary>
