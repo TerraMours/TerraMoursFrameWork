@@ -47,6 +47,11 @@ namespace TerraMours.Domains.LoginDomain.Contracts.Req
         /// 图像剩余次数
         /// </summary>
         public int? ImageCount { get; set; }
+
+        /// <summary>
+        /// token余额价格
+        /// </summary>
+        public decimal? Balance { get; set; }
         #endregion
     }
 }

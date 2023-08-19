@@ -3,13 +3,15 @@ using Essensoft.Paylink.Alipay.Domain;
 using Essensoft.Paylink.Alipay.Request;
 using Essensoft.Paylink.Alipay.Response;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.Text.Json;
 using TerraMours.Framework.Infrastructure.EFCore;
 using TerraMours_Gpt.Domains.PayDomain.Contracts.Req;
-using ILogger = Serilog.ILogger;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons.Enums;
+using ILogger = Serilog.ILogger;
 
 namespace TerraMours_Gpt.Domains.PayDomain.Hubs
 {
@@ -39,13 +41,15 @@ namespace TerraMours_Gpt.Domains.PayDomain.Hubs
         /// <returns></returns>
         public async Task QueryPaymentStatus(AlipayTradeQueryReq req)
         {
-            _logger.Warning($"即时查询状态，订单号:{req.OutTradeNo}");
+            
+            _logger.Information($"即时查询状态，订单号:{req.OutTradeNo}");
             //获取当前连接id
             var connectionId = this.Context.ConnectionId;
 
             //先查询系统里面是否有此账单
             // todo  支付成功 则修改用户vip信息
             var order = await _dbContext.Orders.FirstOrDefaultAsync(x => x.OrderId == req.OutTradeNo) ?? throw new Exception("此订单不存在");
+
             var model = new AlipayTradeQueryModel
             {
                 OutTradeNo = req.OutTradeNo,
@@ -58,41 +62,65 @@ namespace TerraMours_Gpt.Domains.PayDomain.Hubs
             //循环查询3分钟这个账单，超时或者状态位已支付则停止
             using var httpClient = new HttpClient();
             var startTime = DateTime.Now;
-            //先查一次 以免使用未赋值的变量
-            AlipayTradeQueryResponse queryPayRes = await _client.ExecuteAsync(request, _optionsAccessor.Value);
-            _logger.Warning($"第一次查询返回:{req.OutTradeNo},交易状态：{queryPayRes.TradeStatus}");
+            AlipayTradeQueryResponse queryPayRes = new AlipayTradeQueryResponse();
+            //是否超时，超时调用支付宝关闭订单接口
+            bool isSuccess = false;
             while ((DateTime.Now - startTime).TotalMinutes <= 3)
             {
                 queryPayRes = await _client.ExecuteAsync(request, _optionsAccessor.Value);
-
-                if (queryPayRes.TradeStatus != "WAIT_BUYER_PAY")
+                string jsonContent = System.Text.Json.JsonSerializer.Serialize(queryPayRes, new JsonSerializerOptions
                 {
-                    _logger.Warning($"订单号状态改变:{req.OutTradeNo},交易状态：{queryPayRes.TradeStatus}");
-                    //交易状态：WAIT_BUYER_PAY（交易创建，等待买家付款）、TRADE_CLOSED（未付款交易超时关闭，或支付完成后全额退款）、TRADE_SUCCESS（交易支付成功）、TRADE_FINISHED（交易结束，不可退款）
+                    IgnoreNullValues = true
+                });
+                if (jsonContent != null)
+                {
+                    _logger.Information($"【{DateTime.Now}】ali接口查詢結果:{jsonContent}");
+                    _logger.Warning($"ali接口查詢結果:{jsonContent}");
+                }
+                //交易状态：WAIT_BUYER_PAY（交易创建，等待买家付款）、TRADE_CLOSED（未付款交易超时关闭，或支付完成后全额退款）、TRADE_SUCCESS（交易支付成功）、TRADE_FINISHED（交易结束，不可退款）
+                if (queryPayRes.Code == "10000" && (queryPayRes.TradeStatus == AlipayTradeStatusEnum.TRADE_SUCCESS.ToString() || queryPayRes.TradeStatus == AlipayTradeStatusEnum.TRADE_CLOSED.ToString()))
+                {
+                    isSuccess = true;
+                    _logger.Information($"【{DateTime.Now}】订单号状态改变:{req.OutTradeNo},交易状态：{queryPayRes.TradeStatus}");
+                    _logger.Warning($"【{DateTime.Now}】订单号状态改变:{req.OutTradeNo},交易状态：{queryPayRes.TradeStatus}");
                     break;
                 }
-                // 间隔3秒进行下一次查询
+
+                //等待 3 秒后调用 [alipay.trade.query](https://opendocs.alipay.com/open/02ekfh?scene=23)（统一收单线下交易查询接口），通过支付时传入的商户订单号（out_trade_no）查询支付结果（返回参数 TRADE_STATUS）。
                 await Task.Delay(3000);
             }
             // 如果超过3分钟仍未支付，发送订单状态信息
-
-            order.PayOrder(queryPayRes.TradeNo, queryPayRes.TradeStatus);
-            _dbContext.Orders.Update(order);
-            await _dbContext.SaveChangesAsync();
-            //如果支付成功，则把user的余额加上新充值的钱
-            var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserEmail == order.UserId) ?? throw new Exception("此用户不存在");
-            user.Balance = user.Balance + order.Price;
-            _dbContext.SysUsers.Update(user);
-            await _dbContext.SaveChangesAsync();
-
-            var res = false;
-            //交易状态：WAIT_BUYER_PAY（交易创建，等待买家付款）、TRADE_CLOSED（未付款交易超时关闭，或支付完成后全额退款）、TRADE_SUCCESS（交易支付成功）、TRADE_FINISHED（交易结束，不可退款）
-            if (queryPayRes.TradeStatus == AlipayTradeStatusEnum.TRADE_SUCCESS.ToString())
+            if (!isSuccess)
             {
-                res = true;
+                order.PayOrder(string.Empty, AlipayTradeStatusEnum.TRADE_CLOSED.ToString());
+
+                //超时调用支付宝关闭订单接口
+                var closeModel = new AlipayTradeCloseModel
+                {
+                    OutTradeNo = req.OutTradeNo,
+                    //可以不传
+                    TradeNo = req.TradeNo
+                };
+                var closeReq = new AlipayTradeCloseRequest();
+                closeReq.SetBizModel(closeModel);
+                _client.ExecuteAsync(closeReq, _optionsAccessor.Value);
+                _dbContext.Orders.Update(order);
+                await _dbContext.SaveChangesAsync();
+                await Clients.Client(connectionId).SendAsync("QueryPaymentStatus", new { OutTradeNo = req.OutTradeNo, TradeStatus = AlipayTradeStatusEnum.TRADE_CLOSED.ToString() });
             }
-            //queryPayRes,前端只需要传是否成功即可
-            await Clients.Client(connectionId).SendAsync("QueryPaymentStatus", res);
+            else
+            {
+                order.PayOrder(queryPayRes.TradeNo, queryPayRes.TradeStatus);
+                _dbContext.Orders.Update(order);
+                await _dbContext.SaveChangesAsync();
+                //如果支付成功，则把user的余额加上新充值的钱
+                var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserId == long.Parse(order.UserId)) ?? throw new Exception("此用户不存在");
+                user.Balance = (user.Balance??0) + order.Price;
+                _dbContext.SysUsers.Update(user);
+                await _dbContext.SaveChangesAsync();
+                await Clients.Client(connectionId).SendAsync("QueryPaymentStatus", new { OutTradeNo = req.OutTradeNo, TradeStatus = queryPayRes.TradeStatus });
+            }
+
         }
 
     }
