@@ -35,15 +35,21 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
         /// <returns></returns>
         public async Task<ApiResponse<AlipayTradePrecreateResponse>> PreCreate(AlipayTradePreCreateReq req)
         {
+            //生成系统内唯一交易号
+            var tradeNo = $"TerraMours-{Guid.NewGuid()}";
+            // 支付宝规定：订单总金额，单位为元，精确到小数点后两位，取值范围为 [0.01,100000000]，金额不能为 0。
+            //但是我们系统是decimal 保留六位小数，这里由于充值我们是整数，所以我们只需要传给支付宝的钱处理下，保留两位小数即可
+
             var model = new AlipayTradePrecreateModel
             {
                 //系统内部的唯一交易号  $"TerraMours-{Guid.NewGuid()}"
                 //OutTradeNo = req.OutTradeNo,
-                OutTradeNo = $"TerraMours-{Guid.NewGuid()}",
+                OutTradeNo = tradeNo,
                 //类似于邮件主题
                 Subject = req.Name,
-                //金额总数
-                TotalAmount = req.Price.ToString(),
+                //金额总数: 将商品价格转换为保留 2 位小数的 decimal 再转换为字符串
+                TotalAmount = Math.Round(req.Price, 2).ToString(),
+                //TotalAmount = req.Price.ToString(),
                 //描述
                 Body = req.Description
             };
@@ -53,7 +59,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
 
             //此时应该先在自己的order表里面创建一个待支付的订单
 
-            var order = new Order(req.ProductId, req.Name, req.Description, req.Price, req.UserId);
+            var order = new Order(req.ProductId, req.Name, req.Description, req.Price, req.UserId, tradeNo);
             await _dbContext.Orders.AddAsync(order);
             await _dbContext.SaveChangesAsync();
 
