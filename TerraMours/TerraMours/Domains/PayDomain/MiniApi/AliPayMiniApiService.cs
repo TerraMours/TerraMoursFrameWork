@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Ocsp;
+using System.Security.Claims;
 using TerraMours_Gpt.Domains.PayDomain.Contracts.Req;
 using TerraMours_Gpt.Domains.PayDomain.IServices;
 using APIServiceBase = Microsoft.AspNetCore.Builder.ServiceBase;
@@ -11,19 +14,21 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
     public class AliPayMiniApiService : APIServiceBase
     {
         private readonly IPayService _payService;
-
+        private readonly IHttpContextAccessor _httpContextAccessor;
         /// <summary>
         /// 构造函数以及获取必要的服务
         /// </summary>
         /// <param name="services"></param>
         /// <param name="payService"></param>
-        public AliPayMiniApiService(IServiceCollection services, IPayService payService) : base()
+        public AliPayMiniApiService(IServiceCollection services, IPayService payService, IHttpContextAccessor httpContextAccessor) : base()
         {
             _payService = payService;
+            _httpContextAccessor = httpContextAccessor;
             //此处/api/v1/Test 这里是swagger显示的路由
             //命名规则取当前的xxxMiniApiService的xxx,然后/api/v1/xxx/方法名
             App.MapPost("/api/v1/AliPay/PreCreate", PreCreate);
             App.MapPost("/api/v1/AliPay/Query", Query);
+            App.MapPost("/api/v1/AliPay/Callback", Callback);
         }
 
         /// <summary>
@@ -32,6 +37,9 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
         [HttpPost]
         public async Task<IResult> PreCreate(AlipayTradePreCreateReq viewModel)
         {
+            if (viewModel.UserId == null) {
+                viewModel.UserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData);
+            }
             var res = await _payService.PreCreate(viewModel);
             return Results.Ok(res);
         }
@@ -45,7 +53,15 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
             var res = await _payService.Query(viewMode);
             return Results.Ok(res);
         }
-
+        /// <summary>
+        /// 支付宝回调接口
+        /// </summary>
+        /// <returns></returns>
+        [AllowAnonymous]
+        public async Task Callback([FromBody] AlipayPayCallbackReq req)
+        {
+            _payService.Callback(req);
+        }
 
         /*  /// <summary>
           /// 生成二维码SVG  QRCoder nuget

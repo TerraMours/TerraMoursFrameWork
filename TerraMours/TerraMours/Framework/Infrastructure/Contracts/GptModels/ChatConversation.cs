@@ -24,8 +24,6 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
         /// </summary>
         public long? UserId { get; set; }
 
-        public List<ChatRecord>? ChatRecords { get; set; }
-
         public ChatConversation() {
         }
 

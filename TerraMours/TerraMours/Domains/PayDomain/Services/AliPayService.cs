@@ -3,12 +3,16 @@ using Essensoft.Paylink.Alipay;
 using Essensoft.Paylink.Alipay.Domain;
 using Essensoft.Paylink.Alipay.Request;
 using Essensoft.Paylink.Alipay.Response;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours.Framework.Infrastructure.EFCore;
 using TerraMours_Gpt.Domains.PayDomain.Contracts.Req;
+using TerraMours_Gpt.Domains.PayDomain.Hubs;
 using TerraMours_Gpt.Domains.PayDomain.IServices;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.PaymentModels;
+using ILogger = Serilog.ILogger;
 
 namespace TerraMours_Gpt.Domains.PayDomain.Services
 {
@@ -18,14 +22,15 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
         private readonly IOptions<AlipayOptions> _optionsAccessor;
         private readonly IMapper _mapper;
         private readonly FrameworkDbContext _dbContext;
+        private readonly Serilog.ILogger _logger;
 
-        public AliPayService(IAlipayClient client, IOptions<AlipayOptions> optionsAccessor, IMapper mapper, FrameworkDbContext dbContext)
+        public AliPayService(IAlipayClient client, IOptions<AlipayOptions> optionsAccessor, IMapper mapper, FrameworkDbContext dbContext, ILogger logger)
         {
             _client = client;
             _optionsAccessor = optionsAccessor;
             _mapper = mapper;
             _dbContext = dbContext;
-
+            _logger = logger;
         }
 
         /// <summary>
@@ -94,6 +99,25 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
 
             var res = await _client.ExecuteAsync(request, _optionsAccessor.Value);
             return ApiResponse<AlipayTradeQueryResponse>.Success(res);
+        }
+        /// <summary>
+        /// 支付宝回调
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task Callback(AlipayPayCallbackReq queryPayRes) {
+            //seq 健康检查info的日志太乱，打印测试用
+            _logger.Warning($"支付宝回调，订单号:{queryPayRes.OutTradeNo},交易状态：{queryPayRes.TradeStatus}");
+            var order = await _dbContext.Orders.FirstOrDefaultAsync(x => x.OrderId == queryPayRes.OutTradeNo) ?? throw new Exception("此订单不存在");
+            order.PayOrder(queryPayRes.TradeNo, queryPayRes.TradeStatus);
+            _dbContext.Orders.Update(order);
+            await _dbContext.SaveChangesAsync();
+            //如果支付成功，则把user的余额加上新充值的钱
+            var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserEmail == order.UserId) ?? throw new Exception("此用户不存在");
+            user.Balance = user.Balance + order.Price;
+            _dbContext.SysUsers.Update(user);
+            await _dbContext.SaveChangesAsync();
         }
 
     }
