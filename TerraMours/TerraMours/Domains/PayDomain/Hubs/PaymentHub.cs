@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using TerraMours.Framework.Infrastructure.EFCore;
 using TerraMours_Gpt.Domains.PayDomain.Contracts.Req;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons.Enums;
 
 namespace TerraMours_Gpt.Domains.PayDomain.Hubs
 {
@@ -77,7 +78,15 @@ namespace TerraMours_Gpt.Domains.PayDomain.Hubs
             user.Balance = user.Balance + order.Price;
             _dbContext.SysUsers.Update(user);
             await _dbContext.SaveChangesAsync();
-            await Clients.Client(connectionId).SendAsync("QueryPaymentStatus", queryPayRes);
+
+            var res = false;
+            //交易状态：WAIT_BUYER_PAY（交易创建，等待买家付款）、TRADE_CLOSED（未付款交易超时关闭，或支付完成后全额退款）、TRADE_SUCCESS（交易支付成功）、TRADE_FINISHED（交易结束，不可退款）
+            if (queryPayRes.TradeStatus == AlipayTradeStatusEnum.TRADE_SUCCESS.ToString())
+            {
+                res = true;
+            }
+            //queryPayRes,前端只需要传是否成功即可
+            await Clients.Client(connectionId).SendAsync("QueryPaymentStatus", res);
         }
 
     }
