@@ -4,7 +4,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.Contracts.Req
 {
     public class AlipayTradePreCreateReq
     {
-        [Required]
+        /*[Required]
         [Display(Name = "out_trade_no")]
         public string OutTradeNo { get; set; }
 
@@ -17,7 +17,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.Contracts.Req
 
         [Required]
         [Display(Name = "total_amount")]
-        public string TotalAmount { get; set; }
+        public string TotalAmount { get; set; }*/
 
         [Display(Name = "notify_url")]
         public string NotifyUrl { get; set; }

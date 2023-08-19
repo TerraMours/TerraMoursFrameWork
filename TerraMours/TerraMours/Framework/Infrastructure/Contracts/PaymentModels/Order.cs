@@ -83,6 +83,12 @@
             TRADE_FINISHED
         }*/
 
+        //无参构造函数 攻 EF Core 调用
+        public Order()
+        {
+
+        }
+
         /// <summary>
         /// 新建订单
         /// </summary>
@@ -91,7 +97,8 @@
         /// <param name="description"></param>
         /// <param name="price"></param>
         /// <param name="userId"></param>
-        public Order(long productId, string name, string description, decimal price, string userId)
+        /// <param name="orderid">自身系统里面唯一的交易号</param>
+        public Order(long productId, string name, string description, decimal price, string userId, string orderid)
         {
             //初始化用户 ：以下是有用的字段
             this.ProductId = productId;
@@ -100,7 +107,7 @@
             this.Price = price;
             this.UserId = userId;
             //系统自动生成orderid
-            this.OrderId = $"TerraMours-{Guid.NewGuid()}";
+            this.OrderId = orderid;
             //默认新建订单是未支付的，后续查询支付宝订单状态再覆盖此状态 取消设计枚举
             this.Status = "WAIT_BUYER_PAY";
             //EntityBase
