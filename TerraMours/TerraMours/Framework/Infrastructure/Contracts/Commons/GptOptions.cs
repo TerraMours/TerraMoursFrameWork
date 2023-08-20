@@ -2,10 +2,7 @@
 {
     public class GptOptions
     {
-        /// <summary>
-        /// 1token定价
-        /// </summary>
-        public decimal TokenPrice { get; set; }
+        
         public OpenAIOptions OpenAIOptions { get; set; }
         public ImagOptions ImagOptions { get; set; }
     }
@@ -14,6 +11,10 @@
     /// </summary>
     public class OpenAIOptions
     {
+        /// <summary>
+        /// 1token定价
+        /// </summary>
+        public decimal TokenPrice { get; set; }
         public OpenAI OpenAI { get; set; }
         public AzureOpenAI AzureOpenAI { get; set; }
     }
@@ -22,6 +23,11 @@
     /// </summary>
     public class ImagOptions
     {
+        /// <summary>
+        /// 图片定价
+        /// </summary>
+        public decimal ImagePrice { get; set; }
+
         /// <summary>
         /// 生成图片的静态文件地址
         /// </summary>

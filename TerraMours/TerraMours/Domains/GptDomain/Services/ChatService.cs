@@ -290,6 +290,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             }
             takesPrice += TokensPrice(totalMsg, req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel);
             user.Balance -= takesPrice;
+            user.ModifyDate = DateTime.Now;
             var chatRecord = _mapper.Map<ChatRecord>(chatRes);
             await _dbContext.ChatRecords.AddAsync(chatRecord);
             _dbContext.SysUsers.Update(user);
@@ -925,7 +926,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         private decimal TokensPrice(string str, string model)
         {
             var length = System.Text.Encoding.Default.GetBytes(str.ToCharArray()).Length;
-            decimal price = _options.Value.TokenPrice > 0 ? _options.Value.TokenPrice : (decimal)0.0001;
+            decimal price = _options.Value.OpenAIOptions.TokenPrice > 0 ? _options.Value.OpenAIOptions.TokenPrice : (decimal)0.0001;
             switch (model)
             {
                 case "gpt-3.5-turbo-16k":

@@ -15,7 +15,6 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
         [Key]
         public long GptOptionsId { get; set; }
 
-        public decimal TokenPrice { get; set; }
         /// <summary>
         /// AI配置
         /// </summary>
