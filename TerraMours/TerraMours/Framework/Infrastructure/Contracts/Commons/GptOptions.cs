@@ -2,6 +2,10 @@
 {
     public class GptOptions
     {
+        /// <summary>
+        /// 1token定价
+        /// </summary>
+        public decimal TokenPrice { get; set; }
         public OpenAIOptions OpenAIOptions { get; set; }
         public ImagOptions ImagOptions { get; set; }
     }
