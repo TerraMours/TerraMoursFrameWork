@@ -9,7 +9,7 @@ namespace TerraMours.Domains.LoginDomain.IServices
         Task<ApiResponse<LoginRes>> Login(SysLoginUserReq userReq);
         Task<ApiResponse<List<SysUserDetailRes>>> GetAllUserList();
         Task<ApiResponse<bool>> DelUser(SysUserBaseReq userReq);
-        Task<ApiResponse<bool>> UpdateUser(SysUserDetailRes userReq);
+        Task<ApiResponse<bool>> UpdateUser(SysUserDetailRes userReq,long userId);
         Task<ApiResponse<bool>> AddUser(SysUserAddReq userReq);
         Task<string> Logout(SysLoginUserReq userReq);
         Task<ApiResponse<SysUserDetailRes>> GetUserInfoById(long userId);

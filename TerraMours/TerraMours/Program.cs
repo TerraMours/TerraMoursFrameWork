@@ -126,25 +126,26 @@ builder.Services.AddSwaggerGen(options =>
 });
 //automapper
 // 配置映射规则
+//添加忽略null值的配置：.ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null)
 MapperConfiguration mapperConfig = new(cfg =>
 {
-    cfg.CreateMap<SysUserDetailRes, SysUser>().ForMember(m => m.UserId, n => n.Ignore());
-    cfg.CreateMap<SysUser, SysUserDetailRes>();
-    cfg.CreateMap<SysUserAddReq, SysUser>().ForMember(m => m.UserId, n => n.Ignore());
-    cfg.CreateMap<SysRole, SysRoleRes>();
-    cfg.CreateMap<SysMenuReq, SysMenus>().ForMember(m => m.MenuId, n => n.Ignore());
-    cfg.CreateMap<SysMenus, SysMenuRes>();
-    cfg.CreateMap<KeyOptions, KeyOptionRes>();
-    cfg.CreateMap<Sensitive, SensitiveRes>();
-    cfg.CreateMap<ChatConversation, ChatConversationRes>();
-    cfg.CreateMap<ChatRecord, ChatRes>();
-    cfg.CreateMap<ChatRes, ChatRecord>();
-    cfg.CreateMap<ImageRecord, ImageRes>();
-    cfg.CreateMap<PromptOptions, PromptOptionRes>();
-    cfg.CreateMap<ProductReq, Product>();
-    cfg.CreateMap<Product, ProductRes>();
-    cfg.CreateMap<CategoryReq, Category>();
-    cfg.CreateMap<Category, CategoryRes>();
+    cfg.CreateMap<SysUserDetailRes, SysUser>().ForMember(m => m.UserId, n => n.Ignore()).ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<SysUser, SysUserDetailRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<SysUserAddReq, SysUser>().ForMember(m => m.UserId, n => n.Ignore()).ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<SysRole, SysRoleRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<SysMenuReq, SysMenus>().ForMember(m => m.MenuId, n => n.Ignore()).ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<SysMenus, SysMenuRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<KeyOptions, KeyOptionRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<Sensitive, SensitiveRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<ChatConversation, ChatConversationRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<ChatRecord, ChatRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<ChatRes, ChatRecord>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<ImageRecord, ImageRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<PromptOptions, PromptOptionRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<ProductReq, Product>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<Product, ProductRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<CategoryReq, Category>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<Category, CategoryRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 });
 //注册配置
 IMapper mapper = mapperConfig.CreateMapper();

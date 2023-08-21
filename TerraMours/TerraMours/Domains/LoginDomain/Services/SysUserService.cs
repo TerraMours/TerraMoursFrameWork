@@ -199,16 +199,24 @@ namespace TerraMours.Domains.LoginDomain.Services
         /// 更新用户信息
         /// </summary>
         /// <param name="userReq"></param>
+        /// <param name="userId"></param>
         /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        public async Task<ApiResponse<bool>> UpdateUser(SysUserDetailRes userReq)
+        public async Task<ApiResponse<bool>> UpdateUser(SysUserDetailRes userReq, long userId)
         {
-            if(await _dbContext.SysUsers.AnyAsync(m=>m.UserEmail==userReq.UserEmail && m.UserId != userReq.UserId && m.Enable==true))
+            var modifyUser =await _dbContext.SysUsers.FirstOrDefaultAsync(m=>m.UserId==userId);
+            //只有超级管理员和本人可以修改当前用户的信息,只有超级管理员可以修改余额
+            if (modifyUser == null || (modifyUser.RoleId !=1 && modifyUser.UserId !=userReq.UserId) || (modifyUser.RoleId != 1 && userReq.Balance != null))
+            {
+                return ApiResponse<bool>.Fail("没有修改的权限！");
+            }
+
+            if (await _dbContext.SysUsers.AnyAsync(m=>m.UserEmail==userReq.UserEmail && m.UserId != userReq.UserId && m.Enable==true))
             {
                 return ApiResponse<bool>.Fail("邮箱已注册！");
             }
             var user =await _dbContext.SysUsers.FirstOrDefaultAsync(m => m.UserId == userReq.UserId);
             _mapper.Map(userReq, user);
+            user.ModifyDate=DateTime.Now;
             _dbContext.SysUsers.Update(user);
             await _dbContext.SaveChangesAsync();
             await _helper.RemoveAsync("GetAllUserList");

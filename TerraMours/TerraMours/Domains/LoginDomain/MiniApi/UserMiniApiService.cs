@@ -58,7 +58,9 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
         [Authorize]
         public async Task<IResult> UpdateUser([FromBody] SysUserDetailRes req)
         {
-            var res = await _sysUserService.UpdateUser(req);
+            var userId = long.Parse(_httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.UserData)!);
+
+            var res = await _sysUserService.UpdateUser(req, userId);
             return Results.Ok(res);
         }
         /// <summary>
