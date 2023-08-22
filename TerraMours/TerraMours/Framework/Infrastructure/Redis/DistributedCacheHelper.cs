@@ -71,7 +71,7 @@ namespace TerraMours.Framework.Infrastructure.Redis
             var jsonOptions = new JsonSerializerOptions
             {
                 //支持循环调用，EF Core 使用include 之后会报错
-                ReferenceHandler = ReferenceHandler.Preserve,
+                //ReferenceHandler = ReferenceHandler.Preserve,
                 //WriteIndented = true,
                 //不设置这个，那么符号和汉字都会变成Unicode
                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
