@@ -293,6 +293,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             user.ModifyDate = DateTime.Now;
             var chatRecord = _mapper.Map<ChatRecord>(chatRes);
             await _dbContext.ChatRecords.AddAsync(chatRecord);
+            await _dbContext.SaveChangesAsync();
             _dbContext.SysUsers.Update(user);
             await _dbContext.SaveChangesAsync();
         }
