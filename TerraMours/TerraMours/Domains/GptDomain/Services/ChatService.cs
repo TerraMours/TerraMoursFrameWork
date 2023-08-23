@@ -915,6 +915,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId, Enable = true
             };
             await _dbContext.ChatRecords.AddAsync(chat);
+            await _dbContext.SaveChangesAsync();
             return messegs;
         }
 
