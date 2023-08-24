@@ -1,15 +1,17 @@
-﻿using System.Text.Json.Serialization;
-
-namespace TerraMours.Domains.LoginDomain.Contracts.Req
-{
-    /// <summary>
-    /// 用户列表数据
-    /// </summary>
-    public class SysUserDetailRes : SysUserRes
-    {
-        public SysUserDetailRes()
-        {
-        }
+﻿namespace TerraMours_Gpt.Domains.LoginDomain.Contracts.Req {
+    public class SysUserUpdateReq {
+        /// <summary>
+        /// 用户id
+        /// </summary>
+        public long UserId { get; set; }
+        /// <summary>
+        /// 名称
+        /// </summary>
+        public string UserName { get; set; }
+        /// <summary>
+        /// 角色
+        /// </summary>
+        public long? RoleId { get; set; }
         /// <summary>
         /// 邮箱 可以登录使用
         /// </summary>
@@ -31,27 +33,9 @@ namespace TerraMours.Domains.LoginDomain.Contracts.Req
         /// 头像url地址 
         /// </summary>
         public string? HeadImageUrl { get; set; }
-
-        #region 扩展字段
-        /// <summary>
-        /// 会员等级
-        /// </summary>
-        public int? VipLevel { get; set; }
-
-        /// <summary>
-        /// 会员过期时间
-        /// </summary>
-        public DateTime? VipExpireTime { get; set; }
-
-        /// <summary>
-        /// 图像剩余次数
-        /// </summary>
-        public int? ImageCount { get; set; }
-
         /// <summary>
         /// token余额价格
         /// </summary>
         public decimal? Balance { get; set; }
-        #endregion
     }
 }

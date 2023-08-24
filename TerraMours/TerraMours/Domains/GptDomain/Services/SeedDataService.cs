@@ -68,7 +68,13 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                     new SysMenus(){MenuId=10,HasChildren=false,MenuName="系统提示词",MenuUrl="/management/promptOption",
                     Icon="mdi:table-large",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true},
                     new SysMenus(){MenuId=11,HasChildren=false,MenuName="Key池管理",MenuUrl="/management/keyOption",
-                    Icon="mdi:monitor-dashboard",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true}
+                    Icon="mdi:monitor-dashboard",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true},
+                    new SysMenus(){MenuId=12,HasChildren=false,MenuName="商品管理",
+                    Icon="carbon:cloud-service-management",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=3,ExternalUrl=false,IsHome=false,IsShow=true},
+                     new SysMenus(){MenuId=13,ParentId=12,HasChildren=false,MenuName="商品分类",MenuUrl="/management/category",
+                    Icon="ic:baseline-security",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true},
+                    new SysMenus(){MenuId=14,ParentId=12,HasChildren=false,MenuName="商品列表",MenuUrl="/management/product",
+                    Icon="ic:baseline-security",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=1,ExternalUrl=false,IsHome=false,IsShow=true}
                 });
             }
             if (!await _dbContext.SysRolesToMenus.AnyAsync())
@@ -85,7 +91,10 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                     new SysRolesToMenu(1,8),
                     new SysRolesToMenu(1,9),
                     new SysRolesToMenu(1,10),
-                    new SysRolesToMenu(1,11)
+                    new SysRolesToMenu(1,11),
+                    new SysRolesToMenu(1,12),
+                    new SysRolesToMenu(1,13),
+                    new SysRolesToMenu(1,14),
                 });
             }
             if (!await _dbContext.SysRoles.AnyAsync())
@@ -93,7 +102,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
 
                 await _dbContext.SysRoles.AddRangeAsync(new[]
                 {
-                    new SysRole("超级管理员"){RoleId=1}
+                    new SysRole("超级管理员"){RoleId=1},
+                    new SysRole("普通用户"){RoleId=2}
                 });
             }
             if (!await _dbContext.SysUsers.AnyAsync())

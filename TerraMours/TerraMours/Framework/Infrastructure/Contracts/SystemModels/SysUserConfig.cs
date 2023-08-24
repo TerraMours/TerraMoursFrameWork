@@ -15,6 +15,9 @@ namespace TerraMours.Framework.Infrastructure.Contracts.SystemModels
             //设置主键自增
             builder.Property(e => e.UserId)
                    .UseIdentityColumn();
+            //0.000014 为gpt3.5一个token的价格 这位单位1
+            builder.Property(e => e.Balance)
+           .HasPrecision(18, 6); // 设置 Precision 和 Scale，例子中 Scale 为8
 
             //将 Version 属性设置为每次插入或更新时自增，并且将其设置为乐观并发标识。
             //builder.Property(e => e.Version).ValueGeneratedOnAddOrUpdate().IsConcurrencyToken();

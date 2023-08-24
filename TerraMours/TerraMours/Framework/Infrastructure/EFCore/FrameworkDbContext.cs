@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.PaymentModels;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.SystemModels;
 
 namespace TerraMours.Framework.Infrastructure.EFCore
@@ -25,13 +27,20 @@ namespace TerraMours.Framework.Infrastructure.EFCore
         public DbSet<PromptOptions> PromptOptions { get; set; }
         public DbSet<Sensitive> Sensitives { get; set; }
         public DbSet<Verification> Verifications { get; set; }
+        /// <summary>
+        /// 订单表
+        /// </summary>
+        public DbSet<Order> Orders { get; set; }
+
+        public DbSet<Category> Categorys { get; set; }
+        public DbSet<Product> Products { get; set; }
 
         #endregion
 
 
         public FrameworkDbContext(DbContextOptions<FrameworkDbContext> options) : base(options)
         {
-            
+
         }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -40,6 +49,31 @@ namespace TerraMours.Framework.Infrastructure.EFCore
             builder.ApplyConfigurationsFromAssembly(GetType().Assembly);
         }
 
+        public override int SaveChanges()
+        {
+            var saved = 0;
+            while (saved !=0) {
+                try {
+                    base.SaveChanges();
+                    saved++;
+                }
+                catch (DbUpdateConcurrencyException ex) {
+                    foreach (var entry in ex.Entries) {
+                            var proposedValues = entry.CurrentValues;
+                            var databaseValues = entry.GetDatabaseValues();
 
+                            foreach (var property in proposedValues.Properties) {
+                                var proposedValue = proposedValues[property];
+                                var databaseValue = databaseValues[property];
+                            }
+
+                            // Refresh original values to bypass next concurrency check
+                            entry.OriginalValues.SetValues(databaseValues);
+                    }
+                }
+            }
+
+            return saved;
+        }
     }
 }

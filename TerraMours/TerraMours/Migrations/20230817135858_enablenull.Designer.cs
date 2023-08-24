@@ -8,14 +8,15 @@ using Newtonsoft.Json.Linq;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours.Framework.Infrastructure.EFCore;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
 
 #nullable disable
 
 namespace TerraMours_Gpt.Migrations
 {
     [DbContext(typeof(FrameworkDbContext))]
-    [Migration("20230619150352_init")]
-    partial class init
+    [Migration("20230817135858_enablenull")]
+    partial class enablenull
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -300,6 +301,10 @@ namespace TerraMours_Gpt.Migrations
                     b.Property<string>("Address")
                         .HasColumnType("text");
 
+                    b.Property<decimal?>("Balance")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)");
+
                     b.Property<DateTime?>("CreateDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -465,11 +470,17 @@ namespace TerraMours_Gpt.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("ChatRecordId"));
 
+                    b.Property<long?>("ChatConversationConversationId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("CompletionTokens")
+                        .HasColumnType("integer");
+
                     b.Property<long?>("ConversationId")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("CreateDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp");
 
                     b.Property<bool>("Enable")
                         .HasColumnType("boolean");
@@ -489,15 +500,21 @@ namespace TerraMours_Gpt.Migrations
                     b.Property<DateTime?>("ModifyDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("PromptTokens")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Role")
                         .HasColumnType("text");
+
+                    b.Property<int?>("TotalTokens")
+                        .HasColumnType("integer");
 
                     b.Property<long?>("UserId")
                         .HasColumnType("bigint");
 
                     b.HasKey("ChatRecordId");
 
-                    b.HasIndex("ConversationId");
+                    b.HasIndex("ChatConversationConversationId");
 
                     b.ToTable("ChatRecord", (string)null);
                 });
@@ -590,7 +607,7 @@ namespace TerraMours_Gpt.Migrations
                     b.Property<bool>("Enable")
                         .HasColumnType("boolean");
 
-                    b.Property<JObject>("ImagOptions")
+                    b.Property<ImagOptions>("ImagOptions")
                         .HasColumnType("jsonb");
 
                     b.Property<string>("ModifierName")
@@ -602,7 +619,7 @@ namespace TerraMours_Gpt.Migrations
                     b.Property<long?>("ModifyID")
                         .HasColumnType("bigint");
 
-                    b.Property<JObject>("OpenAIOptions")
+                    b.Property<OpenAIOptions>("OpenAIOptions")
                         .HasColumnType("jsonb");
 
                     b.Property<int?>("OrderNo")
@@ -652,6 +669,9 @@ namespace TerraMours_Gpt.Migrations
                     b.Property<string>("IP")
                         .HasColumnType("text");
 
+                    b.Property<string>("ImagUrl")
+                        .HasColumnType("text");
+
                     b.Property<bool?>("IsPublic")
                         .HasColumnType("boolean");
 
@@ -676,11 +696,17 @@ namespace TerraMours_Gpt.Migrations
                     b.Property<int?>("OrderNo")
                         .HasColumnType("integer");
 
+                    b.Property<string>("PranslatePrompt")
+                        .HasColumnType("text");
+
                     b.Property<string>("Prompt")
                         .HasColumnType("text");
 
                     b.Property<string>("Remark")
                         .HasColumnType("text");
+
+                    b.Property<int?>("Size")
+                        .HasColumnType("integer");
 
                     b.Property<long?>("UserId")
                         .HasColumnType("bigint");
@@ -926,6 +952,189 @@ namespace TerraMours_Gpt.Migrations
                     b.ToTable("Verification", (string)null);
                 });
 
+            modelBuilder.Entity("TerraMours_Gpt.Framework.Infrastructure.Contracts.PaymentModels.Order", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedTime")
+                        .HasColumnType("timestamp");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ImagePath")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("OrderId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("PaidTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)");
+
+                    b.Property<long>("ProductId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("Stock")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TradeNo")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Order", (string)null);
+                });
+
+            modelBuilder.Entity("TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels.Category", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime?>("CreateDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<long?>("CreateID")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("CreatorName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Enable")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ModifierName")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ModifyDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<long?>("ModifyID")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("OrderNo")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Remark")
+                        .HasColumnType("text");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin")
+                        .HasComputedColumnSql("xmin");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Category", (string)null);
+                });
+
+            modelBuilder.Entity("TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels.Product", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("CategoryId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("CreateDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<long?>("CreateID")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("CreatorName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal?>("Discount")
+                        .HasColumnType("numeric");
+
+                    b.Property<bool>("Enable")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ImagePath")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ModifierName")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ModifyDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<long?>("ModifyID")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("OrderNo")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)");
+
+                    b.Property<string>("Remark")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("Stock")
+                        .HasColumnType("integer");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin")
+                        .HasComputedColumnSql("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("Product", (string)null);
+                });
+
             modelBuilder.Entity("TerraMours_Gpt.Framework.Infrastructure.Contracts.SystemModels.SysDictionary", b =>
                 {
                     b.Property<long>("DictionaryId")
@@ -1059,11 +1268,20 @@ namespace TerraMours_Gpt.Migrations
 
             modelBuilder.Entity("TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels.ChatRecord", b =>
                 {
-                    b.HasOne("TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels.ChatConversation", "ChatConversation")
+                    b.HasOne("TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels.ChatConversation", null)
                         .WithMany("ChatRecords")
-                        .HasForeignKey("ConversationId");
+                        .HasForeignKey("ChatConversationConversationId");
+                });
 
-                    b.Navigation("ChatConversation");
+            modelBuilder.Entity("TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels.Product", b =>
+                {
+                    b.HasOne("TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels.Category", "Category")
+                        .WithMany("Products")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("TerraMours.Framework.Infrastructure.Contracts.SystemModels.SysMenus", b =>
@@ -1084,6 +1302,11 @@ namespace TerraMours_Gpt.Migrations
             modelBuilder.Entity("TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels.ChatConversation", b =>
                 {
                     b.Navigation("ChatRecords");
+                });
+
+            modelBuilder.Entity("TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels.Category", b =>
+                {
+                    b.Navigation("Products");
                 });
 #pragma warning restore 612, 618
         }

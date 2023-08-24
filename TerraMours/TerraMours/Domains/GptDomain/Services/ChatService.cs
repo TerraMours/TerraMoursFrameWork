@@ -189,31 +189,33 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             if (req.ConversationId == null || req.ConversationId == 0)
             {
                 var conversation = await _dbContext.ChatConversations.AddAsync(new ChatConversation(req.Prompt.Length < 5 ? req.Prompt : $"{req.Prompt.Substring(0, 5)}...", req.UserId));
-                await _dbContext.SaveChangesAsync();
+                _dbContext.SaveChanges();
                 req.ConversationId = conversation.Entity.ConversationId;
             }
 
             var user = await getSysUser(req.UserId);
+            if (user ==null)
+            {
+                yield return ApiResponse<ChatRes>.Fail("当前用户不存在");
+                yield break;
+            }
             //敏感词检测
             if (!await Sensitive(req))
             {
                 yield return ApiResponse<ChatRes>.Fail("触发了敏感词");
                 yield break;
             }
-            else if (!await CodeCanAsk(user))
-            {
-                if (user.VipLevel > 0)
-                {
-                    yield return ApiResponse<ChatRes>.Fail("请勿恶意使用");
-                }
-                else
-                {
-                    yield return ApiResponse<ChatRes>.Fail($"已超过体验账号每天最大提问次数：{_options.Value.OpenAIOptions.OpenAI.MaxQuestions}次");
-                }
-                yield break;
-            }
+            
             //上下文
             List<ChatMessage> messegs =await BuildMsgList(req);
+            decimal takesPrice = GetAskPrice(messegs, req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel);
+            //判断余额，gpt4时需要余额五元以上
+            if (user.Balance == null || user.Balance <=( req.Model== "gpt-4"? (takesPrice+5):takesPrice))
+            {
+                yield return ApiResponse<ChatRes>.Fail($"账号余额不足，请充值");
+                yield break;
+            }
+            
             int maxtoken;
             switch (req.Model) {
                 case "gpt-4":
@@ -268,6 +270,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                     if (itemMsg.Successful == false)
                     {
                         _logger.Error(itemMsg.Error.Message);
+                        yield return ApiResponse<ChatRes>.Fail(itemMsg.Error.Message);
+                        yield break;
                     }
                     totalMsg += itemMsg?.Choices?.FirstOrDefault().Message.Content;
                     chatRes.Message = totalMsg;
@@ -284,9 +288,14 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                     yield return ApiResponse<ChatRes>.Success(chatRes);
                 }
             }
+            takesPrice += TokensPrice(totalMsg, req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel);
+            user.Balance -= takesPrice;
+            user.ModifyDate = DateTime.Now;
             var chatRecord = _mapper.Map<ChatRecord>(chatRes);
             await _dbContext.ChatRecords.AddAsync(chatRecord);
-            await _dbContext.SaveChangesAsync();
+            _dbContext.SaveChanges();
+            _dbContext.SysUsers.Update(user);
+            _dbContext.SaveChanges();
         }
 
 
@@ -303,16 +312,18 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             if (!await Sensitive(req)) {
                  return ApiResponse<ChatRes>.Fail("触发了敏感词");
             }
-            else if (!await CodeCanAsk(user)) {
-                if (user.VipLevel > 0) {
-                     return ApiResponse<ChatRes>.Fail("请勿恶意使用");
-                }
-                else {
-                     return ApiResponse<ChatRes>.Fail($"已超过体验账号每天最大提问次数：{_options.Value.OpenAIOptions.OpenAI.MaxQuestions}次");
-                }
+            if (user == null)
+            {
+                 return ApiResponse<ChatRes>.Fail("当前用户不存在");
             }
             //上下文
             List<ChatMessage> messegs = await BuildMsgList(req);
+            decimal takesPrice = GetAskPrice(messegs, req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel);
+
+            if (user.Balance == null || user.Balance <= takesPrice)
+            {
+                return ApiResponse<ChatRes>.Fail($"账号余额不足，请充值");
+            }
             int maxtoken;
             switch (req.Model) {
                 case "gpt-4":
@@ -368,6 +379,9 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             
             var chatRecord = _mapper.Map<ChatRecord>(chatRes);
             await _dbContext.ChatRecords.AddAsync(chatRecord);
+            takesPrice += TokensPrice(response.Result.Choices.FirstOrDefault().Message.Content, req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel);
+            user.Balance -= takesPrice;
+            _dbContext.SysUsers.Update(user);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<ChatRes>.Success(chatRes);
         }
@@ -901,9 +915,42 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId, Enable = true
             };
             await _dbContext.ChatRecords.AddAsync(chat);
+            _dbContext.SaveChanges();
             return messegs;
         }
 
+        /// <summary>
+        /// 根据模型和字符串内容计算消耗金额
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        private decimal TokensPrice(string str, string model)
+        {
+            var length = System.Text.Encoding.Default.GetBytes(str.ToCharArray()).Length;
+            decimal price = _options.Value.OpenAIOptions.TokenPrice > 0 ? _options.Value.OpenAIOptions.TokenPrice : (decimal)0.0001;
+            switch (model)
+            {
+                case "gpt-3.5-turbo-16k":
+                    price = price * 2;
+                    break;
+                case "gpt-4":
+                    price = price * 3;
+                    break;
+                default: break;
+            }
+            return length * price;
+        }
+
+        private decimal GetAskPrice(List<ChatMessage> chatMessages, string model)
+        {
+            string msg = "";
+            foreach (var item in chatMessages)
+            {
+                msg += item.Content;
+            }
+            return TokensPrice(msg, model);
+        }
         #endregion
     }
 }

@@ -9,6 +9,7 @@ using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
 using TerraMours.Domains.LoginDomain.Contracts.Res;
 using TerraMours.Domains.LoginDomain.IServices;
+using TerraMours_Gpt.Domains.LoginDomain.Contracts.Req;
 
 namespace TerraMours.Domains.LoginDomain.MiniApi
 {
@@ -56,9 +57,11 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
         /// <param name="req"></param>
         /// <returns></returns>
         [Authorize]
-        public async Task<IResult> UpdateUser([FromBody] SysUserDetailRes req)
+        public async Task<IResult> UpdateUser([FromBody] SysUserUpdateReq req)
         {
-            var res = await _sysUserService.UpdateUser(req);
+            var userId = long.Parse(_httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.UserData)!);
+
+            var res = await _sysUserService.UpdateUser(req, userId);
             return Results.Ok(res);
         }
         /// <summary>

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Caching.Distributed;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace TerraMours.Framework.Infrastructure.Redis
 {
@@ -67,19 +68,31 @@ namespace TerraMours.Framework.Infrastructure.Redis
         public async Task<TResult?> GetOrCreateAsync<TResult>(string cacheKey, Func<DistributedCacheEntryOptions, Task<TResult?>> valueFactory, int expireSeconds = 86400)
         {
             string jsonStr = await _distCache.GetStringAsync(cacheKey);
+            var jsonOptions = new JsonSerializerOptions
+            {
+                //支持循环调用，EF Core 使用include 之后会报错
+                //ReferenceHandler = ReferenceHandler.Preserve,
+                //WriteIndented = true,
+                //不设置这个，那么符号和汉字都会变成Unicode
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                //通过设置 JsonSerializerOptions 的 IgnoreReadOnlyFields 或 IgnoreNullValues 属性来忽略只读字段或空值。
+                /*IgnoreReadOnlyFields = true,
+                IgnoreNullValues = true*/
+            };
             if (string.IsNullOrEmpty(jsonStr))
             {
                 var options = CreateOptions(expireSeconds);
                 TResult? result = await valueFactory(options);
+
                 string jsonOfResult = JsonSerializer.Serialize(result,
-                    typeof(TResult));
+                    typeof(TResult), jsonOptions);
                 await _distCache.SetStringAsync(cacheKey, jsonOfResult, options);
                 return result;
             }
             else
             {
                 await _distCache.RefreshAsync(cacheKey);
-                return JsonSerializer.Deserialize<TResult>(jsonStr)!;
+                return JsonSerializer.Deserialize<TResult>(jsonStr, jsonOptions)!;
             }
         }
 

@@ -101,7 +101,20 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         [Queue("img-queue")]
         public async Task BackServiceCreateImg(ImageReq request) {
             try {
+                var user= await _dbContext.SysUsers.FirstOrDefaultAsync(m => m.UserId == request.UserId);
+                if (user == null || user.Balance<(_options.Value.ImagOptions.ImagePrice * request.Count))
+                {
+                    _hubContext.Clients.Client(request.ConnectionId).SendAsync("updateImgUrl", $"生成图片失败：账号余额不足");
+                    return;
+                }
                 List<string> imgList = await CreatImages(request);
+                if (imgList.Count > 0)
+                {
+                    user.Balance -= _options.Value.ImagOptions.ImagePrice * request.Count;
+                    user.ModifyDate = DateTime.Now;
+                    _dbContext.SysUsers.Update(user);
+                    await _dbContext.SaveChangesAsync();
+                }
                 _hubContext.Clients.Client(request.ConnectionId).SendAsync("updateImgUrl", imgList);
             }
             catch (Exception ex) {

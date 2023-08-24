@@ -13,6 +13,7 @@ using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 using TerraMours.Framework.Infrastructure.EFCore;
 using TerraMours.Framework.Infrastructure.Redis;
 using TerraMours.Framework.Infrastructure.Utils;
+using TerraMours_Gpt.Domains.LoginDomain.Contracts.Req;
 
 namespace TerraMours.Domains.LoginDomain.Services
 {
@@ -25,7 +26,8 @@ namespace TerraMours.Domains.LoginDomain.Services
         private readonly IOptionsSnapshot<SysSettings> _sysSettings;
         private readonly IMapper _mapper;
         private readonly IDistributedCacheHelper _helper;
-        public SysUserService(FrameworkDbContext dbContext, IOptionsSnapshot<SysSettings> sysSettings, IMapper mapper, IDistributedCacheHelper helper) {
+        public SysUserService(FrameworkDbContext dbContext, IOptionsSnapshot<SysSettings> sysSettings, IMapper mapper, IDistributedCacheHelper helper) 
+        {
             _dbContext = dbContext;
             _sysSettings = sysSettings;
             _mapper = mapper;
@@ -126,6 +128,7 @@ namespace TerraMours.Domains.LoginDomain.Services
 
             catch (Exception ex)
             {
+                //todo 后面所有的异常记录日志，同时返回前端的信息需要蒙蔽，为联系为管理员或者其他不包含堆栈信息的内容
                 throw new Exception("" + ex.Message);
             }
         }
@@ -172,8 +175,13 @@ namespace TerraMours.Domains.LoginDomain.Services
         /// </summary>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async Task<ApiResponse<List<SysUserDetailRes>>> GetAllUserList() {
-            var userList = await _helper.GetOrCreateAsync("GetAllUserList", async options => {return await _dbContext.SysUsers.Where(x => x.Enable == true).ToListAsync(); });
+        public async Task<ApiResponse<List<SysUserDetailRes>>> GetAllUserList() 
+        {
+            //由于正式版本1.0，每次对话都会更新，频繁更新之后，不认为放在缓存合适，取消用户所有的缓存操作
+            //思考，如果将用户id与用户余额单独做一张小表分离出来，其实用户的信息，并不是经常修改，依旧可以使用缓存。以后遇到问题，需要进一步思考
+            //Enable 这种可以在实体config里面配置queryFilter
+            //var userList = await _helper.GetOrCreateAsync("GetAllUserList", async options => { return await _dbContext.SysUsers.Where(x => x.Enable == true).ToListAsync(); });
+            var userList = await _dbContext.SysUsers.Where(x => x.Enable == true).ToListAsync();
             var userDetailList = _mapper.Map<List<SysUserDetailRes>>(userList);
             return ApiResponse<List<SysUserDetailRes>>.Success(userDetailList);
         }
@@ -192,26 +200,34 @@ namespace TerraMours.Domains.LoginDomain.Services
             }
             user?.Delete();
             await _dbContext.SaveChangesAsync();
-            await _helper.RemoveAsync("GetAllUserList");
+            //await _helper.RemoveAsync("GetAllUserList");
             return ApiResponse<bool>.Success(true);
         }
         /// <summary>
         /// 更新用户信息
         /// </summary>
         /// <param name="userReq"></param>
+        /// <param name="userId"></param>
         /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        public async Task<ApiResponse<bool>> UpdateUser(SysUserDetailRes userReq)
+        public async Task<ApiResponse<bool>> UpdateUser(SysUserUpdateReq userReq, long userId)
         {
-            if(await _dbContext.SysUsers.AnyAsync(m=>m.UserEmail==userReq.UserEmail && m.UserId != userReq.UserId && m.Enable==true))
+            var modifyUser =await _dbContext.SysUsers.FirstOrDefaultAsync(m=>m.UserId==userId);
+            //只有超级管理员和本人可以修改当前用户的信息,只有超级管理员可以修改余额
+            if (modifyUser == null || (modifyUser.RoleId !=1 && modifyUser.UserId !=userReq.UserId) || (modifyUser.RoleId != 1 && userReq.Balance != null))
+            {
+                return ApiResponse<bool>.Fail("没有修改的权限！");
+            }
+
+            if (await _dbContext.SysUsers.AnyAsync(m=>m.UserEmail==userReq.UserEmail && m.UserId != userReq.UserId && m.Enable==true))
             {
                 return ApiResponse<bool>.Fail("邮箱已注册！");
             }
             var user =await _dbContext.SysUsers.FirstOrDefaultAsync(m => m.UserId == userReq.UserId);
             _mapper.Map(userReq, user);
+            user.ModifyDate=DateTime.Now;
             _dbContext.SysUsers.Update(user);
-            await _dbContext.SaveChangesAsync();
-            await _helper.RemoveAsync("GetAllUserList");
+            _dbContext.SaveChanges();
+            //await _helper.RemoveAsync("GetAllUserList");
             return ApiResponse<bool>.Success(true);
         }
         /// <summary>
@@ -232,7 +248,7 @@ namespace TerraMours.Domains.LoginDomain.Services
             _mapper.Map(userReq, user);
             await _dbContext.SysUsers.AddAsync(user);
             await _dbContext.SaveChangesAsync();
-            await _helper.RemoveAsync("GetAllUserList");
+            //await _helper.RemoveAsync("GetAllUserList");
             return ApiResponse<bool>.Success(true);
         }
 

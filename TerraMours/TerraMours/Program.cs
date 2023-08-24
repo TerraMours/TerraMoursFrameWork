@@ -1,12 +1,15 @@
 using AutoMapper;
-using Masa.BuildingBlocks.Service.MinimalAPIs;
+using Essensoft.Paylink.Alipay;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Hangfire;
+using Hangfire.PostgreSql;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -14,6 +17,7 @@ using Serilog.Events;
 using System.Text;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
 using TerraMours.Domains.LoginDomain.Contracts.ReqValidators;
+using TerraMours.Domains.LoginDomain.Contracts.Res;
 using TerraMours.Domains.LoginDomain.IServices;
 using TerraMours.Domains.LoginDomain.Services;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
@@ -21,19 +25,26 @@ using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 using TerraMours.Framework.Infrastructure.EFCore;
 using TerraMours.Framework.Infrastructure.Filters;
 using TerraMours.Framework.Infrastructure.Redis;
-using TerraMours.Domains.LoginDomain.Contracts.Res;
 using TerraMours.Framework.Infrastructure.Services;
-using TerraMours_Gpt.Framework.Infrastructure.Middlewares;
-using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
-using TerraMours_Gpt.Domains.GptDomain.IServices;
-using TerraMours_Gpt.Domains.GptDomain.Services;
-using TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;
 using TerraMours_Gpt.Domains.GptDomain.Hubs;
-using Hangfire;
-using Hangfire.PostgreSql;
-using Masa.BuildingBlocks.Data;
-using Microsoft.Extensions.FileProviders;
+using TerraMours_Gpt.Domains.GptDomain.IServices;
+using TerraMours_Gpt.Domains.GptDomain.Services;
+using TerraMours_Gpt.Domains.LoginDomain.Contracts.Req;
+using TerraMours_Gpt.Domains.PayDomain.Contracts.Req;
+using TerraMours_Gpt.Domains.PayDomain.Contracts.Res;
+using TerraMours_Gpt.Domains.PayDomain.Hubs;
+using TerraMours_Gpt.Domains.PayDomain.IServices;
+using TerraMours_Gpt.Domains.PayDomain.Services;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels;
+using TerraMours_Gpt.Framework.Infrastructure.Middlewares;
+
+//用于启用或禁用 Npgsql 客户端与 Postgres 服务器之间的时间戳行为。它并不会直接修改 Postgres 的时区设置。
+//时间设置要提前，之前在身份检验后会导致失效
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,6 +61,7 @@ IConfiguration configuration = builder.Configuration;
 builder.Services.Configure<SysSettings>(configuration.GetSection("SysSettings"));
 var sysSettings = builder.Configuration.GetSection("SysSettings").Get<SysSettings>() ?? throw new Exception("用户或者密码不正确");
 builder.Services.Configure<GptOptions>(configuration.GetSection("GptOptions"));
+builder.Services.Configure<AlipayOptions>(configuration.GetSection("Alipay"));
 //注入日志
 // 配置 Serilog 日志记录器
 
@@ -115,20 +127,26 @@ builder.Services.AddSwaggerGen(options =>
 });
 //automapper
 // 配置映射规则
-MapperConfiguration mapperConfig = new(cfg => {
-    cfg.CreateMap<SysUserDetailRes, SysUser>().ForMember(m => m.UserId, n => n.Ignore());
-    cfg.CreateMap<SysUser, SysUserDetailRes>();
-    cfg.CreateMap<SysUserAddReq, SysUser>().ForMember(m => m.UserId, n => n.Ignore());
-    cfg.CreateMap<SysRole, SysRoleRes>();
-    cfg.CreateMap<SysMenuReq, SysMenus>().ForMember(m => m.MenuId, n => n.Ignore());
-    cfg.CreateMap<SysMenus, SysMenuRes>();
-    cfg.CreateMap<KeyOptions, KeyOptionRes>();
-    cfg.CreateMap<Sensitive, SensitiveRes>();
-    cfg.CreateMap<ChatConversation, ChatConversationRes>();
-    cfg.CreateMap<ChatRecord, ChatRes>();
-    cfg.CreateMap<ChatRes, ChatRecord>();
-    cfg.CreateMap<ImageRecord, ImageRes>();
-    cfg.CreateMap<PromptOptions, PromptOptionRes>();
+//添加忽略null值的配置：.ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null)
+MapperConfiguration mapperConfig = new(cfg =>
+{
+    cfg.CreateMap<SysUserUpdateReq, SysUser>().ForMember(m => m.UserId, n => n.Ignore()).ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<SysUser, SysUserDetailRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<SysUserAddReq, SysUser>().ForMember(m => m.UserId, n => n.Ignore()).ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<SysRole, SysRoleRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<SysMenuReq, SysMenus>().ForMember(m => m.MenuId, n => n.Ignore()).ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<SysMenus, SysMenuRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<KeyOptions, KeyOptionRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<Sensitive, SensitiveRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<ChatConversation, ChatConversationRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<ChatRecord, ChatRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<ChatRes, ChatRecord>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<ImageRecord, ImageRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<PromptOptions, PromptOptionRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<ProductReq, Product>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<Product, ProductRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<CategoryReq, Category>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<Category, CategoryRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 });
 //注册配置
 IMapper mapper = mapperConfig.CreateMapper();
@@ -152,9 +170,19 @@ builder.Services.AddScoped<ISettingsService, SettingsService>();
 //gpt
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IImageService, ImageService>();
-builder.Services.AddCors(options => {
+
+//支付宝pay
+builder.Services.AddScoped<IPayService, AliPayService>();
+
+//商品服务
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+
+builder.Services.AddCors(options =>
+{
     options.AddPolicy(name: "MyPolicy",
-                      policy => {
+                      policy =>
+                      {
                           policy.SetIsOriginAllowed(_ => true)
                                    .AllowAnyMethod()
                                    .AllowAnyHeader()
@@ -231,13 +259,16 @@ var options = new RateLimiterOptions()
 builder.Services.AddSingleton(options);
 */
 
+// 添加Paylink依赖注入
+builder.Services.AddAlipay();
 
 
 //将builder.Build();注释掉然后 改为  builder.AddServices(); 自动注入我们写的服务（miniapi）即可，由于只是单体框架我们不需要使用caller，
 //很简单的只是将miniapi代替以前的传统的controller而已,
 //var app = builder.Build();
 //添加masa miniapi
-var app = builder.AddServices(opt => {
+var app = builder.AddServices(opt =>
+{
     opt.DisableAutoMapRoute = true;
 });
 
@@ -262,14 +293,16 @@ app.UseSerilogRequestLogging();
 app.UseHttpsRedirection();
 
 // Use Hangfire server and dashboard.
-app.UseHangfireServer(new BackgroundJobServerOptions {
+app.UseHangfireServer(new BackgroundJobServerOptions
+{
     Queues = new[] { "default", "img-queue" },
     WorkerCount = 1
 });
 app.UseHangfireDashboard();// 使用 Hangfire 控制面板
 
 //app.UseStaticFiles();
-app.UseStaticFiles(new StaticFileOptions {
+app.UseStaticFiles(new StaticFileOptions
+{
     FileProvider = new PhysicalFileProvider(AppDomain.CurrentDomain.BaseDirectory + "/images"),
     RequestPath = ""
 });
@@ -278,9 +311,6 @@ app.UseStaticFiles(new StaticFileOptions {
 app.UseAuthentication();
 app.UseAuthorization();
 
-//用于启用或禁用 Npgsql 客户端与 Postgres 服务器之间的时间戳行为。它并不会直接修改 Postgres 的时区设置。
-AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
 app.UseCors("MyPolicy");
 //请求中间件
 app.UseMiddleware<KeyMiddleware>();
@@ -314,6 +344,7 @@ app.UseEndpoints(endpoints =>
 */
 // SignalR hub
 app.MapHub<GraphGenerationHub>("/graphhub");
+app.MapHub<PaymentHub>("/Hubs/QueryPaymentStatus");
 
 app.Run();
 

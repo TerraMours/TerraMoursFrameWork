@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Newtonsoft.Json.Linq;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
 
 #nullable disable
 
@@ -14,6 +15,30 @@ namespace TerraMours_Gpt.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "Category",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false, computedColumnSql: "xmin"),
+                    Enable = table.Column<bool>(type: "boolean", nullable: false),
+                    CreateDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    CreateID = table.Column<long>(type: "bigint", nullable: true),
+                    CreatorName = table.Column<string>(type: "text", nullable: true),
+                    ModifyID = table.Column<long>(type: "bigint", nullable: true),
+                    ModifierName = table.Column<string>(type: "text", nullable: true),
+                    ModifyDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    Remark = table.Column<string>(type: "text", nullable: true),
+                    OrderNo = table.Column<int>(type: "integer", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Category", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "ChatConversation",
                 columns: table => new
@@ -73,8 +98,8 @@ namespace TerraMours_Gpt.Migrations
                 {
                     GptOptionsId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    OpenAIOptions = table.Column<JObject>(type: "jsonb", nullable: true),
-                    ImagOptions = table.Column<JObject>(type: "jsonb", nullable: true),
+                    OpenAIOptions = table.Column<OpenAIOptions>(type: "jsonb", nullable: true),
+                    ImagOptions = table.Column<ImagOptions>(type: "jsonb", nullable: true),
                     xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false, computedColumnSql: "xmin"),
                     Enable = table.Column<bool>(type: "boolean", nullable: false),
                     CreateDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -101,6 +126,9 @@ namespace TerraMours_Gpt.Migrations
                     Model = table.Column<string>(type: "text", nullable: true),
                     IP = table.Column<string>(type: "text", nullable: true),
                     Prompt = table.Column<string>(type: "text", nullable: true),
+                    PranslatePrompt = table.Column<string>(type: "text", nullable: true),
+                    Size = table.Column<int>(type: "integer", nullable: true),
+                    ImagUrl = table.Column<string>(type: "text", nullable: true),
                     UserId = table.Column<long>(type: "bigint", nullable: true),
                     IsPublic = table.Column<bool>(type: "boolean", nullable: true),
                     ForwardCount = table.Column<int>(type: "integer", nullable: true),
@@ -147,6 +175,30 @@ namespace TerraMours_Gpt.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_KeyOptions", x => x.KeyId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Order",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    OrderId = table.Column<string>(type: "text", nullable: false),
+                    TradeNo = table.Column<string>(type: "text", nullable: true),
+                    ProductId = table.Column<long>(type: "bigint", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false),
+                    Price = table.Column<decimal>(type: "numeric(18,6)", precision: 18, scale: 6, nullable: false),
+                    Stock = table.Column<int>(type: "integer", nullable: true),
+                    ImagePath = table.Column<string>(type: "text", nullable: true),
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    Status = table.Column<string>(type: "text", nullable: false),
+                    CreatedTime = table.Column<DateTime>(type: "timestamp", nullable: false),
+                    PaidTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Order", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -331,6 +383,7 @@ namespace TerraMours_Gpt.Migrations
                     VipLevel = table.Column<int>(type: "integer", nullable: true),
                     VipExpireTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     ImageCount = table.Column<int>(type: "integer", nullable: true),
+                    Balance = table.Column<decimal>(type: "numeric(18,6)", precision: 18, scale: 6, nullable: true),
                     xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false, computedColumnSql: "xmin"),
                     Enable = table.Column<bool>(type: "boolean", nullable: false),
                     CreateDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -374,6 +427,41 @@ namespace TerraMours_Gpt.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Product",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false),
+                    Price = table.Column<decimal>(type: "numeric(18,6)", precision: 18, scale: 6, nullable: false),
+                    Discount = table.Column<decimal>(type: "numeric", nullable: true),
+                    ImagePath = table.Column<string>(type: "text", nullable: true),
+                    Stock = table.Column<int>(type: "integer", nullable: true),
+                    CategoryId = table.Column<long>(type: "bigint", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false, computedColumnSql: "xmin"),
+                    Enable = table.Column<bool>(type: "boolean", nullable: false),
+                    CreateDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    CreateID = table.Column<long>(type: "bigint", nullable: true),
+                    CreatorName = table.Column<string>(type: "text", nullable: true),
+                    ModifyID = table.Column<long>(type: "bigint", nullable: true),
+                    ModifierName = table.Column<string>(type: "text", nullable: true),
+                    ModifyDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    Remark = table.Column<string>(type: "text", nullable: true),
+                    OrderNo = table.Column<int>(type: "integer", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Product", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Product_Category_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "Category",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ChatRecord",
                 columns: table => new
                 {
@@ -386,16 +474,20 @@ namespace TerraMours_Gpt.Migrations
                     Role = table.Column<string>(type: "text", nullable: true),
                     Message = table.Column<string>(type: "text", nullable: true),
                     UserId = table.Column<long>(type: "bigint", nullable: true),
-                    CreateDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreateDate = table.Column<DateTime>(type: "timestamp", nullable: false),
                     ModifyDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    Enable = table.Column<bool>(type: "boolean", nullable: false)
+                    Enable = table.Column<bool>(type: "boolean", nullable: false),
+                    PromptTokens = table.Column<int>(type: "integer", nullable: true),
+                    CompletionTokens = table.Column<int>(type: "integer", nullable: true),
+                    TotalTokens = table.Column<int>(type: "integer", nullable: true),
+                    ChatConversationConversationId = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ChatRecord", x => x.ChatRecordId);
                     table.ForeignKey(
-                        name: "FK_ChatRecord_ChatConversation_ConversationId",
-                        column: x => x.ConversationId,
+                        name: "FK_ChatRecord_ChatConversation_ChatConversationConversationId",
+                        column: x => x.ChatConversationConversationId,
                         principalTable: "ChatConversation",
                         principalColumn: "ConversationId");
                 });
@@ -469,9 +561,14 @@ namespace TerraMours_Gpt.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ChatRecord_ConversationId",
+                name: "IX_ChatRecord_ChatConversationConversationId",
                 table: "ChatRecord",
-                column: "ConversationId");
+                column: "ChatConversationConversationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Product_CategoryId",
+                table: "Product",
+                column: "CategoryId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SysMenuButtons_MenuId",
@@ -503,6 +600,12 @@ namespace TerraMours_Gpt.Migrations
                 name: "KeyOptions");
 
             migrationBuilder.DropTable(
+                name: "Order");
+
+            migrationBuilder.DropTable(
+                name: "Product");
+
+            migrationBuilder.DropTable(
                 name: "PromptOptions");
 
             migrationBuilder.DropTable(
@@ -525,6 +628,9 @@ namespace TerraMours_Gpt.Migrations
 
             migrationBuilder.DropTable(
                 name: "ChatConversation");
+
+            migrationBuilder.DropTable(
+                name: "Category");
 
             migrationBuilder.DropTable(
                 name: "SysMenus");
