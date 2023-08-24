@@ -189,7 +189,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             if (req.ConversationId == null || req.ConversationId == 0)
             {
                 var conversation = await _dbContext.ChatConversations.AddAsync(new ChatConversation(req.Prompt.Length < 5 ? req.Prompt : $"{req.Prompt.Substring(0, 5)}...", req.UserId));
-                await _dbContext.SaveChangesAsync();
+                _dbContext.SaveChanges();
                 req.ConversationId = conversation.Entity.ConversationId;
             }
 
@@ -293,9 +293,9 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             user.ModifyDate = DateTime.Now;
             var chatRecord = _mapper.Map<ChatRecord>(chatRes);
             await _dbContext.ChatRecords.AddAsync(chatRecord);
-            await _dbContext.SaveChangesAsync();
+            _dbContext.SaveChanges();
             _dbContext.SysUsers.Update(user);
-            await _dbContext.SaveChangesAsync();
+            _dbContext.SaveChanges();
         }
 
 
@@ -915,7 +915,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId, Enable = true
             };
             await _dbContext.ChatRecords.AddAsync(chat);
-            await _dbContext.SaveChangesAsync();
+            _dbContext.SaveChanges();
             return messegs;
         }
 

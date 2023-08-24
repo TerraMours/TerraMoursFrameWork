@@ -30,6 +30,7 @@ using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;
 using TerraMours_Gpt.Domains.GptDomain.Hubs;
 using TerraMours_Gpt.Domains.GptDomain.IServices;
 using TerraMours_Gpt.Domains.GptDomain.Services;
+using TerraMours_Gpt.Domains.LoginDomain.Contracts.Req;
 using TerraMours_Gpt.Domains.PayDomain.Contracts.Req;
 using TerraMours_Gpt.Domains.PayDomain.Contracts.Res;
 using TerraMours_Gpt.Domains.PayDomain.Hubs;
@@ -129,7 +130,7 @@ builder.Services.AddSwaggerGen(options =>
 //添加忽略null值的配置：.ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null)
 MapperConfiguration mapperConfig = new(cfg =>
 {
-    cfg.CreateMap<SysUserDetailRes, SysUser>().ForMember(m => m.UserId, n => n.Ignore()).ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<SysUserUpdateReq, SysUser>().ForMember(m => m.UserId, n => n.Ignore()).ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
     cfg.CreateMap<SysUser, SysUserDetailRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
     cfg.CreateMap<SysUserAddReq, SysUser>().ForMember(m => m.UserId, n => n.Ignore()).ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
     cfg.CreateMap<SysRole, SysRoleRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));

@@ -49,6 +49,31 @@ namespace TerraMours.Framework.Infrastructure.EFCore
             builder.ApplyConfigurationsFromAssembly(GetType().Assembly);
         }
 
+        public override int SaveChanges()
+        {
+            var saved = 0;
+            while (saved !=0) {
+                try {
+                    base.SaveChanges();
+                    saved++;
+                }
+                catch (DbUpdateConcurrencyException ex) {
+                    foreach (var entry in ex.Entries) {
+                            var proposedValues = entry.CurrentValues;
+                            var databaseValues = entry.GetDatabaseValues();
 
+                            foreach (var property in proposedValues.Properties) {
+                                var proposedValue = proposedValues[property];
+                                var databaseValue = databaseValues[property];
+                            }
+
+                            // Refresh original values to bypass next concurrency check
+                            entry.OriginalValues.SetValues(databaseValues);
+                    }
+                }
+            }
+
+            return saved;
+        }
     }
 }

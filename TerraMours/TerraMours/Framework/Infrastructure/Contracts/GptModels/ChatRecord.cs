@@ -74,6 +74,11 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
 
         //public ChatConversation? ChatConversation { get; set; }
 
+        public ChatRecord()
+        {
+
+        }
+
         public ChatRecord Delete(long? userId) {
             this.Enable = false;
             //EntityBase

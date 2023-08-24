@@ -13,6 +13,7 @@ using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 using TerraMours.Framework.Infrastructure.EFCore;
 using TerraMours.Framework.Infrastructure.Redis;
 using TerraMours.Framework.Infrastructure.Utils;
+using TerraMours_Gpt.Domains.LoginDomain.Contracts.Req;
 
 namespace TerraMours.Domains.LoginDomain.Services
 {
@@ -208,7 +209,7 @@ namespace TerraMours.Domains.LoginDomain.Services
         /// <param name="userReq"></param>
         /// <param name="userId"></param>
         /// <returns></returns>
-        public async Task<ApiResponse<bool>> UpdateUser(SysUserDetailRes userReq, long userId)
+        public async Task<ApiResponse<bool>> UpdateUser(SysUserUpdateReq userReq, long userId)
         {
             var modifyUser =await _dbContext.SysUsers.FirstOrDefaultAsync(m=>m.UserId==userId);
             //只有超级管理员和本人可以修改当前用户的信息,只有超级管理员可以修改余额
@@ -225,7 +226,7 @@ namespace TerraMours.Domains.LoginDomain.Services
             _mapper.Map(userReq, user);
             user.ModifyDate=DateTime.Now;
             _dbContext.SysUsers.Update(user);
-            await _dbContext.SaveChangesAsync();
+            _dbContext.SaveChanges();
             //await _helper.RemoveAsync("GetAllUserList");
             return ApiResponse<bool>.Success(true);
         }
