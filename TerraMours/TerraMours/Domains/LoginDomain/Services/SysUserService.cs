@@ -181,7 +181,7 @@ namespace TerraMours.Domains.LoginDomain.Services
             //思考，如果将用户id与用户余额单独做一张小表分离出来，其实用户的信息，并不是经常修改，依旧可以使用缓存。以后遇到问题，需要进一步思考
             //Enable 这种可以在实体config里面配置queryFilter
             //var userList = await _helper.GetOrCreateAsync("GetAllUserList", async options => { return await _dbContext.SysUsers.Where(x => x.Enable == true).ToListAsync(); });
-            var userList = await _dbContext.SysUsers.Where(x => x.Enable == true).ToListAsync();
+            var userList = await _dbContext.SysUsers.AsNoTracking().Where(x => x.Enable == true).ToListAsync();
             var userDetailList = _mapper.Map<List<SysUserDetailRes>>(userList);
             return ApiResponse<List<SysUserDetailRes>>.Success(userDetailList);
         }
@@ -286,7 +286,7 @@ namespace TerraMours.Domains.LoginDomain.Services
 
         public async Task<ApiResponse<SysUserDetailRes>> GetUserInfoById(long userId)
         {
-            var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserId == userId);
+            var user = await _dbContext.SysUsers.AsNoTracking().FirstOrDefaultAsync(x => x.UserId == userId);
             if (user == null)
             {
                 return ApiResponse<SysUserDetailRes>.Fail("用户不存在");
