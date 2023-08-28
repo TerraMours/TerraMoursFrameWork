@@ -52,7 +52,7 @@ namespace TerraMours.Framework.Infrastructure.EFCore
         public override int SaveChanges()
         {
             var saved = 0;
-            while (saved !=0) {
+            while (saved ==0) {
                 try {
                     base.SaveChanges();
                     saved++;
