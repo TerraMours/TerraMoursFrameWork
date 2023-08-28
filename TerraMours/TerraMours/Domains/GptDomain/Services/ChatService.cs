@@ -289,11 +289,13 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 }
             }
             takesPrice += TokensPrice(totalMsg, req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel);
-            user.Balance -= takesPrice;
-            user.ModifyDate = DateTime.Now;
+            
             var chatRecord = _mapper.Map<ChatRecord>(chatRes);
             await _dbContext.ChatRecords.AddAsync(chatRecord);
             _dbContext.SaveChanges();
+            user = await getSysUser(req.UserId);
+            user.Balance -= takesPrice;
+            user.ModifyDate = DateTime.Now;
             _dbContext.SysUsers.Update(user);
             _dbContext.SaveChanges();
         }
@@ -783,7 +785,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         /// <returns></returns>
         private async Task<SysUser?> getSysUser(long userId)
         {
-            return await _dbContext.SysUsers.FirstOrDefaultAsync(m => m.UserId == userId);
+            return await _dbContext.SysUsers.AsNoTracking().FirstOrDefaultAsync(m => m.UserId == userId);
             //return await _helper.GetOrCreateAsync($"SysUser_{userId}", async options => { return await _dbContext.SysUsers.FirstOrDefaultAsync(m => m.UserId == userId); });
         }
         /// <summary>
