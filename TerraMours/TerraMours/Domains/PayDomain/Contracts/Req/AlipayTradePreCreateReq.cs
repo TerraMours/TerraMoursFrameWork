@@ -50,6 +50,18 @@ namespace TerraMours_Gpt.Domains.PayDomain.Contracts.Req
         /// 用户ID
         /// </summary>
         public string UserId { get; set; }
+        /// <summary>
+        /// 是否是Vip(包月会员)
+        /// </summary>
+        public bool? IsVIP { get; set; }
+        /// <summary>
+        /// 会员等级 
+        /// </summary>
+        public int? VipLevel { get; set; }
+        /// <summary>
+        /// vip充值时间 按月算  数字就是月数
+        /// </summary>
+        public int? VipTime { get; set; }
 
     }
 }

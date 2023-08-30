@@ -3,13 +3,11 @@ using Essensoft.Paylink.Alipay;
 using Essensoft.Paylink.Alipay.Domain;
 using Essensoft.Paylink.Alipay.Request;
 using Essensoft.Paylink.Alipay.Response;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours.Framework.Infrastructure.EFCore;
 using TerraMours_Gpt.Domains.PayDomain.Contracts.Req;
-using TerraMours_Gpt.Domains.PayDomain.Hubs;
 using TerraMours_Gpt.Domains.PayDomain.IServices;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.PaymentModels;
 using ILogger = Serilog.ILogger;
@@ -64,7 +62,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
 
             //此时应该先在自己的order表里面创建一个待支付的订单
 
-            var order = new Order(req.ProductId, req.Name, req.Description, req.Price, req.UserId, tradeNo);
+            var order = new Order(req.ProductId, req.Name, req.Description, req.Price, req.UserId, tradeNo, req.IsVIP, req.VipLevel, req.VipTime);
             await _dbContext.Orders.AddAsync(order);
             await _dbContext.SaveChangesAsync();
 
@@ -106,7 +104,8 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
         /// <param name="req"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async Task Callback(AlipayPayCallbackReq queryPayRes) {
+        public async Task Callback(AlipayPayCallbackReq queryPayRes)
+        {
             //seq 健康检查info的日志太乱，打印测试用
             _logger.Warning($"支付宝回调，订单号:{queryPayRes.OutTradeNo},交易状态：{queryPayRes.TradeStatus}");
             var order = await _dbContext.Orders.FirstOrDefaultAsync(x => x.OrderId == queryPayRes.OutTradeNo) ?? throw new Exception("此订单不存在");
