@@ -58,10 +58,6 @@ namespace TerraMours.Framework.Infrastructure.Contracts.SystemModels
         /// 是否可见，默认true
         /// </summary>
         public bool IsShow { get; set; }
-        /// <summary>
-        /// 每个菜单的按钮 外键就是 MenuId 自己
-        /// </summary>
-        public List<SysMenuButtons>? SysMenuButtons { get; set; }
 
         public SysMenus()
         {
