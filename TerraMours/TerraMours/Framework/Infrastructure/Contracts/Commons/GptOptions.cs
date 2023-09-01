@@ -15,8 +15,8 @@
         /// 1token定价
         /// </summary>
         public decimal TokenPrice { get; set; }
-        public OpenAI OpenAI { get; set; }
-        public AzureOpenAI AzureOpenAI { get; set; }
+        public OpenAI? OpenAI { get; set; }
+        public AzureOpenAI? AzureOpenAI { get; set; }
     }
     /// <summary>
     /// 图片生成配置

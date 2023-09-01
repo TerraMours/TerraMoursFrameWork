@@ -429,8 +429,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                         {
                             // 读取文件内容并Base64解码
 
-                            var decodedContent = Encoding.UTF8.GetString(Convert.FromBase64String(line));
-                            await context.Sensitives.AddAsync(new Sensitive(decodedContent, userId));
+                            //var decodedContent = Encoding.UTF8.GetString(Convert.FromBase64String(line));
+                            await context.Sensitives.AddAsync(new Sensitive(line, userId));
                         }
                     }
                     await context.SaveChangesAsync();
