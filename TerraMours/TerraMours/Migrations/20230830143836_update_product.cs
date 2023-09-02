@@ -11,17 +11,6 @@ namespace TerraMours_Gpt.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_ChatRecord_ChatConversation_ChatConversationConversationId",
-                table: "ChatRecord");
-
-            migrationBuilder.DropIndex(
-                name: "IX_ChatRecord_ChatConversationConversationId",
-                table: "ChatRecord");
-
-            migrationBuilder.DropColumn(
-                name: "ChatConversationConversationId",
-                table: "ChatRecord");
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "ModifyDate",
