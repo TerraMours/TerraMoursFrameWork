@@ -32,8 +32,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
         /// <returns></returns>
         public async Task<ApiResponse<bool>> AddProduct(ProductReq productReq)
         {
-            //var product = _mapper.Map<Product>(productReq);
-            var product = new Product(productReq.Name, productReq.Description, productReq.Price, productReq.CategoryId, productReq.Stock, productReq.IsVIP, productReq.VipLevel, productReq.VipTime);
+            var product = new Product(productReq.Name, productReq.Description, productReq.Price, productReq.CategoryId, productReq.Stock, productReq.IsVIP, productReq.VipLevel, productReq.VipTime, productReq.ImagePath);
             _mapper.Map(productReq, product);
             await _dbContext.Products.AddAsync(product);
             var res = await _dbContext.SaveChangesAsync();
@@ -127,12 +126,41 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
         {
             var product = await _dbContext.Products.FirstOrDefaultAsync(x => x.Id == productReq.Id) ?? throw new Exception("该商品不存在");
             _mapper.Map(productReq, product);
-            product.UpdateProduct(productReq.Name, product.Description, product.Price, product.CategoryId, productReq.IsVIP, productReq.VipLevel, productReq.VipTime);
+            product.UpdateProduct(productReq.Name, product.Description, product.Price, product.CategoryId, productReq.IsVIP, productReq.VipLevel, productReq.VipTime,productReq.ImagePath);
             _dbContext.Products.Update(product);
             var res = await _dbContext.SaveChangesAsync();
             //删除过期的缓存
             await _helper.RemoveAsync("GetAllCategoryList");
             return ApiResponse<bool>.Success(true);
+        }
+
+        /// <summary>
+        /// 上传图片，返回图片地址
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        public async Task<ApiResponse<string>> UploadProductImage(IFormFile file)
+        {
+            try
+            {
+                var fileName = $"{Guid.NewGuid()}.png";
+                var folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "images/product");
+                if (!Directory.Exists(folderPath))
+                {
+                    Directory.CreateDirectory(folderPath);
+                }
+                var filePath = Path.Combine(folderPath, fileName);
+                using (FileStream fs=new FileStream(filePath, FileMode.Create))
+                {
+                    file.CopyTo(fs);
+                    fs.Flush();
+                }
+                return ApiResponse<string>.Success($"/product/{fileName}");
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
     }
 }

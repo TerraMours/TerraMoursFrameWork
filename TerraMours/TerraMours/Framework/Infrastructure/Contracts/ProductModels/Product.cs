@@ -67,7 +67,7 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels
         /// <param name="isVIP"></param>
         /// <param name="vipLevel"></param>
         /// <param name="vipTime"></param>
-        public Product(string name, string description, decimal price, long categoryId, int? stock, bool? isVIP, int? vipLevel, int? vipTime)
+        public Product(string name, string description, decimal price, long categoryId, int? stock, bool? isVIP, int? vipLevel, int? vipTime, string? imagePath)
         {
             //初始化用户 ：以下是有用的字段
             this.Name = name;
@@ -81,6 +81,7 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels
             Enable = true;
             CreateDate = DateTime.Now;
             this.Stock = stock;
+            this.ImagePath = imagePath;
         }
 
         /// <summary>
@@ -94,7 +95,7 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels
         /// <param name="vipLevel"></param>
         /// <param name="vipTime"></param>
         /// <returns></returns>
-        public Product UpdateProduct(string name, string description, decimal price, long categoryId, bool? isVIP, int? vipLevel, int? vipTime)
+        public Product UpdateProduct(string name, string description, decimal price, long categoryId, bool? isVIP, int? vipLevel, int? vipTime,string? imagePath)
         {
             this.Name = name;
             this.Description = description;
@@ -103,6 +104,7 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels
             this.VipLevel = vipLevel;
             this.VipTime = vipTime;
             this.CategoryId = categoryId;
+            this.ImagePath = imagePath;
             this.ModifyDate = DateTime.Now;
             return this;
         }
