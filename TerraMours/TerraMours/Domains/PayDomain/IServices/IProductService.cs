@@ -15,6 +15,6 @@ namespace TerraMours_Gpt.Domains.PayDomain.IServices
 
         Task<ApiResponse<List<ProductRes>>> GetProductByCategoryId(long categoryId);
 
-
+        Task<ApiResponse<string>> UploadProductImage(IFormFile file);
     }
 }

@@ -45,5 +45,10 @@
         /// vip充值时间 按月算  数字就是月数
         /// </summary>
         public int? VipTime { get; set; }
+
+        /// <summary>
+        /// 商品图片路径
+        /// </summary>
+        public string? ImagePath { get; set; }
     }
 }
