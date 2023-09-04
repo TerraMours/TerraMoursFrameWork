@@ -185,8 +185,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         /// <exception cref="NotImplementedException"></exception>
         public async IAsyncEnumerable<ApiResponse<ChatRes>> ChatCompletionStream(ChatReq req)
         {
-            try
-            {
+            
                 //创建会话
                 if (req.ConversationId == null || req.ConversationId == 0)
                 {
@@ -219,7 +218,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                     yield return ApiResponse<ChatRes>.Fail($"账号余额不足，请充值");
                     yield break;
                 }
-
+            try
+            {
                 int maxtoken;
                 switch (req.Model)
                 {
@@ -301,9 +301,6 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                         {
                             chatRes.Role = itemMsg.Choices.FirstOrDefault().Message.Role;
                         }
-
-                        Log.Information(
-                            $"[时间：{DateTime.Now}]stream输出：{itemMsg?.Choices?.FirstOrDefault().Message.Content}");
                         yield return ApiResponse<ChatRes>.Success(chatRes);
                     }
                 }
@@ -312,16 +309,17 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
 
                 var chatRecord = _mapper.Map<ChatRecord>(chatRes);
                 await _dbContext.ChatRecords.AddAsync(chatRecord);
-                var updateUser = user;
-                updateUser.Balance -= takesPrice;
-                updateUser.ModifyDate = DateTime.Now;
-                _logger.Information($"更新当前用户{updateUser.UserId}，对应版本号:{updateUser.Version}");
-                _dbContext.Update(updateUser);
-                _dbContext.Entry<SysUser>(updateUser).State = EntityState.Detached;
+                
             }
             finally
             {
+                var updateUser = user;
+                updateUser.Balance -= takesPrice;
+                updateUser.ModifyDate = DateTime.Now;
+                _logger.Information($"更新当前用户{updateUser.UserId}，对应版本号:{updateUser.Version},当前余额：{updateUser.Balance}");
+                _dbContext.Update(updateUser);
                 await _dbContext.SaveChangesAsync();
+               // _dbContext.Entry<SysUser>(updateUser).State = EntityState.Detached;
             }
         }
 
