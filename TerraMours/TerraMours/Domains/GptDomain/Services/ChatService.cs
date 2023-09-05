@@ -313,13 +313,13 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             }
             finally
             {
-                var updateUser = user;
+                var updateUser = await getSysUser(req.UserId);
                 updateUser.Balance -= takesPrice;
                 updateUser.ModifyDate = DateTime.Now;
                 _logger.Information($"更新当前用户{updateUser.UserId}，对应版本号:{updateUser.Version},当前余额：{updateUser.Balance}");
                 _dbContext.Update(updateUser);
-                await _dbContext.SaveChangesAsync();
-               // _dbContext.Entry<SysUser>(updateUser).State = EntityState.Detached;
+                _dbContext.SaveChangesAsync();
+                _dbContext.Entry<SysUser>(updateUser).State = EntityState.Detached;
             }
         }
 
