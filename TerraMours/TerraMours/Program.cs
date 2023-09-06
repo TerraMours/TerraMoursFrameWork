@@ -232,8 +232,11 @@ builder.Services.AddDbContext<FrameworkDbContext>(opt =>
     //var connStr = $"Host=localhost;Database=TerraMours;Username=postgres;Password=root";
     var connStr = sysSettings.connection.DbConnectionString;
     opt.UseNpgsql(connStr);
-    //启用此选项后，EF Core将在日志中包含敏感数据，例如实体的属性值。这对于调试和排查问题非常有用。
-    //opt.EnableSensitiveDataLogging();
+    if(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != Environments.Development)
+    {
+        //启用此选项后，EF Core将在日志中包含敏感数据，例如实体的属性值。这对于调试和排查问题非常有用。
+        opt.EnableSensitiveDataLogging();
+    }
 });
 
 //json小写的问题
@@ -280,13 +283,10 @@ app.UseHealthChecksUI();
 
 
 // Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-//{
-//    app.UseSwagger();
-//    app.UseSwaggerUI();
-//}
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment()) {
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 //日志
 app.UseSerilogRequestLogging();
