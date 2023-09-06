@@ -157,6 +157,20 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             }
             return imgList;
         }
+
+        public async Task<ApiResponse<PagedRes<ImageRes>>> AllImageList(PageReq page, long? userId) {
+            var user= await _dbContext.SysUsers.AsNoTracking().FirstOrDefaultAsync(m => m.UserId == userId);
+            if (user == null || user.RoleId != 1)
+            {
+                return ApiResponse<PagedRes<ImageRes>>.Fail("用户权限不足");
+            }
+            var query = _dbContext.ImageRecords.Where(m => (string.IsNullOrEmpty(page.QueryString) || m.Prompt.Contains(page.QueryString)) && m.Enable == true);
+            var total = await query.CountAsync();
+            var item = await query.OrderByDescending(m => m.CreateDate).Skip((page.PageIndex - 1) * page.PageSize).Take(page.PageSize).ToListAsync();
+            var res = _mapper.Map<IEnumerable<ImageRes>>(item);
+            return ApiResponse<PagedRes<ImageRes>>.Success(new PagedRes<ImageRes>(res, total, page.PageIndex, page.PageSize));
+        }
+
         #region 私有方法
         /// <summary>
         /// 查询用户图片次数
