@@ -17,6 +17,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             App.MapGet("/api/v1/Image/ShareImage", ShareImage);
             App.MapPost("/api/v1/Image/ShareImageList", ShareImageList);
             App.MapPost("/api/v1/Image/MyImageList", MyImageList);
+            App.MapPost("/api/v1/Image/AllImageList", AllImageList);
         }
         /// <summary>
         /// 生成图片
@@ -76,6 +77,17 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         /// <returns></returns>
         [Authorize]
         public async Task<IResult> MyImageList(PageReq page) {
+            var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
+            var res = await _imageService.MyImageList(page, userId);
+            return Results.Ok(res);
+        }
+        /// <summary>
+        /// 全部图片
+        /// </summary>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> AllImageList(PageReq page) {
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
             var res = await _imageService.MyImageList(page, userId);
             return Results.Ok(res);

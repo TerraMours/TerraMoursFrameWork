@@ -185,119 +185,142 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         /// <exception cref="NotImplementedException"></exception>
         public async IAsyncEnumerable<ApiResponse<ChatRes>> ChatCompletionStream(ChatReq req)
         {
-            //创建会话
-            if (req.ConversationId == null || req.ConversationId == 0)
-            {
-                var conversation = await _dbContext.ChatConversations.AddAsync(new ChatConversation(req.Prompt.Length < 5 ? req.Prompt : $"{req.Prompt.Substring(0, 5)}...", req.UserId));
-                _dbContext.SaveChanges();
-                req.ConversationId = conversation.Entity.ConversationId;
-            }
-
-            var user = await getSysUser(req.UserId);
-            if (user ==null)
-            {
-                yield return ApiResponse<ChatRes>.Fail("当前用户不存在");
-                yield break;
-            }
-            //敏感词检测
-            if (!await Sensitive(req))
-            {
-                yield return ApiResponse<ChatRes>.Fail("触发了敏感词");
-                yield break;
-            }
             
-            //上下文
-            List<ChatMessage> messegs =await BuildMsgList(req);
-            decimal takesPrice = GetAskPrice(messegs, req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel);
-            //判断余额，gpt4时需要余额五元以上
-            if (user.Balance == null || user.Balance <=( req.Model== "gpt-4"? (takesPrice+5):takesPrice))
-            {
-                yield return ApiResponse<ChatRes>.Fail($"账号余额不足，请充值");
-                yield break;
-            }
-            
-            int maxtoken;
-            switch (req.Model) {
-                case "gpt-4":
-                    maxtoken = (int)((req.MaxTokens != null && req.MaxTokens < 4000) ? req.MaxTokens : 4000);
-                    break;
-                case "gpt-3.5-turbo-16k":
-                    maxtoken = (int)((req.MaxTokens != null && req.MaxTokens < 4000) ? req.MaxTokens : 4000);
-                    break;
-                default:
-                    maxtoken = (int)((req.MaxTokens != null && req.MaxTokens < _options.Value.OpenAIOptions.OpenAI.MaxTokens) ? req.MaxTokens : _options.Value.OpenAIOptions.OpenAI.MaxTokens);
-                    break;
-            }
-            string apikey;
-            if (req.Model == "gpt-4")
-                apikey = _options.Value.OpenAIOptions.OpenAI.Gpt4Key;
-            else 
-                apikey=req.Key;
-
-            var openAiOpetions = new OpenAI.OpenAiOptions()
-            {
-                ApiKey = req.Key,
-                BaseDomain= _options.Value.OpenAIOptions.OpenAI.BaseUrl
-            };
-            //gpt-4走的第三方
-            if (req.Model == "gpt-4")
-            {
-                openAiOpetions.ApiKey= _options.Value.OpenAIOptions.OpenAI.Gpt4Key;
-                openAiOpetions.BaseDomain = _options.Value.OpenAIOptions.OpenAI.Gpt4Url ;
-            }
-                var openAiService = new OpenAIService(openAiOpetions);
-            //调用SDK
-            var response = openAiService.ChatCompletion.CreateCompletionAsStream(new ChatCompletionCreateRequest
-            {
-                Messages = messegs,
-                Model = req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel,
-                MaxTokens = maxtoken,
-                TopP = req.TopP,
-                N = req.N,
-                PresencePenalty = req.PresencePenalty,
-                FrequencyPenalty = req.FrequencyPenalty,
-                Stop = req.Stop,
-                Temperature = req.Temperature,
-                LogitBias = req.LogitBias,
-            });
-            //接口返回的完整内容
-            string totalMsg = "";
-            var chatRes = new ChatRes() { Role = "assistant", Message = totalMsg, Model = req.Model, ModelType = req.ModelType, ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId,Enable = true};
-            await foreach (var itemMsg in response)
-            {
-                if (itemMsg != null)
+                //创建会话
+                if (req.ConversationId == null || req.ConversationId == 0)
                 {
-                    if (itemMsg.Successful == false)
-                    {
-                        _logger.Error(itemMsg.Error.Message);
-                        yield return ApiResponse<ChatRes>.Fail(itemMsg.Error.Message);
-                        yield break;
-                    }
-                    totalMsg += itemMsg?.Choices?.FirstOrDefault().Message.Content;
-                    chatRes.Message = totalMsg;
-                    chatRes.PromptTokens = itemMsg.Usage?.PromptTokens;
-                    chatRes.CompletionTokens = itemMsg.Usage?.CompletionTokens;
-                    chatRes.TotalTokens = itemMsg.Usage?.TotalTokens;
-                    if (!string.IsNullOrEmpty(itemMsg.Model))
-                        chatRes.Model = itemMsg?.Model;
-                    if (itemMsg.Choices != null && itemMsg.Choices.FirstOrDefault() != null && itemMsg.Choices.FirstOrDefault().Message != null && !string.IsNullOrEmpty(itemMsg.Choices.FirstOrDefault().Message.Role))
-                    {
-                        chatRes.Role = itemMsg.Choices.FirstOrDefault().Message.Role;
-                    }
-                    Log.Information($"[时间：{DateTime.Now}]stream输出：{itemMsg?.Choices?.FirstOrDefault().Message.Content}");
-                    yield return ApiResponse<ChatRes>.Success(chatRes);
+                    var conversation = await _dbContext.ChatConversations.AddAsync(
+                        new ChatConversation(req.Prompt.Length < 5 ? req.Prompt : $"{req.Prompt.Substring(0, 5)}...",
+                            req.UserId));
+                    req.ConversationId = conversation.Entity.ConversationId;
                 }
+
+                var user = await getSysUser(req.UserId);
+                if (user == null)
+                {
+                    yield return ApiResponse<ChatRes>.Fail("当前用户不存在");
+                    yield break;
+                }
+
+                //敏感词检测
+                if (!await Sensitive(req))
+                {
+                    yield return ApiResponse<ChatRes>.Fail("触发了敏感词");
+                    yield break;
+                }
+
+                //上下文
+                List<ChatMessage> messegs = await BuildMsgList(req);
+                decimal takesPrice = GetAskPrice(messegs, req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel);
+                //判断余额，gpt4时需要余额五元以上
+                if (user.Balance == null || user.Balance <= (req.Model == "gpt-4" ? (takesPrice + 5) : takesPrice))
+                {
+                    yield return ApiResponse<ChatRes>.Fail($"账号余额不足，请充值");
+                    yield break;
+                }
+            try
+            {
+                int maxtoken;
+                switch (req.Model)
+                {
+                    case "gpt-4":
+                        maxtoken = (int)((req.MaxTokens != null && req.MaxTokens < 4000) ? req.MaxTokens : 4000);
+                        break;
+                    case "gpt-3.5-turbo-16k":
+                        maxtoken = (int)((req.MaxTokens != null && req.MaxTokens < 4000) ? req.MaxTokens : 4000);
+                        break;
+                    default:
+                        maxtoken = (int)((req.MaxTokens != null &&
+                                          req.MaxTokens < _options.Value.OpenAIOptions.OpenAI.MaxTokens)
+                            ? req.MaxTokens
+                            : _options.Value.OpenAIOptions.OpenAI.MaxTokens);
+                        break;
+                }
+
+                string apikey;
+                if (req.Model == "gpt-4")
+                    apikey = _options.Value.OpenAIOptions.OpenAI.Gpt4Key;
+                else
+                    apikey = req.Key;
+
+                var openAiOpetions = new OpenAI.OpenAiOptions()
+                {
+                    ApiKey = req.Key,
+                    BaseDomain = _options.Value.OpenAIOptions.OpenAI.BaseUrl
+                };
+                //gpt-4走的第三方
+                if (req.Model == "gpt-4")
+                {
+                    openAiOpetions.ApiKey = _options.Value.OpenAIOptions.OpenAI.Gpt4Key;
+                    openAiOpetions.BaseDomain = _options.Value.OpenAIOptions.OpenAI.Gpt4Url;
+                }
+
+                var openAiService = new OpenAIService(openAiOpetions);
+                //调用SDK
+                var response = openAiService.ChatCompletion.CreateCompletionAsStream(new ChatCompletionCreateRequest
+                {
+                    Messages = messegs,
+                    Model = req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel,
+                    MaxTokens = maxtoken,
+                    TopP = req.TopP,
+                    N = req.N,
+                    PresencePenalty = req.PresencePenalty,
+                    FrequencyPenalty = req.FrequencyPenalty,
+                    Stop = req.Stop,
+                    Temperature = req.Temperature,
+                    LogitBias = req.LogitBias,
+                });
+                //接口返回的完整内容
+                string totalMsg = "";
+                var chatRes = new ChatRes()
+                {
+                    Role = "assistant", Message = totalMsg, Model = req.Model, ModelType = req.ModelType,
+                    ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId, Enable = true
+                };
+                await foreach (var itemMsg in response)
+                {
+                    if (itemMsg != null)
+                    {
+                        if (itemMsg.Successful == false)
+                        {
+                            _logger.Error(itemMsg.Error.Message);
+                            yield return ApiResponse<ChatRes>.Fail(itemMsg.Error.Message);
+                            yield break;
+                        }
+
+                        totalMsg += itemMsg?.Choices?.FirstOrDefault().Message.Content;
+                        chatRes.Message = totalMsg;
+                        chatRes.PromptTokens = itemMsg.Usage?.PromptTokens;
+                        chatRes.CompletionTokens = itemMsg.Usage?.CompletionTokens;
+                        chatRes.TotalTokens = itemMsg.Usage?.TotalTokens;
+                        if (!string.IsNullOrEmpty(itemMsg.Model))
+                            chatRes.Model = itemMsg?.Model;
+                        if (itemMsg.Choices != null && itemMsg.Choices.FirstOrDefault() != null &&
+                            itemMsg.Choices.FirstOrDefault().Message != null &&
+                            !string.IsNullOrEmpty(itemMsg.Choices.FirstOrDefault().Message.Role))
+                        {
+                            chatRes.Role = itemMsg.Choices.FirstOrDefault().Message.Role;
+                        }
+                        yield return ApiResponse<ChatRes>.Success(chatRes);
+                    }
+                }
+
+                takesPrice += TokensPrice(totalMsg, req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel);
+
+                var chatRecord = _mapper.Map<ChatRecord>(chatRes);
+                await _dbContext.ChatRecords.AddAsync(chatRecord);
+                
             }
-            takesPrice += TokensPrice(totalMsg, req.Model ?? _options.Value.OpenAIOptions.OpenAI.ChatModel);
-            
-            var chatRecord = _mapper.Map<ChatRecord>(chatRes);
-            await _dbContext.ChatRecords.AddAsync(chatRecord);
-            _dbContext.SaveChanges();
-            user = await getSysUser(req.UserId);
-            user.Balance -= takesPrice;
-            user.ModifyDate = DateTime.Now;
-            _dbContext.SysUsers.Update(user);
-            _dbContext.SaveChanges();
+            finally
+            {
+                var updateUser = await getSysUser(req.UserId);
+                updateUser.Balance -= takesPrice;
+                updateUser.ModifyDate = DateTime.Now;
+                _logger.Information($"更新当前用户{updateUser.UserId}，对应版本号:{updateUser.Version},当前余额：{updateUser.Balance}");
+                _dbContext.Update(updateUser);
+                _dbContext.SaveChangesAsync();
+                _dbContext.Entry<SysUser>(updateUser).State = EntityState.Detached;
+            }
         }
 
 
@@ -921,7 +944,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId, Enable = true
             };
             await _dbContext.ChatRecords.AddAsync(chat);
-            _dbContext.SaveChanges();
+            //await _dbContext.SaveChangesAsync();
             return messegs;
         }
 
