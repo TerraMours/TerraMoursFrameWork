@@ -7,6 +7,7 @@ using Microsoft.SemanticKernel.Connectors.AI.OpenAI.ChatCompletion;
 using OpenAI.Managers;
 using OpenAI.ObjectModels.RequestModels;
 using Serilog;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -776,6 +777,14 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             var res = _mapper.Map<IEnumerable<PromptOptionRes>>(item);
             return ApiResponse<PagedRes<PromptOptionRes>>.Success(new PagedRes<PromptOptionRes>(res, total, page.PageIndex, page.PageSize));
         }
+
+        public async Task<ApiResponse<IEnumerable<PromptOptionRes>>> AllPromptOptionList()
+        {
+            var query = await _dbContext.PromptOptions.ToListAsync();
+            var res = _mapper.Map<IEnumerable<PromptOptionRes>>(query);
+            return ApiResponse<IEnumerable<PromptOptionRes>>.Success(res);
+        }
+
         #endregion
 
         #region 私有方法

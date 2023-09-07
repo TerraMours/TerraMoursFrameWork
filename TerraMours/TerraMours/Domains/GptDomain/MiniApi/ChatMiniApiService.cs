@@ -58,6 +58,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             App.MapPost("/api/v1/Chat/ChangePromptOption", ChangePromptOption);
             App.MapGet("/api/v1/Chat/DeletePromptOption", DeletePromptOption);
             App.MapPost("/api/v1/Chat/PromptOptionList", PromptOptionList);
+            App.MapGet("/api/v1/Chat/AllPromptOptionList", AllPromptOptionList);
 
             App.MapGet("/api/v1/Chat/DeleteChatRecord", DeleteChatRecord);
             App.MapPost("/api/v1/Chat/ChatRecordList", ChatRecordList);
@@ -467,6 +468,18 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             var res = await _chatService.PromptOptionList(page);
             return Results.Ok(res);
         }
+
+        /// <summary>
+        /// 获取全部系统提示词列表
+        /// </summary>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> AllPromptOptionList() {
+            var res = await _chatService.AllPromptOptionList();
+            return Results.Ok(res);
+        }
+        
         #endregion
     }
 }

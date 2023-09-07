@@ -89,7 +89,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         [Authorize]
         public async Task<IResult> AllImageList(PageReq page) {
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
-            var res = await _imageService.MyImageList(page, userId);
+            var res = await _imageService.AllImageList(page, userId);
             return Results.Ok(res);
         }
     }
