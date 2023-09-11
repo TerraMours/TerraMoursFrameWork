@@ -30,8 +30,6 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         {
             _httpContextAccessor = httpContextAccessor;
             _chatService = chatService;
-            //App.MapPost("/api/v1/Chat/ChatStream", ChatStream);
-            //App.MapPost("/api/v1/Chat/ChatStream1", ChatStream1);
             App.MapPost("/api/v1/Chat/ChatCompletionStream", ChatCompletionStream);
             App.MapPost("/api/v1/Chat/ChatCompletion", ChatCompletion);
             App.MapPost("/api/v1/Chat/ImportSensitive", ImportSensitive);
@@ -67,68 +65,6 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         #region 聊天记录
 
         /// <summary>
-        /// Chat聊天接口
-        /// </summary>
-        /// <param name="req"></param>
-        /// <returns></returns>
-        [Authorize]
-        [Produces("application/octet-stream")]
-        public async Task ChatStream(ChatReq req, CancellationToken cancellationToken = default) {
-            if (_httpContextAccessor.HttpContext?.Items["key"] != null) {
-                req.Key = _httpContextAccessor.HttpContext?.Items["key"]?.ToString();
-            }
-            var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
-            req.UserId = userId;
-            req.IP = _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.MapToIPv4().ToString();
-
-            var response = _httpContextAccessor.HttpContext.Response;
-            response.ContentType = "application/octet-stream";
-
-            await foreach (string msg in _chatService.ChatProcessStream(req)) {
-                var buffer = Encoding.UTF8.GetBytes(msg + Environment.NewLine);
-                await response.Body.WriteAsync(buffer.AsMemory(0, buffer.Length), cancellationToken);
-                await response.Body.FlushAsync(cancellationToken);
-            }
-
-            await response.Body.DisposeAsync();
-        }
-
-        /// <summary>
-        /// Chat聊天接口
-        /// </summary>
-        /// <param name="req"></param>
-        /// <returns></returns>
-        [Authorize]
-        [Produces("application/octet-stream")]
-        public async Task ChatStream1(ChatReq req, CancellationToken cancellationToken = default)
-        {
-            _logger.Information($"ChatStream1开始时间：{DateTime.Now}");
-            if (_httpContextAccessor.HttpContext?.Items["key"] != null)
-            {
-                req.Key = _httpContextAccessor.HttpContext?.Items["key"]?.ToString();
-            }
-            var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
-            req.UserId = userId;
-            req.IP = _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.MapToIPv4().ToString();
-
-            var response = _httpContextAccessor.HttpContext.Response;
-            response.ContentType = "application/octet-stream";
-
-            await foreach (ApiResponse<ChatRes> item in _chatService.ChatStream(req))
-            {
-                var buffer = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(item, new JsonSerializerOptions()
-                {
-                    Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
-                }) + Environment.NewLine);
-                await response.Body.WriteAsync(buffer.AsMemory(0, buffer.Length), cancellationToken);
-                await response.Body.FlushAsync(cancellationToken);
-                _logger.Information($"ChatStream1返回时间：{DateTime.Now}");
-            }
-
-            await response.Body.DisposeAsync();
-            _logger.Information($"ChatStream1结束时间：{DateTime.Now}");
-        }
-        /// <summary>
         /// 聊天接口（gpt-4）返回流
         /// </summary>
         /// <param name="req"></param>
@@ -141,7 +77,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             {
                 req.Key = _httpContextAccessor.HttpContext?.Items["key"]?.ToString();
             }
-            _logger.Information($"ChatStream1开始时间：{DateTime.Now}，key【{req.Key}】");
+            _logger.Information($"ChatStream开始时间：{DateTime.Now}，key【{req.Key}】");
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
             req.UserId = userId;
             req.IP = _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.MapToIPv4().ToString();

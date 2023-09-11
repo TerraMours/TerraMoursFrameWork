@@ -47,7 +47,6 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
 
 var builder = WebApplication.CreateBuilder(args);
-
 //健康检查
 builder.Services.AddHealthChecks()
 //这里是添加自己的自定义的健康检查逻辑 使用默认的可以注释
@@ -66,8 +65,8 @@ builder.Services.Configure<AlipayOptions>(configuration.GetSection("Alipay"));
 // 配置 Serilog 日志记录器
 
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Debug()
-    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
     .Enrich.FromLogContext()
     .WriteTo.Console()
     //.WriteTo.File()
@@ -232,7 +231,7 @@ builder.Services.AddDbContext<FrameworkDbContext>(opt =>
     //var connStr = $"Host=localhost;Database=TerraMours;Username=postgres;Password=root";
     var connStr = sysSettings.connection.DbConnectionString;
     opt.UseNpgsql(connStr);
-    if(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != Environments.Development)
+    if(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == Environments.Development)
     {
         //启用此选项后，EF Core将在日志中包含敏感数据，例如实体的属性值。这对于调试和排查问题非常有用。
         opt.EnableSensitiveDataLogging();
@@ -286,6 +285,7 @@ app.UseHealthChecksUI();
 if (app.Environment.IsDevelopment()) {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseDeveloperExceptionPage();
 }
 
 //日志

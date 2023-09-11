@@ -12,8 +12,6 @@ namespace TerraMours_Gpt.Domains.GptDomain.IServices {
         /// </summary>
         /// <param name="req"></param>
         /// <returns></returns>
-        IAsyncEnumerable<string> ChatProcessStream(ChatReq req);
-        IAsyncEnumerable<ApiResponse<ChatRes>> ChatStream(ChatReq req);
         IAsyncEnumerable<ApiResponse<ChatRes>> ChatCompletionStream(ChatReq req);
         Task<ApiResponse<ChatRes>> ChatCompletion(ChatReq req);
         Task<ApiResponse<bool>> DeleteChatRecord(long recordId, long? userId);
