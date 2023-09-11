@@ -17,8 +17,12 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Middlewares {
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<FrameworkDbContext>();
                 // 然后在此处使用dbContext
-                if (dbContext.GptOptions.Any())
-                    list = dbContext.GptOptions.AsNoTracking().FirstOrDefault().OpenAIOptions.OpenAI.KeyList;
+                var gptOptions = dbContext.GptOptions.AsNoTracking()
+                    .OrderBy(m => m.GptOptionsId)
+                    .FirstOrDefault();
+                if (gptOptions != null) {
+                    list = gptOptions.OpenAIOptions.OpenAI.KeyList;
+                }
             }
             _list = list ?? throw new ArgumentNullException(nameof(list));
             if (_list.Length == 0) throw new ArgumentException("List cannot be empty.", nameof(list));
