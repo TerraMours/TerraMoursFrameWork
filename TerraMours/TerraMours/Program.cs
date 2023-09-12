@@ -308,11 +308,13 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = ""
 });
 
+//`UseCors` 添加 CORS 中间件。 对 `UseCors` 的调用必须放在 `UseRouting` 之后，但在 `UseAuthorization` 之前。 不然会出现前端获取不到response的现象
+app.UseCors("MyPolicy");
 //添加jwt验证
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseCors("MyPolicy");
+
 //请求中间件
 app.UseMiddleware<KeyMiddleware>();
 
