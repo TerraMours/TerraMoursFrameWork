@@ -11,10 +11,14 @@ namespace TerraMours_Gpt.Domains.LoginDomain.Contracts.Enum
         [EnumMember(Value = "全部")]
         All,
         [EnumMember(Value = "今天")]
-        today,
+        Today,
         [EnumMember(Value = "最近7天")]
-        lately7,
+        Lately7,
         [EnumMember(Value = "最近30天")]
-        lately30
+        Lately30,
+        [EnumMember(Value = "月份")]
+        Month,
+        [EnumMember(Value = "年份")]
+        Year
     }
 }

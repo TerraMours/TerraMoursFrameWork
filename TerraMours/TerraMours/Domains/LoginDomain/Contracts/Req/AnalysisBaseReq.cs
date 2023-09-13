@@ -1,4 +1,6 @@
-﻿namespace TerraMours_Gpt.Domains.LoginDomain.Contracts.Req
+﻿using TerraMours_Gpt.Domains.LoginDomain.Contracts.Enum;
+
+namespace TerraMours_Gpt.Domains.LoginDomain.Contracts.Req
 {
     /// <summary>
     /// 统计入参
@@ -8,14 +10,14 @@
         /// <summary>
         /// 筛选类型
         /// </summary>
-        public string? dateType;
+        public DateTypeEnum? DateType { get; set; }
         /// <summary>
         /// 开始时间
         /// </summary>
-        public DateTime? startTime;
+        public DateTime? StartTime { get; set; }
         /// <summary>
         /// 结束时间
         /// </summary>
-        public DateTime? endTime;
+        public DateTime? EndTime { get; set; }
     }
 }
