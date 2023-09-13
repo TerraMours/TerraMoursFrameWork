@@ -1,6 +1,9 @@
 ﻿using Essensoft.Paylink.Alipay.Response;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
+using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;
+using TerraMours_Gpt.Domains.LoginDomain.Contracts.Common;
 using TerraMours_Gpt.Domains.PayDomain.Contracts.Req;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.PaymentModels;
 
 namespace TerraMours_Gpt.Domains.PayDomain.IServices
 {
@@ -29,6 +32,13 @@ namespace TerraMours_Gpt.Domains.PayDomain.IServices
         /// <param name="req"></param>
         /// <returns></returns>
         Task Callback(AlipayPayCallbackReq req);
+
+        /// <summary>
+        /// 订单管理
+        /// </summary>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        Task<ApiResponse<PagedRes<Order>>> OrderList(PageReq page);
 
         /// <summary>
         /// 根据订单号或者交易号查询订单状态，判断用户是否支付

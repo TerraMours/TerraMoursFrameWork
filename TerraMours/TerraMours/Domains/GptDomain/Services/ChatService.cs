@@ -42,7 +42,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             _helper = helper;
             _logger = logger;
             _httpClient = httpClient;
-            openAiOptions = dbContext.GptOptions.Any() ? dbContext.GptOptions.FirstOrDefault().OpenAIOptions : options.Value.OpenAIOptions;
+            openAiOptions = dbContext.GptOptions.AsNoTracking().Any() ? dbContext.GptOptions.AsNoTracking().FirstOrDefault().OpenAIOptions : options.Value.OpenAIOptions;
         }
         #region 聊天
 

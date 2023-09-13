@@ -2,9 +2,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Org.BouncyCastle.Ocsp;
 using System.Security.Claims;
+using Essensoft.Paylink.Alipay.Domain;
+using TerraMours_Gpt.Domains.LoginDomain.Contracts.Common;
 using TerraMours_Gpt.Domains.PayDomain.Contracts.Req;
 using TerraMours_Gpt.Domains.PayDomain.IServices;
 using APIServiceBase = Microsoft.AspNetCore.Builder.ServiceBase;
+using TerraMours.Domains.LoginDomain.Contracts.Common;
+using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;
 
 namespace TerraMours.Domains.LoginDomain.MiniApi
 {
@@ -29,6 +33,7 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
             App.MapPost("/api/v1/AliPay/PreCreate", PreCreate);
             App.MapPost("/api/v1/AliPay/Query", Query);
             App.MapPost("/api/v1/AliPay/Callback", Callback);
+            App.MapPost("/api/v1/AliPay/OrderList", OrderList);
         }
 
         /// <summary>
@@ -63,6 +68,23 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
             _payService.Callback(req);
         }
 
+        /// <summary>
+        /// 订单管理
+        /// </summary>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> OrderList(PageReq page)
+        {
+            var roleId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Role));
+            if (roleId != 1)
+            {
+                return Results.Ok(ApiResponse<bool>.Fail("没有调用权限（超级管理员）"));
+            }
+            var res = await _payService.OrderList(page);
+            return Results.Ok(res);
+        }
+
         /*  /// <summary>
           /// 生成二维码SVG  QRCoder nuget
           /// </summary>
@@ -79,5 +101,6 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
                   return File(pngBytes, "image/png");
               }
           }*/
+
     }
 }

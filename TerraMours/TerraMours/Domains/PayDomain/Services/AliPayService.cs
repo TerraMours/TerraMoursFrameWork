@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours.Framework.Infrastructure.EFCore;
+using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;
+using TerraMours_Gpt.Domains.LoginDomain.Contracts.Common;
 using TerraMours_Gpt.Domains.PayDomain.Contracts.Req;
 using TerraMours_Gpt.Domains.PayDomain.IServices;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.PaymentModels;
@@ -119,5 +121,18 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
             await _dbContext.SaveChangesAsync();
         }
 
+        /// <summary>
+        /// 订单管理
+        /// </summary>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task<ApiResponse<PagedRes<Order>>> OrderList(PageReq page)
+        {
+            var query = _dbContext.Orders.AsNoTracking().Where(m => string.IsNullOrEmpty(page.QueryString) || m.OrderId.Contains(page.QueryString) || m.TradeNo.Contains(page.QueryString));
+            var total = await query.CountAsync();
+            var item = await query.OrderByDescending(m=>m.CreatedTime).Skip((page.PageIndex - 1) * page.PageSize).Take(page.PageSize).ToListAsync();
+            return ApiResponse<PagedRes<Order>>.Success(new PagedRes<Order>(item, total, page.PageIndex, page.PageSize));
+        }
     }
 }

@@ -31,6 +31,8 @@ using TerraMours_Gpt.Domains.GptDomain.Hubs;
 using TerraMours_Gpt.Domains.GptDomain.IServices;
 using TerraMours_Gpt.Domains.GptDomain.Services;
 using TerraMours_Gpt.Domains.LoginDomain.Contracts.Req;
+using TerraMours_Gpt.Domains.LoginDomain.IServices;
+using TerraMours_Gpt.Domains.LoginDomain.Services;
 using TerraMours_Gpt.Domains.PayDomain.Contracts.Req;
 using TerraMours_Gpt.Domains.PayDomain.Contracts.Res;
 using TerraMours_Gpt.Domains.PayDomain.Hubs;
@@ -166,6 +168,7 @@ builder.Services.AddScoped<ISysRoleService, SysRoleService>();
 builder.Services.AddScoped<ISysMenuService, SysMenuService>();
 builder.Services.AddScoped<ISeedDataService, SeedDataService>();
 builder.Services.AddScoped<ISettingsService, SettingsService>();
+builder.Services.AddScoped<IAnalysisService, AnalysisService>();
 //gpt
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IImageService, ImageService>();
@@ -231,6 +234,8 @@ builder.Services.AddDbContext<FrameworkDbContext>(opt =>
     //var connStr = $"Host=localhost;Database=TerraMours;Username=postgres;Password=root";
     var connStr = sysSettings.connection.DbConnectionString;
     opt.UseNpgsql(connStr);
+    //设置EF默认AsNoTracking,EF Core不 跟踪
+    opt.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
     if(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == Environments.Development)
     {
         //启用此选项后，EF Core将在日志中包含敏感数据，例如实体的属性值。这对于调试和排查问题非常有用。
@@ -308,11 +313,13 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = ""
 });
 
+//`UseCors` 添加 CORS 中间件。 对 `UseCors` 的调用必须放在 `UseRouting` 之后，但在 `UseAuthorization` 之前。 不然会出现前端获取不到response的现象
+app.UseCors("MyPolicy");
 //添加jwt验证
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseCors("MyPolicy");
+
 //请求中间件
 app.UseMiddleware<KeyMiddleware>();
 
