@@ -234,6 +234,8 @@ builder.Services.AddDbContext<FrameworkDbContext>(opt =>
     //var connStr = $"Host=localhost;Database=TerraMours;Username=postgres;Password=root";
     var connStr = sysSettings.connection.DbConnectionString;
     opt.UseNpgsql(connStr);
+    //设置EF默认AsNoTracking,EF Core不 跟踪
+    opt.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
     if(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == Environments.Development)
     {
         //启用此选项后，EF Core将在日志中包含敏感数据，例如实体的属性值。这对于调试和排查问题非常有用。

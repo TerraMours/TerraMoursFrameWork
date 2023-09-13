@@ -31,10 +31,10 @@ namespace TerraMours_Gpt.Domains.LoginDomain.Services
             switch (req.AnalysisType)
             {
                 case AnalysisTypeEnum.Image:
-                    res = GetAnalysis(req, _dbContext.ImageRecords);
+                    res =await GetAnalysis(req, _dbContext.ImageRecords);
                     break;
                 default:
-                    res = GetChat(req);
+                    res =await GetChat(req);
                     break;
             }
             return ApiResponse<List<TotalAnalysisRes>>.Success(res);
@@ -76,32 +76,32 @@ namespace TerraMours_Gpt.Domains.LoginDomain.Services
         /// <param name="req"></param>
         /// <param name="query"></param>
         /// <returns></returns>
-        private List<TotalAnalysisRes> GetAnalysis<T>(AnalysisBaseReq req, IQueryable<T> query) where T:BaseEntity
+        private async Task<List<TotalAnalysisRes>> GetAnalysis<T>(AnalysisBaseReq req, IQueryable<T> query) where T:BaseEntity
         {
             switch (req.DateType)
             {
                 case DateTypeEnum.Today:
                     DateTime today = DateTime.Today;
                     query = query.Where(u => u.CreateDate >= today && u.CreateDate < today.AddDays(1));
-                    return query.GroupBy(u => u.CreateDate.Value.Hour)
-                        .Select(g => new TotalAnalysisRes { Key =$"{g.Key}:00" , Total = g.Count() }).OrderBy(m => m.Key)
-                        .ToList();
+                    return await query.GroupBy(u => u.CreateDate.Value.Hour).OrderBy(m => m.Key)
+                        .Select(g => new TotalAnalysisRes { Key =$"{g.Key}:00" , Total = g.Count() })
+                        .ToListAsync();
                 case DateTypeEnum.Month:
                     if (req.StartTime != null && req.EndTime != null)
                         query = query.Where(u =>
                             u.CreateDate.Value.Month >= req.StartTime.Value.Month &&
                             u.CreateDate.Value.Month <= req.StartTime.Value.Month);
-                    return query.GroupBy(u => u.CreateDate.Value.Month)
-                        .Select(g => new TotalAnalysisRes { Key = g.Key.ToString(), Total = g.Count() }).OrderBy(m => m.Key)
-                        .ToList();
+                    return await query.GroupBy(u => u.CreateDate.Value.Month).OrderBy(m => m.Key)
+                        .Select(g => new TotalAnalysisRes { Key = g.Key.ToString(), Total = g.Count() })
+                        .ToListAsync();
                 default:
                     if (req.StartTime != null && req.EndTime != null)
                         query = query.Where(u =>
                         u.CreateDate.Value.Date >= req.StartTime.Value.Date &&
                         u.CreateDate.Value.Date <= req.StartTime.Value.Date);
-                    return query.GroupBy(u => u.CreateDate.Value.Date)
-                        .Select(g => new TotalAnalysisRes { Key = g.Key.ToString(), Total = g.Count() }).OrderBy(m => m.Key)
-                        .ToList();
+                    return await query.GroupBy(u => u.CreateDate.Value.Date).OrderBy(m => m.Key)
+                        .Select(g => new TotalAnalysisRes { Key = g.Key.ToString(), Total = g.Count() })
+                        .ToListAsync();
             }
         }
         /// <summary>
@@ -109,31 +109,31 @@ namespace TerraMours_Gpt.Domains.LoginDomain.Services
         /// </summary>
         /// <param name="req"></param>
         /// <returns></returns>
-        private List<TotalAnalysisRes> GetChat(AnalysisBaseReq req) {
+        private async Task< List<TotalAnalysisRes>> GetChat(AnalysisBaseReq req) {
             IQueryable<ChatRecord> query = _dbContext.ChatRecords;
             switch (req.DateType) {
                 case DateTypeEnum.Today:
                     DateTime today = DateTime.Today;
                     query = query.Where(u => u.CreateDate >= today && u.CreateDate < today.AddDays(1));
-                    return query.GroupBy(u => u.CreateDate.Hour)
-                        .Select(g => new TotalAnalysisRes { Key = $"{g.Key}:00", Total = g.Count() }).OrderBy(m=>m.Key)
-                        .ToList();
+                    return await query.GroupBy(u => u.CreateDate.Hour).OrderBy(m => m.Key)
+                        .Select(g => new TotalAnalysisRes { Key = $"{g.Key}:00", Total = g.Count() })
+                        .ToListAsync();
                 case DateTypeEnum.Month:
                     if (req.StartTime != null && req.EndTime != null)
                         query = query.Where(u =>
                             u.CreateDate.Month >= req.StartTime.Value.Month &&
                             u.CreateDate.Month <= req.StartTime.Value.Month);
-                    return query.GroupBy(u => u.CreateDate.Month)
-                        .Select(g => new TotalAnalysisRes { Key = g.Key.ToString(), Total = g.Count() }).OrderBy(m => m.Key)
-                        .ToList();
+                    return await query.GroupBy(u => u.CreateDate.Month).OrderBy(m => m.Key)
+                        .Select(g => new TotalAnalysisRes { Key = g.Key.ToString(), Total = g.Count() })
+                        .ToListAsync();
                 default:
                     if (req.StartTime != null && req.EndTime != null)
                         query = query.Where(u =>
                         u.CreateDate.Date >= req.StartTime.Value.Date &&
                         u.CreateDate.Date <= req.StartTime.Value.Date);
-                    return query.GroupBy(u => u.CreateDate.Date)
-                        .Select(g => new TotalAnalysisRes { Key = g.Key.ToString(), Total = g.Count() }).OrderBy(m => m.Key)
-                        .ToList();
+                    return await query.GroupBy(u => u.CreateDate.Date).OrderBy(m => m.Key)
+                        .Select(g => new TotalAnalysisRes { Key = g.Key.ToString(), Total = g.Count() })
+                        .ToListAsync();
             }
         }
         #endregion
