@@ -46,12 +46,13 @@ namespace TerraMours_Gpt.Domains.LoginDomain.Services
         public async Task<ApiResponse<List<TotalAnalysisRes>>> TotalAnalysis(AnalysisBaseReq req)
         {
             DateTime today = DateTime.Today;
+            IQueryable<SysUser> userQuery = _dbContext.SysUsers;
             IQueryable<ChatRecord> chatQuery = _dbContext.ChatRecords;
             IQueryable<ImageRecord> imageQuery = _dbContext.ImageRecords;
             IQueryable<Order> orderQuery = _dbContext.Orders;
             List<TotalAnalysisRes> totalAnalysisRes = new List<TotalAnalysisRes>();
-            var userTotal = await chatQuery.CountAsync();
-            var userLastTotaly = await chatQuery.Where(u => u.CreateDate < today).CountAsync();
+            var userTotal = await userQuery.CountAsync();
+            var userLastTotaly = await userQuery.Where(u => u.CreateDate < today).CountAsync();
             totalAnalysisRes.Add(new TotalAnalysisRes() { Key = "用户总数", Total = userTotal,LastTotal = userLastTotaly });
             var useTotal = await chatQuery.Where(u => u.CreateDate >= today && u.CreateDate < today.AddDays(1)).Select(m=>m.UserId).Distinct().CountAsync();
             var useLastTotaly = await chatQuery.Where(u => u.CreateDate >= today.AddDays(-1) && u.CreateDate < today).Select(m => m.UserId).Distinct().CountAsync();
@@ -101,20 +102,12 @@ namespace TerraMours_Gpt.Domains.LoginDomain.Services
                         .Select(g => new TotalAnalysisRes { Key =$"{g.Key}:00" , Total = g.Count() })
                         .ToListAsync();
                 case DateTypeEnum.Month:
-                    if (req.StartTime != null && req.EndTime != null)
-                        query = query.Where(u =>
-                            u.CreateDate.Value.Month >= req.StartTime.Value.Month &&
-                            u.CreateDate.Value.Month <= req.StartTime.Value.Month);
                     return await query.GroupBy(u => u.CreateDate.Value.Month).OrderBy(m => m.Key)
                         .Select(g => new TotalAnalysisRes { Key = g.Key.ToString(), Total = g.Count() })
                         .ToListAsync();
                 default:
-                    if (req.StartTime != null && req.EndTime != null)
-                        query = query.Where(u =>
-                        u.CreateDate.Value.Date >= req.StartTime.Value.Date &&
-                        u.CreateDate.Value.Date <= req.StartTime.Value.Date);
                     return await query.GroupBy(u => u.CreateDate.Value.Date).OrderBy(m => m.Key)
-                        .Select(g => new TotalAnalysisRes { Key = g.Key.ToString(), Total = g.Count() })
+                        .Select(g => new TotalAnalysisRes { Key = g.Key.ToString("yyyy-MM-dd"), Total = g.Count() })
                         .ToListAsync();
             }
         }
@@ -138,7 +131,7 @@ namespace TerraMours_Gpt.Domains.LoginDomain.Services
                         .ToListAsync();
                 default:
                     return await query.GroupBy(u => u.CreateDate.Date).OrderBy(m => m.Key)
-                        .Select(g => new TotalAnalysisRes { Key = g.Key.ToString(), Total = g.Count() })
+                        .Select(g => new TotalAnalysisRes { Key = g.Key.ToString("yyyy-MM-dd"), Total = g.Count() })
                         .ToListAsync();
             }
         }
