@@ -13,6 +13,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
+using TerraMours.Domains.LoginDomain.IServices;
 using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 using TerraMours.Framework.Infrastructure.EFCore;
 using TerraMours.Framework.Infrastructure.Redis;
@@ -32,17 +33,17 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         private readonly IDistributedCacheHelper _helper;
         private readonly Serilog.ILogger _logger;
         private readonly HttpClient _httpClient;
-
+        private readonly ISysUserService _sysUserService;
         private OpenAIOptions openAiOptions;
 
-        public ChatService(FrameworkDbContext dbContext, IOptionsSnapshot<GptOptions> options, IMapper mapper, IDistributedCacheHelper helper, Serilog.ILogger logger, HttpClient httpClient)
-        {
+        public ChatService(FrameworkDbContext dbContext, IOptionsSnapshot<GptOptions> options, IMapper mapper, IDistributedCacheHelper helper, Serilog.ILogger logger, HttpClient httpClient, ISysUserService sysUserService) {
             _dbContext = dbContext;
             _mapper = mapper;
             _helper = helper;
             _logger = logger;
             _httpClient = httpClient;
             openAiOptions = dbContext.GptOptions.AsNoTracking().Any() ? dbContext.GptOptions.AsNoTracking().FirstOrDefault().OpenAIOptions : options.Value.OpenAIOptions;
+            _sysUserService = sysUserService;
         }
         #region 聊天
 
@@ -339,6 +340,11 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             var total = await query.CountAsync();
             var item = await query.OrderByDescending(m => m.CreateDate).Skip((req.PageIndex - 1) * req.PageSize).Take(req.PageSize).OrderBy(m=>m.CreateDate).ToListAsync();
             var res = _mapper.Map<IEnumerable<ChatRes>>(item);
+            //获取用户名称缓存
+            var sysUser = await _sysUserService.GetUserNameList();
+            foreach (var i in res) {
+                i.UserName = sysUser.FirstOrDefault(m=>m.Key==i.UserId).Value;
+            }
             return ApiResponse<PagedRes<ChatRes>>.Success(new PagedRes<ChatRes>(res, total, req.PageIndex, req.PageSize));
         }
         #endregion

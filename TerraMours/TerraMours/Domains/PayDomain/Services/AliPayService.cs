@@ -6,10 +6,12 @@ using Essensoft.Paylink.Alipay.Response;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
+using TerraMours.Domains.LoginDomain.IServices;
 using TerraMours.Framework.Infrastructure.EFCore;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;
 using TerraMours_Gpt.Domains.LoginDomain.Contracts.Common;
 using TerraMours_Gpt.Domains.PayDomain.Contracts.Req;
+using TerraMours_Gpt.Domains.PayDomain.Contracts.Res;
 using TerraMours_Gpt.Domains.PayDomain.IServices;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.PaymentModels;
 using ILogger = Serilog.ILogger;
@@ -23,14 +25,15 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
         private readonly IMapper _mapper;
         private readonly FrameworkDbContext _dbContext;
         private readonly Serilog.ILogger _logger;
+        private readonly ISysUserService _sysUserService;
 
-        public AliPayService(IAlipayClient client, IOptions<AlipayOptions> optionsAccessor, IMapper mapper, FrameworkDbContext dbContext, ILogger logger)
-        {
+        public AliPayService(IAlipayClient client, IOptions<AlipayOptions> optionsAccessor, IMapper mapper, FrameworkDbContext dbContext, ILogger logger, ISysUserService sysUserService) {
             _client = client;
             _optionsAccessor = optionsAccessor;
             _mapper = mapper;
             _dbContext = dbContext;
             _logger = logger;
+            _sysUserService = sysUserService;
         }
 
         /// <summary>
@@ -127,12 +130,18 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
         /// <param name="page"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async Task<ApiResponse<PagedRes<Order>>> OrderList(PageReq page)
+        public async Task<ApiResponse<PagedRes<OrderRes>>> OrderList(PageReq page)
         {
             var query = _dbContext.Orders.AsNoTracking().Where(m => string.IsNullOrEmpty(page.QueryString) || m.OrderId.Contains(page.QueryString) || m.TradeNo.Contains(page.QueryString));
             var total = await query.CountAsync();
             var item = await query.OrderByDescending(m=>m.CreatedTime).Skip((page.PageIndex - 1) * page.PageSize).Take(page.PageSize).ToListAsync();
-            return ApiResponse<PagedRes<Order>>.Success(new PagedRes<Order>(item, total, page.PageIndex, page.PageSize));
+            var res = _mapper.Map<IEnumerable<OrderRes>>(item);
+            //获取用户名称缓存
+            var sysUser = await _sysUserService.GetUserNameList();
+            foreach (var i in res) {
+                i.UserName = sysUser.FirstOrDefault(m => m.Key ==long.Parse(i.UserId)).Value;
+            }
+            return ApiResponse<PagedRes<OrderRes>>.Success(new PagedRes<OrderRes>(res, total, page.PageIndex, page.PageSize));
         }
     }
 }

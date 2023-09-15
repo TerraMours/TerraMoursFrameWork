@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
 using System.Text;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
+using TerraMours.Domains.LoginDomain.Contracts.Res;
 using TerraMours.Domains.LoginDomain.IServices;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
@@ -200,7 +202,7 @@ namespace TerraMours.Domains.LoginDomain.Services
             }
             user?.Delete();
             await _dbContext.SaveChangesAsync();
-            //await _helper.RemoveAsync("GetAllUserList");
+            await _helper.RemoveAsync("GetUserNameList");
             return ApiResponse<bool>.Success(true);
         }
         /// <summary>
@@ -227,7 +229,7 @@ namespace TerraMours.Domains.LoginDomain.Services
             user.ModifyDate=DateTime.Now;
             _dbContext.SysUsers.Update(user);
             _dbContext.SaveChanges();
-            //await _helper.RemoveAsync("GetAllUserList");
+            await _helper.RemoveAsync("GetUserNameList");
             return ApiResponse<bool>.Success(true);
         }
         /// <summary>
@@ -248,7 +250,7 @@ namespace TerraMours.Domains.LoginDomain.Services
             _mapper.Map(userReq, user);
             await _dbContext.SysUsers.AddAsync(user);
             await _dbContext.SaveChangesAsync();
-            //await _helper.RemoveAsync("GetAllUserList");
+            await _helper.RemoveAsync("GetUserNameList");
             return ApiResponse<bool>.Success(true);
         }
 
@@ -293,6 +295,15 @@ namespace TerraMours.Domains.LoginDomain.Services
             }
             var userInfo = _mapper.Map<SysUserDetailRes>(user);
             return ApiResponse<SysUserDetailRes>.Success(userInfo);
+        }
+        /// <summary>
+        /// 获取用户ID-名称缓存
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task<List<KeyValueRes>> GetUserNameList() {
+            var userList = await _helper.GetOrCreateAsync("GetUserNameList", async options => { return await _dbContext.SysUsers.Select(m=>new KeyValueRes(m.UserId,m.UserName)).ToListAsync();});
+            return userList;
         }
     }
 }
