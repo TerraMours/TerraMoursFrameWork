@@ -242,6 +242,7 @@ builder.Services.AddDbContext<FrameworkDbContext>(opt =>
         opt.EnableSensitiveDataLogging();
     }
 });
+builder.Services.AddScoped<FrameworkDbContext>();
 
 //json小写的问题
 builder.Services.Configure<JsonOptions>(options =>
