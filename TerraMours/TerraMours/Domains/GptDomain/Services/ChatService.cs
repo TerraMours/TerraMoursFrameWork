@@ -53,12 +53,10 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         /// <param name="req"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async IAsyncEnumerable<ApiResponse<ChatRes>> ChatCompletionStream(ChatReq req)
-        {
+        public async IAsyncEnumerable<ApiResponse<ChatRes>> ChatCompletionStream(ChatReq req) {
 
             //创建会话
-            if (req.ConversationId == null || req.ConversationId == 0)
-            {
+            if (req.ConversationId == null || req.ConversationId == 0) {
                 var conversation = await _dbContext.ChatConversations.AddAsync(
                     new ChatConversation(req.Prompt.Length < 5 ? req.Prompt : $"{req.Prompt.Substring(0, 5)}...",
                         req.UserId));
@@ -66,22 +64,19 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             }
 
             var user = await getSysUser(req.UserId);
-            if (user == null)
-            {
+            if (user == null) {
                 yield return ApiResponse<ChatRes>.Fail("当前用户不存在");
                 yield break;
             }
 
             //敏感词检测
-            if (!await Sensitive(req))
-            {
+            if (!await Sensitive(req)) {
                 yield return ApiResponse<ChatRes>.Fail("触发了敏感词");
                 yield break;
             }
 
             //最大提问数量判断
-            if (await TodayVisits(req.UserId) > openAiOptions.OpenAI.MaxQuestions)
-            {
+            if (await TodayVisits(req.UserId) > openAiOptions.OpenAI.MaxQuestions) {
                 _logger.Warning($"用户【{req.UserId}】超出了单日最大提问数量,最大提问数量（MaxQuestions）请在系统设置中查看。");
                 yield return ApiResponse<ChatRes>.Fail("超出了单日最大提问数量");
                 yield break;
@@ -91,9 +86,9 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             List<ChatMessage> messegs = await BuildMsgList(req);
             //计费
             decimal takesPrice = 0;
-            //会员判断，非会员或者过期的通过余额扣费
-            bool isVip = user.VipLevel > 0 && user.VipExpireTime > DateTime.Now;
-            if (!isVip)
+            //会员判断，非会员或者GPT4或者过期的通过余额扣费
+            bool isVip = user.VipLevel > 0 && user.VipExpireTime > DateTime.Now && !req.Model.Contains( "gpt-4");
+            if (!isVip )
             {
                 takesPrice = GetAskPrice(messegs, req.Model ?? openAiOptions.OpenAI.ChatModel);
                 //判断余额，gpt4时需要余额五元以上
@@ -246,8 +241,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             List<ChatMessage> messegs = await BuildMsgList(req);
             //计费
             decimal takesPrice = 0;
-            //会员判断，非会员或者过期的通过余额扣费
-            bool isVip = user.VipLevel > 0 && user.VipExpireTime > DateTime.Now;
+            //会员判断，非会员或者GPT4或者过期的通过余额扣费
+            bool isVip = user.VipLevel > 0 && user.VipExpireTime > DateTime.Now && !req.Model.Contains("gpt-4");
             if (!isVip)
             {
                 takesPrice = GetAskPrice(messegs, req.Model ?? openAiOptions.OpenAI.ChatModel);
