@@ -13,6 +13,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
+using TerraMours.Domains.LoginDomain.IServices;
 using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 using TerraMours.Framework.Infrastructure.EFCore;
 using TerraMours.Framework.Infrastructure.Redis;
@@ -32,17 +33,17 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         private readonly IDistributedCacheHelper _helper;
         private readonly Serilog.ILogger _logger;
         private readonly HttpClient _httpClient;
-
+        private readonly ISysUserService _sysUserService;
         private OpenAIOptions openAiOptions;
 
-        public ChatService(FrameworkDbContext dbContext, IOptionsSnapshot<GptOptions> options, IMapper mapper, IDistributedCacheHelper helper, Serilog.ILogger logger, HttpClient httpClient)
-        {
+        public ChatService(FrameworkDbContext dbContext, IOptionsSnapshot<GptOptions> options, IMapper mapper, IDistributedCacheHelper helper, Serilog.ILogger logger, HttpClient httpClient, ISysUserService sysUserService) {
             _dbContext = dbContext;
             _mapper = mapper;
             _helper = helper;
             _logger = logger;
             _httpClient = httpClient;
             openAiOptions = dbContext.GptOptions.AsNoTracking().Any() ? dbContext.GptOptions.AsNoTracking().FirstOrDefault().OpenAIOptions : options.Value.OpenAIOptions;
+            _sysUserService = sysUserService;
         }
         #region 聊天
 
@@ -52,12 +53,10 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         /// <param name="req"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async IAsyncEnumerable<ApiResponse<ChatRes>> ChatCompletionStream(ChatReq req)
-        {
+        public async IAsyncEnumerable<ApiResponse<ChatRes>> ChatCompletionStream(ChatReq req) {
 
             //创建会话
-            if (req.ConversationId == null || req.ConversationId == 0)
-            {
+            if (req.ConversationId == null || req.ConversationId == 0) {
                 var conversation = await _dbContext.ChatConversations.AddAsync(
                     new ChatConversation(req.Prompt.Length < 5 ? req.Prompt : $"{req.Prompt.Substring(0, 5)}...",
                         req.UserId));
@@ -65,22 +64,19 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             }
 
             var user = await getSysUser(req.UserId);
-            if (user == null)
-            {
+            if (user == null) {
                 yield return ApiResponse<ChatRes>.Fail("当前用户不存在");
                 yield break;
             }
 
             //敏感词检测
-            if (!await Sensitive(req))
-            {
+            if (!await Sensitive(req)) {
                 yield return ApiResponse<ChatRes>.Fail("触发了敏感词");
                 yield break;
             }
 
             //最大提问数量判断
-            if (await TodayVisits(req.UserId) > openAiOptions.OpenAI.MaxQuestions)
-            {
+            if (await TodayVisits(req.UserId) > openAiOptions.OpenAI.MaxQuestions) {
                 _logger.Warning($"用户【{req.UserId}】超出了单日最大提问数量,最大提问数量（MaxQuestions）请在系统设置中查看。");
                 yield return ApiResponse<ChatRes>.Fail("超出了单日最大提问数量");
                 yield break;
@@ -90,9 +86,9 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             List<ChatMessage> messegs = await BuildMsgList(req);
             //计费
             decimal takesPrice = 0;
-            //会员判断，非会员或者过期的通过余额扣费
-            bool isVip = user.VipLevel > 0 && user.VipExpireTime > DateTime.Now;
-            if (!isVip)
+            //会员判断，非会员或者GPT4或者过期的通过余额扣费
+            bool isVip = user.VipLevel > 0 && user.VipExpireTime > DateTime.Now && !req.Model.Contains( "gpt-4");
+            if (!isVip )
             {
                 takesPrice = GetAskPrice(messegs, req.Model ?? openAiOptions.OpenAI.ChatModel);
                 //判断余额，gpt4时需要余额五元以上
@@ -245,8 +241,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             List<ChatMessage> messegs = await BuildMsgList(req);
             //计费
             decimal takesPrice = 0;
-            //会员判断，非会员或者过期的通过余额扣费
-            bool isVip = user.VipLevel > 0 && user.VipExpireTime > DateTime.Now;
+            //会员判断，非会员或者GPT4或者过期的通过余额扣费
+            bool isVip = user.VipLevel > 0 && user.VipExpireTime > DateTime.Now && !req.Model.Contains("gpt-4");
             if (!isVip)
             {
                 takesPrice = GetAskPrice(messegs, req.Model ?? openAiOptions.OpenAI.ChatModel);
@@ -339,6 +335,11 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             var total = await query.CountAsync();
             var item = await query.OrderByDescending(m => m.CreateDate).Skip((req.PageIndex - 1) * req.PageSize).Take(req.PageSize).OrderBy(m=>m.CreateDate).ToListAsync();
             var res = _mapper.Map<IEnumerable<ChatRes>>(item);
+            //获取用户名称缓存
+            var sysUser = await _sysUserService.GetUserNameList();
+            foreach (var i in res) {
+                i.UserName = sysUser.FirstOrDefault(m=>m.Key==i.UserId).Value;
+            }
             return ApiResponse<PagedRes<ChatRes>>.Success(new PagedRes<ChatRes>(res, total, req.PageIndex, req.PageSize));
         }
         #endregion

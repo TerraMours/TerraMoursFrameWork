@@ -40,6 +40,7 @@ using TerraMours_Gpt.Domains.PayDomain.IServices;
 using TerraMours_Gpt.Domains.PayDomain.Services;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.PaymentModels;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels;
 using TerraMours_Gpt.Framework.Infrastructure.Middlewares;
 
@@ -148,6 +149,7 @@ MapperConfiguration mapperConfig = new(cfg =>
     cfg.CreateMap<Product, ProductRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
     cfg.CreateMap<CategoryReq, Category>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
     cfg.CreateMap<Category, CategoryRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<Order, OrderRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 });
 //注册配置
 IMapper mapper = mapperConfig.CreateMapper();
@@ -242,6 +244,7 @@ builder.Services.AddDbContext<FrameworkDbContext>(opt =>
         opt.EnableSensitiveDataLogging();
     }
 });
+builder.Services.AddScoped<FrameworkDbContext>();
 
 //json小写的问题
 builder.Services.Configure<JsonOptions>(options =>

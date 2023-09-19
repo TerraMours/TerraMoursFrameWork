@@ -41,6 +41,10 @@
         /// </summary>
         public long? UserId { get; set; }
         /// <summary>
+        /// 用户名称
+        /// </summary>
+        public string? UserName { get; set; }
+        /// <summary>
         /// 是否公开到图片广场
         /// </summary>
         public bool? IsPublic { get; set; }

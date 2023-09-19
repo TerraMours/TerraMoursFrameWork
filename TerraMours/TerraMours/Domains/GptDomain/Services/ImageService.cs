@@ -24,6 +24,7 @@ using OpenAI.ObjectModels;
 using OpenAI.ObjectModels.RequestModels;
 using OpenAI.Managers;
 using OpenAI;
+using TerraMours.Domains.LoginDomain.IServices;
 
 namespace TerraMours_Gpt.Domains.GptDomain.Services
 {
@@ -34,14 +35,16 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         private readonly IHubContext<GraphGenerationHub> _hubContext;
         private readonly Serilog.ILogger _logger;
         private readonly IMapper _mapper;
+        private readonly ISysUserService _sysUserService;
 
-        public ImageService(FrameworkDbContext dbContext, IOptionsSnapshot<GptOptions> options, HttpClient httpClient, IHubContext<GraphGenerationHub> hubContext, Serilog.ILogger logger, IMapper mapper) {
+        public ImageService(FrameworkDbContext dbContext, IOptionsSnapshot<GptOptions> options, HttpClient httpClient, IHubContext<GraphGenerationHub> hubContext, Serilog.ILogger logger, IMapper mapper, ISysUserService sysUserService) {
             _dbContext = dbContext;
             _options = options;
             _httpClient = httpClient;
             _hubContext = hubContext;
             _logger = logger;
             _mapper = mapper;
+            _sysUserService = sysUserService;
         }
 
         public async Task<ApiResponse<string?>> GenerateGraph(ImageReq req) {
@@ -68,9 +71,12 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             var total = await query.CountAsync();
             var item = await query.OrderByDescending(m => m.CreateDate).Skip((page.PageIndex - 1) * page.PageSize).Take(page.PageSize).ToListAsync();
             var res = _mapper.Map<IEnumerable<ImageRes>>(item);
+            //查询用户名称redis缓存
+            var sysUser = await _sysUserService.GetUserNameList();
             foreach (var r in res)
             {
                 r.IsPublic = null;
+                r.UserName = sysUser.FirstOrDefault(m => m.Key == r.UserId).Value;
             }
             return ApiResponse<PagedRes<ImageRes>>.Success(new PagedRes<ImageRes>(res, total, page.PageIndex, page.PageSize));
         }
@@ -168,6 +174,11 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             var total = await query.CountAsync();
             var item = await query.OrderByDescending(m => m.CreateDate).Skip((page.PageIndex - 1) * page.PageSize).Take(page.PageSize).ToListAsync();
             var res = _mapper.Map<IEnumerable<ImageRes>>(item);
+            //获取用户名称缓存
+            var sysUser = await _sysUserService.GetUserNameList();
+            foreach (var i in res) {
+                i.UserName = sysUser.FirstOrDefault(m => m.Key == i.UserId).Value;
+            }
             return ApiResponse<PagedRes<ImageRes>>.Success(new PagedRes<ImageRes>(res, total, page.PageIndex, page.PageSize));
         }
 

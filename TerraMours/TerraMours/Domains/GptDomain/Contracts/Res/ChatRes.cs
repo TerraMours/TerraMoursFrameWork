@@ -40,6 +40,10 @@
         /// </summary>
         public long? UserId { get; set; }
         /// <summary>
+        /// 用户名称
+        /// </summary>
+        public string? UserName { get; set; }
+        /// <summary>
         /// 创建时间
         /// </summary>
         public DateTime CreateDate { get; set; }

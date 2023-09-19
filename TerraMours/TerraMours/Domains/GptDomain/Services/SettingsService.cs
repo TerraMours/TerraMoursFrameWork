@@ -30,6 +30,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 return ApiResponse<bool>.Fail("未初始化数据");
             }
             settings.ChangeEmail(email,userId);
+            _dbContext.SysSettings.Update(settings);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
         }
@@ -42,6 +43,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 return ApiResponse<bool>.Fail("未初始化数据");
             }
             settings.ChangeImagOptions(imagOptions, userId);
+            _dbContext.GptOptions.Update(settings);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
         }
@@ -54,6 +56,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 return ApiResponse<bool>.Fail("未初始化数据");
             }
             settings.ChangeOpenAIOptions(openAIOptions, userId);
+            _dbContext.GptOptions.Update(settings);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
         }
