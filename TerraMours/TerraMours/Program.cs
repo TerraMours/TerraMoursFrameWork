@@ -42,6 +42,7 @@ using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.PaymentModels;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels;
+using TerraMours_Gpt.Framework.Infrastructure.EFCore;
 using TerraMours_Gpt.Framework.Infrastructure.Middlewares;
 
 //用于启用或禁用 Npgsql 客户端与 Postgres 服务器之间的时间戳行为。它并不会直接修改 Postgres 的时区设置。
@@ -168,9 +169,9 @@ builder.Services.AddScoped<ISysUserService, SysUserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ISysRoleService, SysRoleService>();
 builder.Services.AddScoped<ISysMenuService, SysMenuService>();
-builder.Services.AddScoped<ISeedDataService, SeedDataService>();
 builder.Services.AddScoped<ISettingsService, SettingsService>();
 builder.Services.AddScoped<IAnalysisService, AnalysisService>();
+builder.Services.AddScoped<ISeedDataService, SeedDataService>();
 //gpt
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IImageService, ImageService>();
@@ -181,6 +182,8 @@ builder.Services.AddScoped<IPayService, AliPayService>();
 //商品服务
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+//初始化
+builder.Services.AddTransient<DbInitialiser>();
 
 builder.Services.AddCors(options =>
 {
@@ -194,12 +197,11 @@ builder.Services.AddCors(options =>
                       });
 });
 // Add Hangfire services.
-builder.Services.AddHangfire(config => config.UseStorage(new PostgreSqlStorage(sysSettings.connection.DbConnectionString)));
-
+builder.Services.AddHangfire(config => config.UseStorage(new PostgreSqlStorage(Environment.GetEnvironmentVariable("ENV_DB_CONNECTION") ?? sysSettings.connection.DbConnectionString)));
 //redis 缓存 这个实现了IDistributedCache
 builder.Services.AddStackExchangeRedisCache(options =>
 {
-    options.Configuration = sysSettings.connection.RedisHost;
+    options.Configuration = Environment.GetEnvironmentVariable("ENV_REDIS_HOST") ?? sysSettings.connection.RedisHost;
     options.InstanceName = sysSettings.connection.RedisInstanceName;
 });
 builder.Services.AddScoped<IDistributedCacheHelper, DistributedCacheHelper>();
@@ -234,7 +236,7 @@ builder.Services.AddDbContext<FrameworkDbContext>(opt =>
     //从配置文件中获取key,这种方法需要新增一个类与之对应
 
     //var connStr = $"Host=localhost;Database=TerraMours;Username=postgres;Password=root";
-    var connStr = sysSettings.connection.DbConnectionString;
+    var connStr = Environment.GetEnvironmentVariable("ENV_DB_CONNECTION") ?? sysSettings.connection.DbConnectionString;
     opt.UseNpgsql(connStr);
     //设置EF默认AsNoTracking,EF Core不 跟踪
     opt.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
@@ -245,6 +247,8 @@ builder.Services.AddDbContext<FrameworkDbContext>(opt =>
     }
 });
 builder.Services.AddScoped<FrameworkDbContext>();
+
+
 
 //json小写的问题
 builder.Services.Configure<JsonOptions>(options =>
@@ -282,6 +286,15 @@ var app = builder.AddServices(opt =>
 {
     opt.DisableAutoMapRoute = true;
 });
+
+//初始化数据库
+using var scope = app.Services.CreateScope();
+
+var services = scope.ServiceProvider;
+
+var initialiser = services.GetRequiredService<DbInitialiser>();
+
+initialiser.Run();
 
 //健康检查
 //app.UseHealthChecks("/health");
