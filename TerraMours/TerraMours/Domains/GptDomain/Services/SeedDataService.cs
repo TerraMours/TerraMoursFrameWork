@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Essensoft.Paylink.Alipay;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
@@ -23,13 +24,15 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         private readonly Serilog.ILogger _logger;
         private readonly IOptionsSnapshot<SysSettings> _sysSettings;
         private readonly IOptionsSnapshot<GptOptions> _gptOptions;
+        private readonly IOptionsSnapshot<AlipayOptions> _alipayOptions;
 
-        public SeedDataService(FrameworkDbContext dbContext, Serilog.ILogger logger, IOptionsSnapshot<SysSettings> sysSettings, IOptionsSnapshot<GptOptions> gptOptions)
+        public SeedDataService(FrameworkDbContext dbContext, Serilog.ILogger logger, IOptionsSnapshot<SysSettings> sysSettings, IOptionsSnapshot<GptOptions> gptOptions, IOptionsSnapshot<AlipayOptions> alipayOptions)
         {
             _dbContext = dbContext;
             _logger = logger;
             _sysSettings = sysSettings;
             _gptOptions = gptOptions;
+            _alipayOptions = alipayOptions;
         }
 
         /// <summary>
@@ -127,7 +130,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             }
             if (!await _dbContext.SysSettings.AnyAsync())
             {
-                var settins=new SysSettingsEntity(_sysSettings.Value.initial, _sysSettings.Value.email);
+                var settins=new SysSettingsEntity(_sysSettings.Value.initial, _sysSettings.Value.email,_alipayOptions.Value);
                 await _dbContext.SysSettings.AddAsync(settins);
             }
             if (!await _dbContext.GptOptions.AnyAsync())

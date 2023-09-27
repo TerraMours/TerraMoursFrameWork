@@ -1,4 +1,5 @@
-﻿using TerraMours.Domains.LoginDomain.Contracts.Common;
+﻿using Essensoft.Paylink.Alipay;
+using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
 
@@ -41,5 +42,17 @@ namespace TerraMours_Gpt.Domains.GptDomain.IServices
         /// </summary>
         /// <returns></returns>
         public Task<ApiResponse<bool>> ChangeImagOptions(ImagOptions imagOptions, long? userId);
+
+        /// <summary>
+        /// 支付配置
+        /// </summary>
+        /// <returns></returns>
+        public Task<ApiResponse<AlipayOptions>> GetAlipayOptions();
+
+        /// <summary>
+        /// 支付配置
+        /// </summary>
+        /// <returns></returns>
+        public Task<ApiResponse<bool>> ChangeAlipayOptions(AlipayOptions alipayOptions, long? userId);
     }
 }

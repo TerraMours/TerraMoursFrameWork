@@ -1,4 +1,5 @@
-﻿using k8s.KubeConfigModels;
+﻿using Essensoft.Paylink.Alipay;
+using k8s.KubeConfigModels;
 using Newtonsoft.Json.Linq;
 using System.ComponentModel.DataAnnotations;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
@@ -26,14 +27,17 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.SystemModels
         /// </summary>
         public Email? Email { get; set; }
 
+        public AlipayOptions? Alipay { get; set; }
+
         public SysSettingsEntity()
         {
         }
 
-        public SysSettingsEntity( Initial? initial, Email? email)
+        public SysSettingsEntity( Initial? initial, Email? email, AlipayOptions? alipay)
         {
             Initial = initial;
             Email = email;
+            Alipay = alipay;
             //EntityBase
             Version = 1;
             Enable = true;
@@ -52,6 +56,14 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.SystemModels
         {
             //EntityBase
             this.Email= email;
+            this.ModifyDate = DateTime.Now;
+            this.ModifyID = userId;
+            return this;
+        }
+
+        public SysSettingsEntity ChangeAlipayOptions(AlipayOptions? alipay, long? userId) {
+            //EntityBase
+            this.Alipay = alipay;
             this.ModifyDate = DateTime.Now;
             this.ModifyID = userId;
             return this;
