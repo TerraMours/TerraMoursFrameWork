@@ -42,7 +42,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             _helper = helper;
             _logger = logger;
             _httpClient = httpClient;
-            openAiOptions = dbContext.GptOptions.AsNoTracking().Any() ? dbContext.GptOptions.AsNoTracking().FirstOrDefault().OpenAIOptions : options.Value.OpenAIOptions;
+            openAiOptions =options.Value.OpenAIOptions;
             _sysUserService = sysUserService;
         }
         #region 聊天
@@ -54,7 +54,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
         public async IAsyncEnumerable<ApiResponse<ChatRes>> ChatCompletionStream(ChatReq req) {
-
+            openAiOptions = _dbContext.GptOptions.AsNoTracking().Any() ? _dbContext.GptOptions.AsNoTracking().FirstOrDefault().OpenAIOptions : openAiOptions;
             //创建会话
             if (req.ConversationId == null || req.ConversationId == 0) {
                 var conversation = await _dbContext.ChatConversations.AddAsync(
@@ -216,6 +216,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
 
 
         public async Task<ApiResponse<ChatRes>> ChatCompletion(ChatReq req) {
+            openAiOptions = _dbContext.GptOptions.AsNoTracking().Any() ? _dbContext.GptOptions.AsNoTracking().FirstOrDefault().OpenAIOptions : openAiOptions;
             //创建会话
             if (req.ConversationId == null || req.ConversationId == 0) {
                 var conversation = await _dbContext.ChatConversations.AddAsync(new ChatConversation(req.Prompt.Length < 5 ? req.Prompt : $"{req.Prompt.Substring(0, 5)}...", req.UserId));
@@ -708,6 +709,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         /// <returns></returns>
         private async Task<bool> Sensitive(ChatReq req)
         {
+            openAiOptions = _dbContext.GptOptions.AsNoTracking().Any() ? _dbContext.GptOptions.AsNoTracking().FirstOrDefault().OpenAIOptions : openAiOptions;
             bool res = true;
             if (await _dbContext.Sensitives.CountAsync(m => req.Prompt.Contains(m.Word)) > 0)
             {
@@ -753,6 +755,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         /// <returns></returns>
         private async Task<bool> CodeCanAsk(SysUser user)
         {
+            openAiOptions = _dbContext.GptOptions.AsNoTracking().Any() ? _dbContext.GptOptions.AsNoTracking().FirstOrDefault().OpenAIOptions : openAiOptions;
             bool res = true;
             int max = user.VipLevel>0 ? 999 : (openAiOptions.OpenAI.MaxQuestions);
             var todays = await TodayVisits(user.UserId);
@@ -824,6 +827,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         /// <returns></returns>
         private async Task<List<ChatMessage>> BuildMsgList(ChatReq req)
         {
+            openAiOptions = _dbContext.GptOptions.AsNoTracking().Any() ? _dbContext.GptOptions.AsNoTracking().FirstOrDefault().OpenAIOptions : openAiOptions;
             //根据配置中的CONTEXT_COUNT 查询上下文
             var messegs = new List<ChatMessage>();
             if (!string.IsNullOrEmpty(req.SystemMessage))
@@ -878,6 +882,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         /// <returns></returns>
         private decimal TokensPrice(string str, string model)
         {
+            openAiOptions = _dbContext.GptOptions.AsNoTracking().Any() ? _dbContext.GptOptions.AsNoTracking().FirstOrDefault().OpenAIOptions : openAiOptions;
             var length = System.Text.Encoding.Default.GetBytes(str.ToCharArray()).Length;
             decimal price = openAiOptions.TokenPrice > 0 ? openAiOptions.TokenPrice : (decimal)0.0001;
             switch (model)

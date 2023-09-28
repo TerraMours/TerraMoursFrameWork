@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Essensoft.Paylink.Alipay;
+using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours_Gpt.Domains.GptDomain.IServices;
@@ -23,6 +24,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi
             App.MapPost("/api/v1/Settings/ChangeOpenAIOptions", ChangeOpenAIOptions);
             App.MapGet("/api/v1/Settings/GetImagOptions", GetImagOptions);
             App.MapPost("/api/v1/Settings/ChangeImagOptions", ChangeImagOptions);
+            App.MapGet("/api/v1/Settings/GetAlipayOptions", GetAlipayOptions);
+            App.MapPost("/api/v1/Settings/ChangeAlipayOptions", ChangeAlipayOptions);
             _httpContextAccessor = httpContextAccessor;
         }
 
@@ -105,6 +108,28 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi
         {
             var userId = long.Parse(_httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.UserData)!);
             var res = await _settingsService.ChangeImagOptions(imagOptions, userId);
+            return Results.Ok(res);
+        }
+
+        /// <summary>
+        /// 获取支付配置
+        /// </summary>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> GetAlipayOptions() {
+            var res = await _settingsService.GetAlipayOptions();
+            return Results.Ok(res);
+        }
+
+        /// <summary>
+        /// 修改支付配置
+        /// </summary>
+        /// <param name="email">邮箱信息</param>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> ChangeAlipayOptions(AlipayOptions alipayOptions) {
+            var userId = long.Parse(_httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.UserData)!);
+            var res = await _settingsService.ChangeAlipayOptions(alipayOptions, userId);
             return Results.Ok(res);
         }
     }
