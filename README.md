@@ -107,7 +107,7 @@ docker run --name terramours_gpt_server -v /data/terramoursgpt/server/images:/ap
 
 新建一个空文件命名为docker-compose.yml，将以下内容粘贴到文件中保存
 
-```dockerfile
+```yaml
 version: "3.9"
 services:
   redis:
