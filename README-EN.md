@@ -10,6 +10,14 @@
 
 [TerraMours Gpt Api](https://github.com/TerraMours/TerraMours_Gpt_Api) is an intelligent assistant project developed and improved based on [TerraMoursFrameWork](https://github.com/TerraMours/TerraMoursFrameWork). The technology includes Net7+MinimalApi+EF Core+Postgresql+Seq+FluentApi...
 
+
+
+TerraMours is a practical project that implements user login and features such as multilingual model chat based on SK, multimodal image generation based on chatgpt and SD. The management side includes data dashboards, chat record management, image record management, user management, and system configuration.
+
+Official website: https://terramours.site/
+
+
+
 Core features:
 
 1. Refactoring based on Semantic Kernel of https://ai.terramours.site/, realizing multi-AI model chat.
@@ -77,6 +85,127 @@ docker run --name terramours_gpt_server -v /data/terramoursgpt/server/images:/ap
 - Access swagger:
 
 Open the local browser and access `http://localhost/swagger/index.html`
+
+## Quick Setup
+
+### 1. Quick setup of AI chat and drawing system based on docker-compose
+
+#### 1. Create a new empty file named docker-compose.yml
+
+Create a new empty file named docker-compose.yml and paste the following contents into the file, then save it.
+
+```dockerfile
+version: "3.9"
+services:
+  redis:
+    image: redis
+    container_name: redis_container
+    ports:
+      - "6379:6379"
+    restart: always
+    networks:
+      - server
+
+  postgres:
+    image: postgres
+    container_name: postgres_container
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=terramours1024
+      - POSTGRES_DB=TerraMoursGpt
+    ports:
+      - "5432:5432"
+    restart: always
+    networks:
+      - server
+  server:
+    image: raokun88/terramours_gpt_server:latest
+    container_name: terramours_gpt_server
+    environment:
+      - TZ=Asia/Shanghai
+      - ENV_DB_CONNECTION=Host=postgres;Port=5432;Userid=postgres;password=terramours1024;Database=TerraMoursGpt;
+      - ENV_REDIS_HOST=redis:6379
+    volumes:
+      # 图片挂载地址，将容器中的图片挂载出来
+      - F:\Docker\terra\server\images:/app/images
+      # 可挂载自定义的配置文件快速进行系统配置
+      #- F:\Docker\terra\server/appsettings.json:/app/appsettings.json
+    ports:
+      - "3116:80"
+    restart: always
+    networks:
+      - server
+    depends_on:
+      - postgres
+      - redis
+  admin:
+    image: raokun88/terramours_gpt_admin:latest
+    container_name: terramoursgptadmin
+    environment:
+      - VUE_APP_API_BASE_URL=http://127.0.0.1:3116
+    ports:
+      - "3226:8081"
+    restart: always
+    networks:
+      - server
+
+  web:
+    image: raokun88/terramours_gpt_web:latest
+    container_name: terramoursgptweb
+    environment:
+      - VUE_APP_API_BASE_URL=http://127.0.0.1:3116
+    ports:
+      - "3216:8081"
+    restart: always
+    networks:
+      - server
+    
+networks:
+  server:
+    driver:
+      bridge
+
+```
+
+#### 2. Upload the docker-compose file to the server
+
+Upload the docker-compose file to the server using XFTP, the FTP client I am using.
+
+#### 3. Execute Docker command to build the docker-compose
+
+```shell
+docker-compose up
+```
+
+### 2. Build the front-end project using Docker command
+
+In addition to using docker-compose, we have also uploaded the front-end image to Docker Hub. You can quickly build the front-end project using the Docker command. Execute the following command on the server:
+
+```shell
+docker run --name terramoursgptadmin -p 3226:8081 -e VUE_APP_API_BASE_URL=http://127.0.0.1:3116 --restart always -d raokun88/terramours_gpt_admin:latest //Replace VUE_APP_API_BASE_URL with the corresponding backend API address
+```
+
+**Note: Replace VUE_APP_API_BASE_URL with the corresponding backend API address**
+
+
+
+## Project Screenshots
+
+### User Interface
+
+![image-20231009165939032](./img/image-20231009165939032-1696921797173-6.png)
+
+![image-20231009165948121](./img/image-20231009165948121-1696921797173-7.png)
+
+### Admin Interface
+
+![image-20231009170148439](./img/image-20231009170148439-1696921797173-8.png)
+
+![image-20231009170200187](./img/image-20231009170200187-1696921797173-9.png)
+
+![image-20231009170507536](./img/image-20231009170507536-1696921797173-10.png)
+
+
 
 ## Open-Source Authors
 
