@@ -94,7 +94,7 @@ Open the local browser and access `http://localhost/swagger/index.html`
 
 Create a new empty file named docker-compose.yml and paste the following contents into the file, then save it.
 
-```dockerfile
+```yml
 version: "3.9"
 services:
   redis:
