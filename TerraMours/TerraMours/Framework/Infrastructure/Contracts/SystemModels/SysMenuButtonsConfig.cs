@@ -26,15 +26,6 @@ namespace TerraMours.Framework.Infrastructure.Contracts.SystemModels
                   .ValueGeneratedOnAddOrUpdate()
                   .IsConcurrencyToken(); // 使用 IsConcurrencyToken 方法将 Version 属性标记为并发令牌
 
-            // 配置角色关系一个菜单对应的对应多个按钮 关系 外键是 MenuId
-            builder.HasOne<SysRolesToMenu>(e => e.SysRolesToMenu)
-                .WithMany(e => e.SysMenuButtons)
-                .HasForeignKey(e => e.MenuId);
-
-            // 配置关系一个菜单页面对应的对应多个按钮 关系 外键是 MenuId
-            builder.HasOne<SysMenus>(e => e.SysMenus)
-                .WithMany(e => e.SysMenuButtons)
-                .HasForeignKey(e => e.MenuId);
         }
     }
 }

@@ -69,6 +69,19 @@
         public DateTime? PaidTime { get; set; }
 
         /// <summary>
+        /// 是否是Vip(包月会员)
+        /// </summary>
+        public bool? IsVIP { get; set; }
+        /// <summary>
+        /// 会员等级 (1 为月度会员，2为季度会员，3会年度会员这与 价格相关，由于user表已经设计了，下次遇到相似问题设计为enum类)
+        /// </summary>
+        public int? VipLevel { get; set; }
+        /// <summary>
+        /// vip充值时间 按月算  数字就是月数
+        /// </summary>
+        public int? VipTime { get; set; }
+
+        /// <summary>
         /// 订单状态 交易状态：WAIT_BUYER_PAY（交易创建，等待买家付款）、TRADE_CLOSED（未付款交易超时关闭，或支付完成后全额退款）、TRADE_SUCCESS（交易支付成功）、TRADE_FINISHED（交易结束，不可退款）
         /// </summary>
         /*public enum OrderStatus
@@ -97,8 +110,10 @@
         /// <param name="description"></param>
         /// <param name="price"></param>
         /// <param name="userId"></param>
-        /// <param name="orderid">自身系统里面唯一的交易号</param>
-        public Order(long productId, string name, string description, decimal price, string userId, string orderid)
+        /// <param name="orderid"></param>
+        /// <param name="isVIP"></param>
+        /// <param name="vipLevel"></param>
+        public Order(long productId, string name, string description, decimal price, string userId, string orderid, bool? isVIP, int? vipLevel, int? vipTime)
         {
             //初始化用户 ：以下是有用的字段
             this.ProductId = productId;
@@ -106,12 +121,16 @@
             this.Description = description;
             this.Price = price;
             this.UserId = userId;
+            this.IsVIP = isVIP;
+            this.VipLevel = vipLevel;
+            this.VipTime = vipTime;
             //系统自动生成orderid
             this.OrderId = orderid;
             //默认新建订单是未支付的，后续查询支付宝订单状态再覆盖此状态 取消设计枚举
             this.Status = "WAIT_BUYER_PAY";
             //EntityBase
             CreatedTime = DateTime.Now;
+            VipTime = vipTime;
         }
 
         /// <summary>

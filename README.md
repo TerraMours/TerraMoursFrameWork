@@ -10,6 +10,12 @@
 
 [TerraMours Gpt Api](https://github.com/TerraMours/TerraMours_Gpt_Api) 是基于[TerraMoursFrameWork](https://github.com/TerraMours/TerraMoursFrameWork) 开发完善的智能助手项目。技术包括 Net7+MinimalApi+EF Core+Postgresql+Seq+FluentApi ...... 
 
+TerraMours实战项目，实现用户登陆和基于SK的多语言模型聊天、基于chatgpt和SD的多模型图片生成等功能。管理端实现数据看板、聊天记录管理，图片记录管理、用户管理、系统配置等。
+
+官网地址：https://terramours.site/
+
+
+
 核心功能：
 
 1.对https://ai.terramours.site/基于Semantic Kernel的重构，实现多AI模型的聊天
@@ -90,6 +96,115 @@ docker run --name terramours_gpt_server -v /data/terramoursgpt/server/images:/ap
 - 访问 swagger
 
 打开本地浏览器访问`http://localhost/swagger/index.html`
+
+
+
+## 快速搭建
+
+### 1.基于dockercompose的快速搭建AI聊天和画图系统
+
+#### 1.新建一个空文件命名为docker-compose.yml
+
+新建一个空文件命名为docker-compose.yml，将以下内容粘贴到文件中保存
+
+```dockerfile
+version: "3.9"
+services:
+  redis:
+    image: redis
+    container_name: redis_container
+    ports:
+      - "6379:6379"
+    restart: always
+    networks:
+      - server
+
+  postgres:
+    image: postgres
+    container_name: postgres_container
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=terramours1024
+      - POSTGRES_DB=TerraMoursGpt
+    ports:
+      - "5432:5432"
+    restart: always
+    networks:
+      - server
+  server:
+    image: raokun88/terramours_gpt_server:latest
+    container_name: terramours_gpt_server
+    environment:
+      - TZ=Asia/Shanghai
+      - ENV_DB_CONNECTION=Host=postgres;Port=5432;Userid=postgres;password=terramours1024;Database=TerraMoursGpt;
+      - ENV_REDIS_HOST=redis:6379
+    volumes:
+      # 图片挂载地址，将容器中的图片挂载出来
+      - F:\Docker\terra\server\images:/app/images
+      # 可挂载自定义的配置文件快速进行系统配置
+      #- F:\Docker\terra\server/appsettings.json:/app/appsettings.json
+    ports:
+      - "3116:80"
+    restart: always
+    networks:
+      - server
+    depends_on:
+      - postgres
+      - redis
+  admin:
+    image: raokun88/terramours_gpt_admin:latest
+    container_name: terramoursgptadmin
+    environment:
+      - VUE_APP_API_BASE_URL=http://127.0.0.1:3116
+    ports:
+      - "3226:8081"
+    restart: always
+    networks:
+      - server
+
+  web:
+    image: raokun88/terramours_gpt_web:latest
+    container_name: terramoursgptweb
+    environment:
+      - VUE_APP_API_BASE_URL=http://127.0.0.1:3116
+    ports:
+      - "3216:8081"
+    restart: always
+    networks:
+      - server
+    
+networks:
+  server:
+    driver:
+      bridge
+
+```
+
+#### 2.上传dockercompose文件到服务器
+
+上传dockercompose文件到服务器，我使用的是XFTP。
+
+#### 3.执行docker命令，构建dockercompose
+
+```shell
+docker-compose up
+```
+
+## 项目截图
+
+### 用户端
+
+![image-20231009165939032](./img/image-20231009165939032.png)
+
+![image-20231009165948121](./img/image-20231009165948121.png)
+
+### 管理端
+
+![image-20231009170148439](./img/image-20231009170148439.png)
+
+![image-20231009170200187](./img/image-20231009170200187.png)
+
+![image-20231009170507536](./img/image-20231009170507536.png)
 
 
 

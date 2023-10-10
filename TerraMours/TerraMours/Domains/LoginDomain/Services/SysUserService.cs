@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
 using System.Text;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
+using TerraMours.Domains.LoginDomain.Contracts.Res;
 using TerraMours.Domains.LoginDomain.IServices;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
@@ -181,7 +183,7 @@ namespace TerraMours.Domains.LoginDomain.Services
             //思考，如果将用户id与用户余额单独做一张小表分离出来，其实用户的信息，并不是经常修改，依旧可以使用缓存。以后遇到问题，需要进一步思考
             //Enable 这种可以在实体config里面配置queryFilter
             //var userList = await _helper.GetOrCreateAsync("GetAllUserList", async options => { return await _dbContext.SysUsers.Where(x => x.Enable == true).ToListAsync(); });
-            var userList = await _dbContext.SysUsers.Where(x => x.Enable == true).ToListAsync();
+            var userList = await _dbContext.SysUsers.AsNoTracking().Where(x => x.Enable == true).ToListAsync();
             var userDetailList = _mapper.Map<List<SysUserDetailRes>>(userList);
             return ApiResponse<List<SysUserDetailRes>>.Success(userDetailList);
         }
@@ -200,7 +202,7 @@ namespace TerraMours.Domains.LoginDomain.Services
             }
             user?.Delete();
             await _dbContext.SaveChangesAsync();
-            //await _helper.RemoveAsync("GetAllUserList");
+            await _helper.RemoveAsync("GetUserNameList");
             return ApiResponse<bool>.Success(true);
         }
         /// <summary>
@@ -227,7 +229,7 @@ namespace TerraMours.Domains.LoginDomain.Services
             user.ModifyDate=DateTime.Now;
             _dbContext.SysUsers.Update(user);
             _dbContext.SaveChanges();
-            //await _helper.RemoveAsync("GetAllUserList");
+            await _helper.RemoveAsync("GetUserNameList");
             return ApiResponse<bool>.Success(true);
         }
         /// <summary>
@@ -248,7 +250,7 @@ namespace TerraMours.Domains.LoginDomain.Services
             _mapper.Map(userReq, user);
             await _dbContext.SysUsers.AddAsync(user);
             await _dbContext.SaveChangesAsync();
-            //await _helper.RemoveAsync("GetAllUserList");
+            await _helper.RemoveAsync("GetUserNameList");
             return ApiResponse<bool>.Success(true);
         }
 
@@ -286,13 +288,22 @@ namespace TerraMours.Domains.LoginDomain.Services
 
         public async Task<ApiResponse<SysUserDetailRes>> GetUserInfoById(long userId)
         {
-            var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserId == userId);
+            var user = await _dbContext.SysUsers.AsNoTracking().FirstOrDefaultAsync(x => x.UserId == userId);
             if (user == null)
             {
                 return ApiResponse<SysUserDetailRes>.Fail("用户不存在");
             }
             var userInfo = _mapper.Map<SysUserDetailRes>(user);
             return ApiResponse<SysUserDetailRes>.Success(userInfo);
+        }
+        /// <summary>
+        /// 获取用户ID-名称缓存
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task<List<KeyValueRes>> GetUserNameList() {
+            var userList = await _helper.GetOrCreateAsync("GetUserNameList", async options => { return await _dbContext.SysUsers.Select(m=>new KeyValueRes(m.UserId,m.UserName)).ToListAsync();});
+            return userList;
         }
     }
 }

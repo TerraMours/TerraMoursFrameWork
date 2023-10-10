@@ -12,5 +12,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.IServices {
         Task<ApiResponse<PagedRes<ImageRes>>> ShareImageList(PageReq page);
 
         Task<ApiResponse<PagedRes<ImageRes>>> MyImageList(PageReq page, long? userId);
+
+        Task<ApiResponse<PagedRes<ImageRes>>> AllImageList(PageReq page, long? userId);
     }
 }

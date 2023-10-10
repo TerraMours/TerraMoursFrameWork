@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Builder.Extensions;
+﻿using Essensoft.Paylink.Alipay;
+using Essensoft.Paylink.Alipay.Domain;
+using Microsoft.AspNetCore.Builder.Extensions;
 using Microsoft.EntityFrameworkCore;
+using OpenAI;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours.Framework.Infrastructure.EFCore;
@@ -30,6 +33,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 return ApiResponse<bool>.Fail("未初始化数据");
             }
             settings.ChangeEmail(email,userId);
+            _dbContext.SysSettings.Update(settings);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
         }
@@ -42,6 +46,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 return ApiResponse<bool>.Fail("未初始化数据");
             }
             settings.ChangeImagOptions(imagOptions, userId);
+            _dbContext.GptOptions.Update(settings);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
         }
@@ -54,6 +59,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 return ApiResponse<bool>.Fail("未初始化数据");
             }
             settings.ChangeOpenAIOptions(openAIOptions, userId);
+            _dbContext.GptOptions.Update(settings);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
         }
@@ -87,5 +93,24 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             }
             return ApiResponse<OpenAIOptions>.Success(settings.OpenAIOptions);
         }
+        public async Task<ApiResponse<AlipayOptions>> GetAlipayOptions() {
+            var settings = await _dbContext.SysSettings.FirstOrDefaultAsync();
+            if (settings == null) {
+                return ApiResponse<AlipayOptions>.Fail("未初始化数据");
+            }
+            return ApiResponse<AlipayOptions>.Success(settings.Alipay);
+        }
+
+        public async Task<ApiResponse<bool>> ChangeAlipayOptions(AlipayOptions alipayOptions, long? userId) {
+            var settings = await _dbContext.SysSettings.FirstOrDefaultAsync();
+            if (settings == null) {
+                return ApiResponse<bool>.Fail("未初始化数据");
+            }
+            settings.ChangeAlipayOptions(alipayOptions, userId);
+            _dbContext.SysSettings.Update(settings);
+            await _dbContext.SaveChangesAsync();
+            return ApiResponse<bool>.Success(true);
+        }
+
     }
 }

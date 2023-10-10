@@ -31,6 +31,8 @@ using TerraMours_Gpt.Domains.GptDomain.Hubs;
 using TerraMours_Gpt.Domains.GptDomain.IServices;
 using TerraMours_Gpt.Domains.GptDomain.Services;
 using TerraMours_Gpt.Domains.LoginDomain.Contracts.Req;
+using TerraMours_Gpt.Domains.LoginDomain.IServices;
+using TerraMours_Gpt.Domains.LoginDomain.Services;
 using TerraMours_Gpt.Domains.PayDomain.Contracts.Req;
 using TerraMours_Gpt.Domains.PayDomain.Contracts.Res;
 using TerraMours_Gpt.Domains.PayDomain.Hubs;
@@ -38,7 +40,9 @@ using TerraMours_Gpt.Domains.PayDomain.IServices;
 using TerraMours_Gpt.Domains.PayDomain.Services;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.PaymentModels;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels;
+using TerraMours_Gpt.Framework.Infrastructure.EFCore;
 using TerraMours_Gpt.Framework.Infrastructure.Middlewares;
 
 //用于启用或禁用 Npgsql 客户端与 Postgres 服务器之间的时间戳行为。它并不会直接修改 Postgres 的时区设置。
@@ -47,7 +51,6 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
 
 var builder = WebApplication.CreateBuilder(args);
-
 //健康检查
 builder.Services.AddHealthChecks()
 //这里是添加自己的自定义的健康检查逻辑 使用默认的可以注释
@@ -66,8 +69,8 @@ builder.Services.Configure<AlipayOptions>(configuration.GetSection("Alipay"));
 // 配置 Serilog 日志记录器
 
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Debug()
-    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
     .Enrich.FromLogContext()
     .WriteTo.Console()
     //.WriteTo.File()
@@ -147,6 +150,7 @@ MapperConfiguration mapperConfig = new(cfg =>
     cfg.CreateMap<Product, ProductRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
     cfg.CreateMap<CategoryReq, Category>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
     cfg.CreateMap<Category, CategoryRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<Order, OrderRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 });
 //注册配置
 IMapper mapper = mapperConfig.CreateMapper();
@@ -165,8 +169,9 @@ builder.Services.AddScoped<ISysUserService, SysUserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ISysRoleService, SysRoleService>();
 builder.Services.AddScoped<ISysMenuService, SysMenuService>();
-builder.Services.AddScoped<ISeedDataService, SeedDataService>();
 builder.Services.AddScoped<ISettingsService, SettingsService>();
+builder.Services.AddScoped<IAnalysisService, AnalysisService>();
+builder.Services.AddScoped<ISeedDataService, SeedDataService>();
 //gpt
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IImageService, ImageService>();
@@ -177,6 +182,8 @@ builder.Services.AddScoped<IPayService, AliPayService>();
 //商品服务
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+//初始化
+builder.Services.AddTransient<DbInitialiser>();
 
 builder.Services.AddCors(options =>
 {
@@ -190,12 +197,11 @@ builder.Services.AddCors(options =>
                       });
 });
 // Add Hangfire services.
-builder.Services.AddHangfire(config => config.UseStorage(new PostgreSqlStorage(sysSettings.connection.DbConnectionString)));
-
+builder.Services.AddHangfire(config => config.UseStorage(new PostgreSqlStorage(Environment.GetEnvironmentVariable("ENV_DB_CONNECTION") ?? sysSettings.connection.DbConnectionString)));
 //redis 缓存 这个实现了IDistributedCache
 builder.Services.AddStackExchangeRedisCache(options =>
 {
-    options.Configuration = sysSettings.connection.RedisHost;
+    options.Configuration = Environment.GetEnvironmentVariable("ENV_REDIS_HOST") ?? sysSettings.connection.RedisHost;
     options.InstanceName = sysSettings.connection.RedisInstanceName;
 });
 builder.Services.AddScoped<IDistributedCacheHelper, DistributedCacheHelper>();
@@ -230,10 +236,19 @@ builder.Services.AddDbContext<FrameworkDbContext>(opt =>
     //从配置文件中获取key,这种方法需要新增一个类与之对应
 
     //var connStr = $"Host=localhost;Database=TerraMours;Username=postgres;Password=root";
-    var connStr = sysSettings.connection.DbConnectionString;
+    var connStr = Environment.GetEnvironmentVariable("ENV_DB_CONNECTION") ?? sysSettings.connection.DbConnectionString;
     opt.UseNpgsql(connStr);
-
+    //设置EF默认AsNoTracking,EF Core不 跟踪
+    opt.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+    if(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == Environments.Development)
+    {
+        //启用此选项后，EF Core将在日志中包含敏感数据，例如实体的属性值。这对于调试和排查问题非常有用。
+        opt.EnableSensitiveDataLogging();
+    }
 });
+builder.Services.AddScoped<FrameworkDbContext>();
+
+
 
 //json小写的问题
 builder.Services.Configure<JsonOptions>(options =>
@@ -272,6 +287,15 @@ var app = builder.AddServices(opt =>
     opt.DisableAutoMapRoute = true;
 });
 
+//初始化数据库
+using var scope = app.Services.CreateScope();
+
+var services = scope.ServiceProvider;
+
+var initialiser = services.GetRequiredService<DbInitialiser>();
+
+initialiser.Run();
+
 //健康检查
 //app.UseHealthChecks("/health");
 app.UseHealthChecksUI();
@@ -279,13 +303,11 @@ app.UseHealthChecksUI();
 
 
 // Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-//{
-//    app.UseSwagger();
-//    app.UseSwaggerUI();
-//}
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment()) {
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    app.UseDeveloperExceptionPage();
+}
 
 //日志
 app.UseSerilogRequestLogging();
@@ -307,11 +329,13 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = ""
 });
 
+//`UseCors` 添加 CORS 中间件。 对 `UseCors` 的调用必须放在 `UseRouting` 之后，但在 `UseAuthorization` 之前。 不然会出现前端获取不到response的现象
+app.UseCors("MyPolicy");
 //添加jwt验证
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseCors("MyPolicy");
+
 //请求中间件
 app.UseMiddleware<KeyMiddleware>();
 

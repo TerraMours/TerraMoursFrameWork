@@ -18,6 +18,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.MiniApi
             App.MapGet("/api/v1/Product/GetProductByCategoryId", GetProductByCategoryId);
             App.MapPut("/api/v1/Product/DeleteProduct", DeleteProduct);
             App.MapPut("/api/v1/Product/UpdateProduct", UpdateProduct);
+            App.MapPost("/api/v1/Product/UploadProductImage", UploadProductImage);
         }
 
         /// <summary>
@@ -88,6 +89,17 @@ namespace TerraMours_Gpt.Domains.PayDomain.MiniApi
         public async Task<IResult> GetProductByCategoryId(long categoryId)
         {
             var res = await _productService.GetProductByCategoryId(categoryId);
+            return Results.Ok(res);
+        }
+        /// <summary>
+        /// 上传图片，返回图片地址
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        [Authorize]
+        public async Task<IResult> UploadProductImage(IFormFile file)
+        {
+            var res = await _productService.UploadProductImage(file);
             return Results.Ok(res);
         }
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Essensoft.Paylink.Alipay;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
@@ -23,13 +24,15 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         private readonly Serilog.ILogger _logger;
         private readonly IOptionsSnapshot<SysSettings> _sysSettings;
         private readonly IOptionsSnapshot<GptOptions> _gptOptions;
+        private readonly IOptionsSnapshot<AlipayOptions> _alipayOptions;
 
-        public SeedDataService(FrameworkDbContext dbContext, Serilog.ILogger logger, IOptionsSnapshot<SysSettings> sysSettings, IOptionsSnapshot<GptOptions> gptOptions)
+        public SeedDataService(FrameworkDbContext dbContext, Serilog.ILogger logger, IOptionsSnapshot<SysSettings> sysSettings, IOptionsSnapshot<GptOptions> gptOptions, IOptionsSnapshot<AlipayOptions> alipayOptions)
         {
             _dbContext = dbContext;
             _logger = logger;
             _sysSettings = sysSettings;
             _gptOptions = gptOptions;
+            _alipayOptions = alipayOptions;
         }
 
         /// <summary>
@@ -56,25 +59,33 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                     new SysMenus(){MenuId=4,ParentId=3,HasChildren=false,MenuName="权限管理",MenuUrl="/management/auth",
                     Icon="ic:baseline-security",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true},
                     new SysMenus(){MenuId=5,ParentId=3,HasChildren=false,MenuName="角色管理",MenuUrl="/management/role",
-                    Icon="ic:baseline-security",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=1,ExternalUrl=false,IsHome=false,IsShow=true},
+                    Icon="icon-park-outline:people-safe",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=1,ExternalUrl=false,IsHome=false,IsShow=true},
                     new SysMenus(){MenuId=6,ParentId=3,HasChildren=false,MenuName="菜单管理",MenuUrl="/management/route",
-                    Icon="ic:baseline-security",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=2,ExternalUrl=false,IsHome=false,IsShow=true},
+                    Icon="icon-park-outline:more-app",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=2,ExternalUrl=false,IsHome=false,IsShow=true},
                     new SysMenus(){MenuId=7,HasChildren=false,MenuName="聊天记录",MenuUrl="/management/chat",
-                    Icon="mdi:file-document-multiple-outline",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true},
+                    Icon="icon-park-outline:adobe-illustrate",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true},
                     new SysMenus(){MenuId=8,HasChildren=false,MenuName="数据看板",MenuUrl="/dashboard/analysis",
                     Icon="icon-park-outline:analysis",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true},
                     new SysMenus(){MenuId=9,HasChildren=false,MenuName="敏感词管理",MenuUrl="/management/sensitive",
-                    Icon="mdi:card-outline",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true},
+                    Icon="icon-park-outline:message-failed",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true},
                     new SysMenus(){MenuId=10,HasChildren=false,MenuName="系统提示词",MenuUrl="/management/promptOption",
-                    Icon="mdi:table-large",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true},
+                    Icon="icon-park-outline:message-emoji",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true},
                     new SysMenus(){MenuId=11,HasChildren=false,MenuName="Key池管理",MenuUrl="/management/keyOption",
-                    Icon="mdi:monitor-dashboard",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true},
+                    Icon="icon-park-outline:file-settings-one",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true},
                     new SysMenus(){MenuId=12,HasChildren=false,MenuName="商品管理",
-                    Icon="carbon:cloud-service-management",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=3,ExternalUrl=false,IsHome=false,IsShow=true},
+                    Icon="icon-park-outline:workbench",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=3,ExternalUrl=false,IsHome=false,IsShow=true},
                      new SysMenus(){MenuId=13,ParentId=12,HasChildren=false,MenuName="商品分类",MenuUrl="/management/category",
-                    Icon="ic:baseline-security",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true},
+                    Icon="icon-park-outline:buy",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true},
                     new SysMenus(){MenuId=14,ParentId=12,HasChildren=false,MenuName="商品列表",MenuUrl="/management/product",
-                    Icon="ic:baseline-security",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=1,ExternalUrl=false,IsHome=false,IsShow=true}
+                    Icon="icon-park-outline:commodity",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=1,ExternalUrl=false,IsHome=false,IsShow=true},
+                    new SysMenus(){MenuId=15,ParentId=3,HasChildren=false,MenuName="系统设置",MenuUrl="/management/settings",
+                    Icon="icon-park-outline:setting",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=3,ExternalUrl=false,IsHome=false,IsShow=true},
+                    new SysMenus(){MenuId=16,HasChildren=false,MenuName="图片记录管理",MenuUrl="/management/image",
+                    Icon="icon-park-outline:adobe-photoshop",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true},
+                    new SysMenus(){MenuId=17,HasChildren=false,MenuName="图标选择",MenuUrl="/plugin/icon",
+                    Icon="icon-park-outline:pic-one",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true},
+                    new SysMenus(){MenuId=18,HasChildren=false,MenuName="订单列表",MenuUrl="/management/order",
+                    Icon="icon-park-outline:shopping",Version=1,Enable=true,CreateDate=DateTime.Now,CreateID=1,OrderNo=0,ExternalUrl=false,IsHome=false,IsShow=true}
                 });
             }
             if (!await _dbContext.SysRolesToMenus.AnyAsync())
@@ -95,6 +106,10 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                     new SysRolesToMenu(1,12),
                     new SysRolesToMenu(1,13),
                     new SysRolesToMenu(1,14),
+                    new SysRolesToMenu(1,15),
+                    new SysRolesToMenu(1,16),
+                    new SysRolesToMenu(1,17),
+                    new SysRolesToMenu(1,18),
                 });
             }
             if (!await _dbContext.SysRoles.AnyAsync())
@@ -115,7 +130,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             }
             if (!await _dbContext.SysSettings.AnyAsync())
             {
-                var settins=new SysSettingsEntity(_sysSettings.Value.initial, _sysSettings.Value.email);
+                var settins=new SysSettingsEntity(_sysSettings.Value.initial, _sysSettings.Value.email,_alipayOptions.Value);
                 await _dbContext.SysSettings.AddAsync(settins);
             }
             if (!await _dbContext.GptOptions.AnyAsync())

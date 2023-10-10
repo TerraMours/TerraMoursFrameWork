@@ -25,14 +25,5 @@
         /// 角色菜单导航属性id外键
         /// </summary>
         public long RolesToMenuId { get; set; }
-        /// <summary>
-        /// 角色菜单导航属性  外键是 MenuId
-        /// </summary>
-        public SysRolesToMenu SysRolesToMenu { get; set; }
-        /// <summary>
-        /// 菜单按钮与菜单导航属性 外键是 MenuId
-        /// </summary>
-        public SysMenus SysMenus { get; set; }
-
     }
 }
