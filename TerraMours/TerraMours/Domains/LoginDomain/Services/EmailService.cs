@@ -6,6 +6,7 @@ using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
 using TerraMours.Domains.LoginDomain.IServices;
 using TerraMours.Framework.Infrastructure.Contracts.Commons;
+using TerraMours.Framework.Infrastructure.EFCore;
 using TerraMours.Framework.Infrastructure.Utils;
 
 namespace TerraMours.Domains.LoginDomain.Services
@@ -14,9 +15,11 @@ namespace TerraMours.Domains.LoginDomain.Services
     {
 
         private readonly IOptionsSnapshot<SysSettings> _sysSettings;
-        public EmailService(IOptionsSnapshot<SysSettings> sysSettings)
+        private readonly FrameworkDbContext _dbContext;
+        public EmailService(FrameworkDbContext dbContext, IOptionsSnapshot<SysSettings> sysSettings)
         {
             _sysSettings = sysSettings;
+            _dbContext= dbContext;
         }
 
         /// <summary>
@@ -74,12 +77,12 @@ namespace TerraMours.Domains.LoginDomain.Services
         {
             try
             {
+                Email emailSetting = _dbContext.SysSettings.FirstOrDefault().Email != null ? _dbContext.SysSettings.FirstOrDefault().Email : _sysSettings.Value.email;
                 string subject = "TerraMours系统验证码";
-
 
                 var emailMessage = new MimeMessage();
 
-                emailMessage.From.Add(new MailboxAddress(_sysSettings.Value.email.SenderName, _sysSettings.Value.email.SenderEmail));
+                emailMessage.From.Add(new MailboxAddress(emailSetting.SenderName, emailSetting.SenderEmail));
                 emailMessage.To.Add(new MailboxAddress("", recipientEmail));
                 emailMessage.Subject = subject;
 
@@ -91,8 +94,8 @@ namespace TerraMours.Domains.LoginDomain.Services
                 using var client = new SmtpClient();
 
                 //SecureSocketOptions.StartTls
-                await client.ConnectAsync(_sysSettings.Value.email.Host, _sysSettings.Value.email.Port, SecureSocketOptions.SslOnConnect);
-                await client.AuthenticateAsync(_sysSettings.Value.email.SenderEmail, _sysSettings.Value.email.SenderPassword);
+                await client.ConnectAsync(emailSetting.Host, emailSetting.Port, SecureSocketOptions.SslOnConnect);
+                await client.AuthenticateAsync(emailSetting.SenderEmail, emailSetting.SenderPassword);
                 await client.SendAsync(emailMessage);
                 await client.DisconnectAsync(true);
             }
