@@ -18,9 +18,8 @@ namespace TerraMours_Gpt.Framework.Infrastructure.EFCore {
             if (tables.Rows.Count < 13) {
                 System.Console.WriteLine("执行数据迁移");
                 _context.Database.Migrate();
-                _seedDataService.EnsureSeedData();
             }
-
+            _seedDataService.EnsureSeedData();
         }
     }
 }
