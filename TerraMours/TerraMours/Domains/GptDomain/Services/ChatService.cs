@@ -330,7 +330,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         public async Task<ApiResponse<PagedRes<ChatRes>>> ChatRecordList(ChatRecordReq req) {
             var currentUser = await getSysUser(req.UserId);
             var query = _dbContext.ChatRecords.Where(m => m.Enable == true && (string.IsNullOrEmpty(req.QueryString) || m.Message.Contains(req.QueryString)));
-            if (!(currentUser.RoleId == 1 && req.ConversationId == 0)) {
+            var currentRole = _dbContext.SysRoles.FirstOrDefault(m => m.RoleId == currentUser.RoleId);
+            if (!(currentRole.IsAdmin !=null && currentRole.IsAdmin ==true && req.ConversationId == 0)) {
                 query.Where(m => m.UserId == req.UserId && m.ConversationId == req.ConversationId);
             }
             var total = await query.CountAsync();

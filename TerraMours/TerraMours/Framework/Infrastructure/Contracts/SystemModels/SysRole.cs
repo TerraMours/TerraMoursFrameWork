@@ -28,6 +28,11 @@
         public string? DeptName { get; set; }
 
         /// <summary>
+        /// 是否管理员
+        /// </summary>
+        public bool? IsAdmin { get; set; }
+
+        /// <summary>
         /// 一个角色对应的多个权限（菜单）外键是roleid
         /// </summary>
         public List<SysRolesToMenu>? RolesToMenus { get; set; }

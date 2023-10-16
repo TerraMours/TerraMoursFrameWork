@@ -166,7 +166,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
 
         public async Task<ApiResponse<PagedRes<ImageRes>>> AllImageList(PageReq page, long? userId) {
             var user= await _dbContext.SysUsers.AsNoTracking().FirstOrDefaultAsync(m => m.UserId == userId);
-            if (user == null || user.RoleId != 1)
+            var currentRole = _dbContext.SysRoles.FirstOrDefault(m => m.RoleId == user.RoleId);
+            if (user == null || currentRole ==null || currentRole.IsAdmin !=true)
             {
                 return ApiResponse<PagedRes<ImageRes>>.Fail("用户权限不足");
             }

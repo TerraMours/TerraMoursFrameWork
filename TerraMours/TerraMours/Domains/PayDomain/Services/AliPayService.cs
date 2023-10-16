@@ -130,8 +130,12 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
         /// <param name="page"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async Task<ApiResponse<PagedRes<OrderRes>>> OrderList(PageReq page)
+        public async Task<ApiResponse<PagedRes<OrderRes>>> OrderList(PageReq page, long roleId)
         {
+            var currentRole = _dbContext.SysRoles.FirstOrDefault(m => m.RoleId == roleId);
+            if (!(currentRole.IsAdmin != null && currentRole.IsAdmin == true)) {
+                return ApiResponse<PagedRes<OrderRes>>.Fail("没有调用权限（超级管理员）");
+            }
             var query = _dbContext.Orders.AsNoTracking().Where(m => string.IsNullOrEmpty(page.QueryString) || m.OrderId.Contains(page.QueryString) || m.TradeNo.Contains(page.QueryString));
             var total = await query.CountAsync();
             var item = await query.OrderByDescending(m=>m.CreatedTime).Skip((page.PageIndex - 1) * page.PageSize).Take(page.PageSize).ToListAsync();
