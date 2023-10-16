@@ -39,7 +39,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.IServices
         /// </summary>
         /// <param name="page"></param>
         /// <returns></returns>
-        Task<ApiResponse<PagedRes<OrderRes>>> OrderList(PageReq page);
+        Task<ApiResponse<PagedRes<OrderRes>>> OrderList(PageReq page,long roleId);
 
         /// <summary>
         /// 根据订单号或者交易号查询订单状态，判断用户是否支付

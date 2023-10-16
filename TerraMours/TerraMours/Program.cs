@@ -63,6 +63,9 @@ IConfiguration configuration = builder.Configuration;
 //添加配置文件与实体类绑定
 builder.Services.Configure<SysSettings>(configuration.GetSection("SysSettings"));
 var sysSettings = builder.Configuration.GetSection("SysSettings").Get<SysSettings>() ?? throw new Exception("用户或者密码不正确");
+var isDev=Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == Environments.Development;
+var dbConnStr = isDev? sysSettings.connection.DbConnectionString:( Environment.GetEnvironmentVariable("ENV_DB_CONNECTION") ?? sysSettings.connection.DbConnectionString);
+var redisConnStr = isDev ? sysSettings.connection.RedisHost : (Environment.GetEnvironmentVariable("ENV_REDIS_HOST") ?? sysSettings.connection.RedisHost);
 builder.Services.Configure<GptOptions>(configuration.GetSection("GptOptions"));
 builder.Services.Configure<AlipayOptions>(configuration.GetSection("Alipay"));
 //注入日志
@@ -197,11 +200,11 @@ builder.Services.AddCors(options =>
                       });
 });
 // Add Hangfire services.
-builder.Services.AddHangfire(config => config.UseStorage(new PostgreSqlStorage(Environment.GetEnvironmentVariable("ENV_DB_CONNECTION") ?? sysSettings.connection.DbConnectionString)));
+builder.Services.AddHangfire(config => config.UseStorage(new PostgreSqlStorage(dbConnStr)));
 //redis 缓存 这个实现了IDistributedCache
 builder.Services.AddStackExchangeRedisCache(options =>
 {
-    options.Configuration = Environment.GetEnvironmentVariable("ENV_REDIS_HOST") ?? sysSettings.connection.RedisHost;
+    options.Configuration = redisConnStr;
     options.InstanceName = sysSettings.connection.RedisInstanceName;
 });
 builder.Services.AddScoped<IDistributedCacheHelper, DistributedCacheHelper>();
@@ -236,11 +239,11 @@ builder.Services.AddDbContext<FrameworkDbContext>(opt =>
     //从配置文件中获取key,这种方法需要新增一个类与之对应
 
     //var connStr = $"Host=localhost;Database=TerraMours;Username=postgres;Password=root";
-    var connStr = Environment.GetEnvironmentVariable("ENV_DB_CONNECTION") ?? sysSettings.connection.DbConnectionString;
+    var connStr = dbConnStr;
     opt.UseNpgsql(connStr);
     //设置EF默认AsNoTracking,EF Core不 跟踪
     opt.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-    if(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == Environments.Development)
+    if(isDev)
     {
         //启用此选项后，EF Core将在日志中包含敏感数据，例如实体的属性值。这对于调试和排查问题非常有用。
         opt.EnableSensitiveDataLogging();

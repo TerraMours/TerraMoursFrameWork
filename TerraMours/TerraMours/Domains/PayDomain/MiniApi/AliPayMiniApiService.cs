@@ -9,6 +9,7 @@ using TerraMours_Gpt.Domains.PayDomain.IServices;
 using APIServiceBase = Microsoft.AspNetCore.Builder.ServiceBase;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;
+using Microsoft.EntityFrameworkCore;
 
 namespace TerraMours.Domains.LoginDomain.MiniApi
 {
@@ -77,11 +78,8 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
         public async Task<IResult> OrderList(PageReq page)
         {
             var roleId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Role));
-            if (roleId != 1)
-            {
-                return Results.Ok(ApiResponse<bool>.Fail("没有调用权限（超级管理员）"));
-            }
-            var res = await _payService.OrderList(page);
+
+            var res = await _payService.OrderList(page, roleId);
             return Results.Ok(res);
         }
 

@@ -183,7 +183,7 @@ namespace TerraMours.Domains.LoginDomain.Services
             //思考，如果将用户id与用户余额单独做一张小表分离出来，其实用户的信息，并不是经常修改，依旧可以使用缓存。以后遇到问题，需要进一步思考
             //Enable 这种可以在实体config里面配置queryFilter
             //var userList = await _helper.GetOrCreateAsync("GetAllUserList", async options => { return await _dbContext.SysUsers.Where(x => x.Enable == true).ToListAsync(); });
-            var userList = await _dbContext.SysUsers.AsNoTracking().Where(x => x.Enable == true).ToListAsync();
+            var userList = await _dbContext.SysUsers.AsNoTracking().Where(x => x.Enable == true).OrderBy(m=>m.UserId).ToListAsync();
             var userDetailList = _mapper.Map<List<SysUserDetailRes>>(userList);
             return ApiResponse<List<SysUserDetailRes>>.Success(userDetailList);
         }
@@ -215,7 +215,8 @@ namespace TerraMours.Domains.LoginDomain.Services
         {
             var modifyUser =await _dbContext.SysUsers.FirstOrDefaultAsync(m=>m.UserId==userId);
             //只有超级管理员和本人可以修改当前用户的信息,只有超级管理员可以修改余额
-            if (modifyUser == null || (modifyUser.RoleId !=1 && modifyUser.UserId !=userReq.UserId) || (modifyUser.RoleId != 1 && userReq.Balance != null))
+            var currentRole = _dbContext.SysRoles.FirstOrDefault(m => m.RoleId == modifyUser.RoleId);
+            if (modifyUser == null || (modifyUser.RoleId !=1 && modifyUser.UserId !=userReq.UserId) || (!(currentRole.IsAdmin != null && currentRole.IsAdmin == true) && userReq.Balance != null))
             {
                 return ApiResponse<bool>.Fail("没有修改的权限！");
             }
