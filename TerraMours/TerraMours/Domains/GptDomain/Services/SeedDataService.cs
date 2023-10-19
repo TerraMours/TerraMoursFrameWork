@@ -41,10 +41,6 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
         public async Task<ApiResponse<bool>> EnsureSeedData() {
-            // 清空数据库
-            //await _dbContext.Database.ExecuteSqlRawAsync("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
-
-            //await _dbContext.Database.MigrateAsync();
             using (var transaction = _dbContext.Database.BeginTransaction()) {
                 try {
                     if (!await _dbContext.SysRoles.AnyAsync() && !await _dbContext.SysMenus.AnyAsync() && !await _dbContext.SysRolesToMenus.AnyAsync() && !await _dbContext.SysUsers.AnyAsync()) {
