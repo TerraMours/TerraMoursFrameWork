@@ -127,6 +127,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
             var product = await _dbContext.Products.FirstOrDefaultAsync(x => x.Id == productReq.Id) ?? throw new Exception("该商品不存在");
             _mapper.Map(productReq, product);
             product.UpdateProduct(productReq.Name, product.Description, product.Price, product.CategoryId, productReq.IsVIP, productReq.VipLevel, productReq.VipTime,productReq.ImagePath);
+            _dbContext.ChangeTracker.Clear();
             _dbContext.Products.Update(product);
             var res = await _dbContext.SaveChangesAsync();
             //删除过期的缓存

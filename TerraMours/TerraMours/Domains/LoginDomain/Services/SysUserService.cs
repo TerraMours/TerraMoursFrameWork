@@ -216,7 +216,7 @@ namespace TerraMours.Domains.LoginDomain.Services
             var modifyUser =await _dbContext.SysUsers.FirstOrDefaultAsync(m=>m.UserId==userId);
             //只有超级管理员和本人可以修改当前用户的信息,只有超级管理员可以修改余额
             var currentRole = _dbContext.SysRoles.FirstOrDefault(m => m.RoleId == modifyUser.RoleId);
-            if (modifyUser == null || (modifyUser.RoleId !=1 && modifyUser.UserId !=userReq.UserId) || (!(currentRole.IsAdmin != null && currentRole.IsAdmin == true) && userReq.Balance != null))
+            if (modifyUser == null || (!(currentRole.IsAdmin != null && currentRole.IsAdmin == true) && modifyUser.UserId !=userReq.UserId) || (!(currentRole.IsAdmin != null && currentRole.IsAdmin == true) && userReq.Balance != null))
             {
                 return ApiResponse<bool>.Fail("没有修改的权限！");
             }
@@ -228,6 +228,7 @@ namespace TerraMours.Domains.LoginDomain.Services
             var user =await _dbContext.SysUsers.FirstOrDefaultAsync(m => m.UserId == userReq.UserId);
             _mapper.Map(userReq, user);
             user.ModifyDate=DateTime.Now;
+            _dbContext.ChangeTracker.Clear();
             _dbContext.SysUsers.Update(user);
             _dbContext.SaveChanges();
             await _helper.RemoveAsync("GetUserNameList");
@@ -276,6 +277,7 @@ namespace TerraMours.Domains.LoginDomain.Services
                 //更新数据库用户的的token
                 user.Logout();
                 //更新用户信息
+                _dbContext.ChangeTracker.Clear();
                 _dbContext.SysUsers.Update(user);
                 _dbContext.SaveChanges();
 
