@@ -143,6 +143,7 @@
         public SysUser ChangePassword(string userPassword)
         {
             this.UserPassword = userPassword;
+            this.ModifyDate=DateTime.Now;
             return this;
         }
 

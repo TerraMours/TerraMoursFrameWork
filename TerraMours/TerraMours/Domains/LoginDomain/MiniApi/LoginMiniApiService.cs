@@ -25,6 +25,7 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
             App.MapPost("/api/v1/Login/Login", Login);
             App.MapPost("/api/v1/Login/Register", Register);
             App.MapPost("/api/v1/Login/Logout", Logout);
+            App.MapPost("/api/v1/Login/ChangePassword", ChangePassword);
         }
 
         /// <summary>
@@ -88,6 +89,17 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
             //await _helper.GetOrCreateAsync("test", async e => "测试");
 
             var res = await _sysUserService.Logout(userReq);
+            return Results.Ok(res);
+        }
+
+        public async Task<IResult> ChangePassword(IValidator<SysUserReq> validator, [FromBody] SysUserReq userReq)
+        {
+            var validationResult = await validator.ValidateAsync(userReq);
+            if (!validationResult.IsValid)
+            {
+                return Results.ValidationProblem(validationResult.ToDictionary());
+            }
+            var res = await _sysUserService.ChangePassword(userReq);
             return Results.Ok(res);
         }
 
