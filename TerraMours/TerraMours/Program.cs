@@ -65,19 +65,21 @@ builder.Services.Configure<SysSettings>(configuration.GetSection("SysSettings"))
 var sysSettings = builder.Configuration.GetSection("SysSettings").Get<SysSettings>() ?? throw new Exception("用户或者密码不正确");
 var isDev=Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == Environments.Development;
 var dbConnStr = isDev? sysSettings.connection.DbConnectionString:( Environment.GetEnvironmentVariable("ENV_DB_CONNECTION") ?? sysSettings.connection.DbConnectionString);
+var seqUrl = isDev ? sysSettings.SeqUrl : (Environment.GetEnvironmentVariable("ENV_SEQ_HOST") ?? sysSettings.SeqUrl);
+Console.WriteLine("当前连接数据库："+dbConnStr);
 var redisConnStr = isDev ? sysSettings.connection.RedisHost : (Environment.GetEnvironmentVariable("ENV_REDIS_HOST") ?? sysSettings.connection.RedisHost);
 builder.Services.Configure<GptOptions>(configuration.GetSection("GptOptions"));
 builder.Services.Configure<AlipayOptions>(configuration.GetSection("Alipay"));
 //注入日志
 // 配置 Serilog 日志记录器
-
+Console.WriteLine("当前连接seq：" + seqUrl);
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
-    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
     .Enrich.FromLogContext()
     .WriteTo.Console()
     //.WriteTo.File()
-    .WriteTo.Seq(sysSettings.SeqUrl)
+    .WriteTo.Seq(seqUrl)
     .CreateLogger();
 builder.Host.UseSerilog(Log.Logger);
 

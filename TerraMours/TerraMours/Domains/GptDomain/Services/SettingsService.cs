@@ -27,12 +27,13 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
 
         public async Task<ApiResponse<bool>> ChangeEmailSettings(Email email, long? userId)
         {
-            var settings = await _dbContext.SysSettings.FirstOrDefaultAsync();
+            var settings = await _dbContext.SysSettings.AsNoTracking().FirstOrDefaultAsync();
             if (settings == null)
             {
                 return ApiResponse<bool>.Fail("未初始化数据");
             }
             settings.ChangeEmail(email,userId);
+            _dbContext.ChangeTracker.Clear();
             _dbContext.SysSettings.Update(settings);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
@@ -46,6 +47,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 return ApiResponse<bool>.Fail("未初始化数据");
             }
             settings.ChangeImagOptions(imagOptions, userId);
+            _dbContext.ChangeTracker.Clear();
             _dbContext.GptOptions.Update(settings);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
@@ -59,6 +61,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 return ApiResponse<bool>.Fail("未初始化数据");
             }
             settings.ChangeOpenAIOptions(openAIOptions, userId);
+            _dbContext.ChangeTracker.Clear();
             _dbContext.GptOptions.Update(settings);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
@@ -107,6 +110,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 return ApiResponse<bool>.Fail("未初始化数据");
             }
             settings.ChangeAlipayOptions(alipayOptions, userId);
+            _dbContext.ChangeTracker.Clear();
             _dbContext.SysSettings.Update(settings);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
