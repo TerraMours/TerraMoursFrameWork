@@ -308,5 +308,49 @@ namespace TerraMours.Domains.LoginDomain.Services
             var userList = await _helper.GetOrCreateAsync("GetUserNameList", async options => { return await _dbContext.SysUsers.Select(m=>new KeyValueRes(m.UserId,m.UserName)).ToListAsync();});
             return userList;
         }
+
+        public async Task<ApiResponse<string>> ChangePassword(SysUserReq userReq)
+        {
+            try
+            {
+                //查看数据库是否有此用户
+                //目前只支持邮箱注册所以这里去判断UserEmail 即可，后续如果可以对接手机号注册 则加上手机号即可
+                //判断此邮箱是否已经被注册
+                var user = await _dbContext.SysUsers.FirstOrDefaultAsync(x => x.UserEmail == userReq.UserAccount);
+                if (user == null)
+                {
+                    return ApiResponse<string>.Fail("用户不存在");
+                }
+
+                //判断邮件6位数 验证码是否正确
+                //todo 编写mailService
+                //根据用户的邮箱查询缓存里面的验证码是否正确或者过期
+                var checkCode = CacheHelper.GetCache(userReq.UserAccount).ToString();
+
+                if (userReq.CheckCode == checkCode)
+                {
+                    //加密密码
+                    var encryptPwd = userReq.UserPassword.EncryptDES(_sysSettings.Value.secret.Encrypt);
+
+                    user.ChangePassword(encryptPwd);
+                    _dbContext.ChangeTracker.Clear();
+                    _dbContext.SysUsers.Update(user);
+                    //更新数据库
+                    await _dbContext.SaveChangesAsync();
+                    return ApiResponse<string>.Success("密码修改成功");
+                }
+                else
+                {
+                    return ApiResponse<string>.Fail("验证码不正确");
+                }
+
+            }
+
+            catch (Exception ex)
+            {
+                //todo 后面所有的异常记录日志，同时返回前端的信息需要蒙蔽，为联系为管理员或者其他不包含堆栈信息的内容
+                throw new Exception("" + ex.Message);
+            }
+        }
     }
 }

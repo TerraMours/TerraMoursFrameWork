@@ -61,6 +61,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                     new ChatConversation(req.Prompt.Length < 5 ? req.Prompt : $"{req.Prompt.Substring(0, 5)}...",
                         req.UserId));
                 req.ConversationId = conversation.Entity.ConversationId;
+                await _dbContext.SaveChangesAsync();
             }
 
             var user = await getSysUser(req.UserId);
@@ -153,8 +154,13 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 });
                 //接口返回的完整内容
                 string totalMsg = "";
+                //创建结果记录
+                var chatRecord = new ChatRecord();
+                await _dbContext.ChatRecords.AddAsync(chatRecord);
+                await _dbContext.SaveChangesAsync();
                 var chatRes = new ChatRes()
                 {
+                    ChatRecordId = chatRecord.ChatRecordId,
                     Role = "assistant", Message = totalMsg, Model = req.Model, ModelType = req.ModelType,
                     ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId, Enable = true
                 };
@@ -189,9 +195,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
 
                 if (!isVip)
                     takesPrice += TokensPrice(totalMsg, req.Model ?? openAiOptions.OpenAI.ChatModel);
-
-                var chatRecord = _mapper.Map<ChatRecord>(chatRes);
-                await _dbContext.ChatRecords.AddAsync(chatRecord);
+                _mapper.Map(chatRes, chatRecord);
+                _dbContext.ChatRecords.Update(chatRecord);
 
             }
             finally
