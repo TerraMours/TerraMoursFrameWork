@@ -21,14 +21,12 @@ namespace TerraMours_Gpt.Domains.PayDomain.Hubs
     public class PaymentHub : Hub
     {
         private readonly IAlipayClient _client;
-        private readonly IOptions<AlipayOptions> _optionsAccessor;
         private readonly FrameworkDbContext _dbContext;
         private readonly Serilog.ILogger _logger;
 
-        public PaymentHub(IAlipayClient client, IOptions<AlipayOptions> optionsAccessor, FrameworkDbContext dbContext, ILogger logger)
+        public PaymentHub(IAlipayClient client,FrameworkDbContext dbContext, ILogger logger)
         {
             _client = client;
-            _optionsAccessor = optionsAccessor;
             _dbContext = dbContext;
             _logger = logger;
         }
@@ -40,6 +38,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.Hubs
         /// <returns></returns>
         public async Task QueryPaymentStatus(AlipayTradeQueryReq req)
         {
+            var options =await _dbContext.SysSettings.FirstOrDefaultAsync();
             _logger.Information($"即时查询状态，订单号:{req.OutTradeNo}");
             //获取当前连接id
             var connectionId = this.Context.ConnectionId;
@@ -65,7 +64,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.Hubs
             bool isSuccess = false;
             while ((DateTime.Now - startTime).TotalMinutes <= 3)
             {
-                queryPayRes = await _client.ExecuteAsync(request, _optionsAccessor.Value);
+                queryPayRes = await _client.ExecuteAsync(request, options.Alipay);
                 string jsonContent = System.Text.Json.JsonSerializer.Serialize(queryPayRes, new JsonSerializerOptions
                 {
                     IgnoreNullValues = true
@@ -88,7 +87,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.Hubs
                 await Task.Delay(3000);
             }
             //再次查询一次，保证延迟的三秒不是刚刚支付的同时不是三分钟的临界点，导致返回的数据与实际的数据不一致
-            queryPayRes = await _client.ExecuteAsync(request, _optionsAccessor.Value);
+            queryPayRes = await _client.ExecuteAsync(request, options.Alipay);
             if (queryPayRes.Code == "10000" && (queryPayRes.TradeStatus == AlipayTradeStatusEnum.TRADE_SUCCESS.ToString() || queryPayRes.TradeStatus == AlipayTradeStatusEnum.TRADE_CLOSED.ToString()))
             {
                 isSuccess = true;
@@ -110,7 +109,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.Hubs
                 };
                 var closeReq = new AlipayTradeCloseRequest();
                 closeReq.SetBizModel(closeModel);
-                _client.ExecuteAsync(closeReq, _optionsAccessor.Value);
+                _client.ExecuteAsync(closeReq, options.Alipay);
                 _dbContext.Orders.Update(order);
                 await _dbContext.SaveChangesAsync();
                 await Clients.Client(connectionId).SendAsync("QueryPaymentStatus", new { OutTradeNo = req.OutTradeNo, TradeStatus = AlipayTradeStatusEnum.TRADE_CLOSED.ToString() });
