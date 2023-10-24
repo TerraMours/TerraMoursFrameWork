@@ -251,7 +251,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 var imageData = Convert.FromBase64String(imgs[i]);
                 await System.IO.File.WriteAllBytesAsync(filePath, imageData);
                 // 获取图片路径
-                var baseUrl = _options.Value.ImagOptions.ImagFileBaseUrl;
+                var baseUrl = imageOption.ImagOptions.ImagFileBaseUrl;
                 // 生成图片 URL，注意将反斜杠转换为正斜杠
                 var imageUrl = $"{baseUrl}/{fileName.Replace("\\", "/")}";
                 imgList.Add(imageUrl);
