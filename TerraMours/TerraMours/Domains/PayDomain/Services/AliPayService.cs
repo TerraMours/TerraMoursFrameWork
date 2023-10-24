@@ -21,15 +21,13 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
     public class AliPayService : IPayService
     {
         private readonly IAlipayClient _client;
-        private readonly IOptions<AlipayOptions> _optionsAccessor;
         private readonly IMapper _mapper;
         private readonly FrameworkDbContext _dbContext;
         private readonly Serilog.ILogger _logger;
         private readonly ISysUserService _sysUserService;
 
-        public AliPayService(IAlipayClient client, IOptions<AlipayOptions> optionsAccessor, IMapper mapper, FrameworkDbContext dbContext, ILogger logger, ISysUserService sysUserService) {
+        public AliPayService(IAlipayClient client, IMapper mapper, FrameworkDbContext dbContext, ILogger logger, ISysUserService sysUserService) {
             _client = client;
-            _optionsAccessor = optionsAccessor;
             _mapper = mapper;
             _dbContext = dbContext;
             _logger = logger;
@@ -43,6 +41,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
         /// <returns></returns>
         public async Task<ApiResponse<AlipayTradePrecreateResponse>> PreCreate(AlipayTradePreCreateReq req)
         {
+            var options =await _dbContext.SysSettings.FirstOrDefaultAsync();
             //生成系统内唯一交易号
             var tradeNo = $"TerraMours-{Guid.NewGuid()}";
             // 支付宝规定：订单总金额，单位为元，精确到小数点后两位，取值范围为 [0.01,100000000]，金额不能为 0。
@@ -72,7 +71,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
             await _dbContext.SaveChangesAsync();
 
             //测试本地先生成一个支付二维码图片，后面再加vue项目
-            var response = await _client.ExecuteAsync(request, _optionsAccessor.Value);
+            var response = await _client.ExecuteAsync(request, options.Alipay);
 
             if (!response.IsError)
             {
@@ -90,6 +89,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
 
         public async Task<ApiResponse<AlipayTradeQueryResponse>> Query(AlipayTradeQueryReq req)
         {
+            var options =await _dbContext.SysSettings.FirstOrDefaultAsync();
             var model = new AlipayTradeQueryModel
             {
                 OutTradeNo = req.OutTradeNo,
@@ -100,7 +100,7 @@ namespace TerraMours_Gpt.Domains.PayDomain.Services
             var request = new AlipayTradeQueryRequest();
             request.SetBizModel(model);
 
-            var res = await _client.ExecuteAsync(request, _optionsAccessor.Value);
+            var res = await _client.ExecuteAsync(request, options.Alipay);
             return ApiResponse<AlipayTradeQueryResponse>.Success(res);
         }
         /// <summary>
