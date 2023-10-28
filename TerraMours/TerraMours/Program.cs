@@ -250,6 +250,8 @@ builder.Services.AddDbContext<FrameworkDbContext>(opt =>
         //启用此选项后，EF Core将在日志中包含敏感数据，例如实体的属性值。这对于调试和排查问题非常有用。
         opt.EnableSensitiveDataLogging();
     }
+
+    opt.EnableDetailedErrors();
 });
 builder.Services.AddScoped<FrameworkDbContext>();
 
