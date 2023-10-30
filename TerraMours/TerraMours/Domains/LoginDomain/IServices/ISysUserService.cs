@@ -16,5 +16,7 @@ namespace TerraMours.Domains.LoginDomain.IServices
         Task<string> Logout(SysLoginUserReq userReq);
         Task<ApiResponse<SysUserDetailRes>> GetUserInfoById(long userId);
         Task<List<KeyValueRes>>GetUserNameList();
+        
+        Task<ApiResponse<string>> ChangePassword(SysUserReq userReq);
     }
 }

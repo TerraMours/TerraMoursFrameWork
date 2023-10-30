@@ -60,6 +60,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 var conversation = await _dbContext.ChatConversations.AddAsync(
                     new ChatConversation(req.Prompt.Length < 5 ? req.Prompt : $"{req.Prompt.Substring(0, 5)}...",
                         req.UserId));
+                await _dbContext.SaveChangesAsync();
                 req.ConversationId = conversation.Entity.ConversationId;
             }
 
@@ -153,8 +154,13 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 });
                 //接口返回的完整内容
                 string totalMsg = "";
+                //创建结果记录
+                var chatRecord = new ChatRecord();
+                await _dbContext.ChatRecords.AddAsync(chatRecord);
+                await _dbContext.SaveChangesAsync();
                 var chatRes = new ChatRes()
                 {
+                    ChatRecordId = chatRecord.ChatRecordId,
                     Role = "assistant", Message = totalMsg, Model = req.Model, ModelType = req.ModelType,
                     ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId, Enable = true
                 };
@@ -189,9 +195,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
 
                 if (!isVip)
                     takesPrice += TokensPrice(totalMsg, req.Model ?? openAiOptions.OpenAI.ChatModel);
-
-                var chatRecord = _mapper.Map<ChatRecord>(chatRes);
-                await _dbContext.ChatRecords.AddAsync(chatRecord);
+                _mapper.Map(chatRes, chatRecord);
+                _dbContext.ChatRecords.Update(chatRecord);
 
             }
             finally
@@ -323,25 +328,39 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         public async Task<ApiResponse<bool>> DeleteChatRecord(long recordId, long? userId) {
             var record = await _dbContext.ChatRecords.FirstOrDefaultAsync(m => m.ChatRecordId == recordId && m.Enable == true);
             record?.Delete(userId);
+            _dbContext.ChatRecords.Update(record);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
         }
 
-        public async Task<ApiResponse<PagedRes<ChatRes>>> ChatRecordList(ChatRecordReq req) {
-            var currentUser = await getSysUser(req.UserId);
-            var query = _dbContext.ChatRecords.Where(m => m.Enable == true && (string.IsNullOrEmpty(req.QueryString) || m.Message.Contains(req.QueryString)));
+        public async Task<ApiResponse<PagedRes<ChatRes>>> ChatRecordList(ChatRecordReq req)
+        {
+            var currentUser = await _dbContext.SysUsers.AsNoTracking().FirstOrDefaultAsync(m => m.UserId == req.UserId);
+            var query = _dbContext.ChatRecords
+                .Where(m => m.Enable == true && (string.IsNullOrEmpty(req.QueryString) || m.Message.Contains(req.QueryString)));
+
             var currentRole = _dbContext.SysRoles.FirstOrDefault(m => m.RoleId == currentUser.RoleId);
-            if (!(currentRole.IsAdmin !=null && currentRole.IsAdmin ==true && req.ConversationId == 0)) {
-                query.Where(m => m.UserId == req.UserId && m.ConversationId == req.ConversationId);
+            if (!(currentRole != null && currentRole.IsAdmin != null && currentRole.IsAdmin == true && req.ConversationId == 0))
+            {
+                query = query.Where(m => m.UserId == req.UserId && m.ConversationId == req.ConversationId && m.Enable == true);
             }
+
             var total = await query.CountAsync();
-            var item = await query.OrderByDescending(m => m.CreateDate).Skip((req.PageIndex - 1) * req.PageSize).Take(req.PageSize).OrderBy(m=>m.CreateDate).ToListAsync();
-            var res = _mapper.Map<IEnumerable<ChatRes>>(item);
+            var items = await query
+                .OrderByDescending(m => m.CreateDate)
+                .Skip((req.PageIndex - 1) * req.PageSize)
+                .Take(req.PageSize)
+                .OrderBy(m=>m.CreateDate).ToListAsync();
+
+            var res = _mapper.Map<IEnumerable<ChatRes>>(items);
+
             //获取用户名称缓存
             var sysUser = await _sysUserService.GetUserNameList();
-            foreach (var i in res) {
-                i.UserName = sysUser.FirstOrDefault(m=>m.Key==i.UserId).Value;
+            foreach (var i in res)
+            {
+                i.UserName = sysUser.FirstOrDefault(m => m.Key == i.UserId).Value;
             }
+
             return ApiResponse<PagedRes<ChatRes>>.Success(new PagedRes<ChatRes>(res, total, req.PageIndex, req.PageSize));
         }
         #endregion
@@ -562,28 +581,45 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         #endregion
 
         #region 会话列表
-        public async Task<ApiResponse<bool>> AddChatConversation(string conversationName, long? userId) {
-            await _dbContext.ChatConversations.AddAsync(new ChatConversation(conversationName, userId));
+        public async Task<ApiResponse<ChatConversationRes>> AddChatConversation(string conversationName, long? userId)
+        {
+            var newRecord = new ChatConversation(conversationName, userId);
+            await _dbContext.ChatConversations.AddAsync(newRecord);
             await _dbContext.SaveChangesAsync();
-            return ApiResponse<bool>.Success(true);
+            var res = _mapper.Map<ChatConversationRes>(newRecord);
+            return ApiResponse<ChatConversationRes>.Success(res);
         }
 
         public async Task<ApiResponse<bool>> ChangeChatConversation(long conversationId, string conversationName, long? userId) {
-            var sensitive = await _dbContext.ChatConversations.FirstOrDefaultAsync(m => m.ConversationId == conversationId && m.Enable == true);
-            sensitive?.Change(conversationName, userId);
+            var conversation = await _dbContext.ChatConversations.FirstOrDefaultAsync(m => m.ConversationId == conversationId && m.Enable == true);
+            conversation?.Change(conversationName, userId);
+            _dbContext.ChangeTracker.Clear();
+            _dbContext.ChatConversations.Update(conversation);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
         }
 
         public async Task<ApiResponse<bool>> DeleteChatConversation(long conversationId, long? userId) {
-            var sensitive = await _dbContext.ChatConversations.FirstOrDefaultAsync(m => m.ConversationId == conversationId && m.Enable == true);
-            sensitive?.Delete(userId);
+            var conversation = await _dbContext.ChatConversations.FirstOrDefaultAsync(m => m.ConversationId == conversationId && m.Enable == true);
+            conversation?.Delete(userId);
+            _dbContext.ChangeTracker.Clear();
+            _dbContext.ChatConversations.Update(conversation);
+            var chatRecords =
+                await _dbContext.ChatRecords.Where(m => m.Enable == true && m.ConversationId == conversationId).ToListAsync();
+            if (chatRecords.Count > 0)
+            {
+                foreach (var chatRecord in chatRecords)
+                {
+                    chatRecord.Delete(userId);
+                }
+                _dbContext.ChatRecords.UpdateRange(chatRecords);
+            }
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
         }
 
         public async Task<ApiResponse<PagedRes<ChatConversationRes>>> ChatConversationList(PageReq page, long? userId) {
-            var query = _dbContext.ChatConversations.Where(m =>m.UserId==userId &&(  string.IsNullOrEmpty(page.QueryString) || m.ConversationName.Contains(page.QueryString)));
+            var query = _dbContext.ChatConversations.AsNoTracking().Where(m =>m.UserId==userId &&(  string.IsNullOrEmpty(page.QueryString) || m.ConversationName.Contains(page.QueryString))).OrderByDescending(m=>m.CreateDate);
             var total = await query.CountAsync();
             var item = await query.Skip((page.PageIndex - 1) * page.PageSize).Take(page.PageSize).ToListAsync();
             var res = _mapper.Map<IEnumerable<ChatConversationRes>>(item);
@@ -885,7 +921,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         {
             openAiOptions = _dbContext.GptOptions.AsNoTracking().Any() ? _dbContext.GptOptions.AsNoTracking().FirstOrDefault().OpenAIOptions : openAiOptions;
             var length = System.Text.Encoding.Default.GetBytes(str.ToCharArray()).Length;
-            decimal price = openAiOptions.TokenPrice > 0 ? openAiOptions.TokenPrice : (decimal)0.0001;
+            decimal price = openAiOptions.TokenPrice;
             switch (model)
             {
                 case "gpt-3.5-turbo-16k":

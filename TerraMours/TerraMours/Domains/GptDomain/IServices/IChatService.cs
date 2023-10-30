@@ -34,7 +34,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.IServices {
         #endregion
 
         #region 会话列表
-        Task<ApiResponse<bool>> AddChatConversation(string conversationName, long? userId);
+        Task<ApiResponse<ChatConversationRes>> AddChatConversation(string conversationName, long? userId);
         Task<ApiResponse<bool>> ChangeChatConversation(long conversationId, string conversationName, long? userId);
         Task<ApiResponse<bool>> DeleteChatConversation(long conversationId, long? userId);
         Task<ApiResponse<PagedRes<ChatConversationRes>>> ChatConversationList(PageReq page, long? userId);

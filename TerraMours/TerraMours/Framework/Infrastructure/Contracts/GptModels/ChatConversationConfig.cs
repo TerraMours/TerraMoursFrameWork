@@ -15,7 +15,7 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels
             //设置主键自增
             builder.Property(e => e.ConversationId)
                    .UseIdentityColumn();
-
+            builder.HasQueryFilter(e => e.Enable);
             //将 Version 属性设置为每次插入或更新时自增，并且将其设置为乐观并发标识。
             //builder.Property(e => e.Version).ValueGeneratedOnAddOrUpdate().IsConcurrencyToken();
             //使用pqsql自带的xmin隐式字段为版本控制

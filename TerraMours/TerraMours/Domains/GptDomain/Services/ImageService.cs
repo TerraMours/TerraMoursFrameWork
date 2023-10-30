@@ -251,7 +251,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 var imageData = Convert.FromBase64String(imgs[i]);
                 await System.IO.File.WriteAllBytesAsync(filePath, imageData);
                 // 获取图片路径
-                var baseUrl = _options.Value.ImagOptions.ImagFileBaseUrl;
+                var baseUrl = imageOption.ImagOptions.ImagFileBaseUrl;
                 // 生成图片 URL，注意将反斜杠转换为正斜杠
                 var imageUrl = $"{baseUrl}/{fileName.Replace("\\", "/")}";
                 imgList.Add(imageUrl);
@@ -285,6 +285,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         /// <returns></returns>
         private async Task<List<string>> CreateGptImgOpenAi(ImageReq req)
         {
+            var options = await _dbContext.GptOptions.FirstOrDefaultAsync();
             var size = StaticValues.ImageStatics.Size.Size512;
             switch (req.Size)
             {
@@ -298,7 +299,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             var openAiService = new OpenAIService(new OpenAiOptions()
             {
                 ApiKey = req.Key,
-                BaseDomain = _options.Value.OpenAIOptions.OpenAI.BaseUrl
+                BaseDomain = options.OpenAIOptions.OpenAI.BaseUrl
             });
             //接受传进来的prompt生成一张或者多张图片
             var imageResult = await openAiService.Image.CreateImage(new ImageCreateRequest
@@ -364,6 +365,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         /// <returns></returns>
         private async Task<string> TranslateOpenAi(ImageReq req)
         {
+            var options = await _dbContext.GptOptions.FirstOrDefaultAsync();
             // 定义正则表达式
             Regex regex = new Regex(@"[\u4e00-\u9fa5]+");
             if (!regex.IsMatch(req.Prompt))
@@ -374,7 +376,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             var openAiService = new OpenAIService(new OpenAiOptions()
             {
                 ApiKey = req.Key,
-                BaseDomain = _options.Value.OpenAIOptions.OpenAI.BaseUrl
+                BaseDomain = options.OpenAIOptions.OpenAI.BaseUrl
             });
             var messegs = new List<ChatMessage>();
             messegs.Add(ChatMessage.FromSystem("Translate Chinese into English"));
@@ -383,7 +385,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             var response = await openAiService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest
             {
                 Messages = messegs,
-                Model = _options.Value.OpenAIOptions.OpenAI.ChatModel,
+                Model = options.OpenAIOptions.OpenAI.ChatModel,
                 MaxTokens = 500,
             });
             return response.Choices[0].Message.Content;
