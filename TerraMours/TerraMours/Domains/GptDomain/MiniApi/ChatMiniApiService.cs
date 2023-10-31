@@ -79,7 +79,10 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             {
                 req.Key = _httpContextAccessor.HttpContext?.Items["key"]?.ToString();
             }
-            _logger.Information($"ChatStream开始时间：{DateTime.Now}，key【{req.Key}】");
+            if (!req.Model.Contains("gpt-4"))
+            {
+                _logger.Information($"ChatStream开始时间：{DateTime.Now}，key【{req.Key}】");
+            }
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
             req.UserId = userId;
             req.IP = _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.MapToIPv4().ToString();
