@@ -4,6 +4,7 @@ using TerraMours_Gpt.Domains.GptDomain.Contracts.Req;
 using TerraMours_Gpt.Domains.GptDomain.IServices;
 using TerraMours_Gpt.Domains.GptDomain.Services;
 using TerraMours_Gpt.Domains.LoginDomain.Contracts.Common;
+using TerraMours_Gpt.Framework.Infrastructure.Middlewares;
 
 namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
     public class ImageMiniApiService : ServiceBase {
@@ -25,6 +26,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         /// <param name="req"></param>
         /// <returns></returns>
         [Authorize]
+        [KeyMiddlewareEnabled]
         public async Task<IResult> GenerateGraph(ImageReq req) {
             if (_httpContextAccessor.HttpContext?.Items["key"] != null) {
                 req.Key = _httpContextAccessor.HttpContext?.Items["key"]?.ToString();

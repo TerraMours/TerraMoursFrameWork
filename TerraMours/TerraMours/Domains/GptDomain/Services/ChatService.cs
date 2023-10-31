@@ -135,6 +135,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 {
                     openAiOpetions.ApiKey = openAiOptions.OpenAI.Gpt4Key;
                     openAiOpetions.BaseDomain = openAiOptions.OpenAI.Gpt4Url;
+                    _logger.Information($"当前会话调用gpt-4，key【{openAiOptions.OpenAI.Gpt4Key}】");
                 }
 
                 var openAiService = new OpenAIService(openAiOpetions);
