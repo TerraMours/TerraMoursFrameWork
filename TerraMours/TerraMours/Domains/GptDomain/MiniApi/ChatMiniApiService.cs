@@ -19,6 +19,7 @@ using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;
 using TerraMours_Gpt.Domains.GptDomain.IServices;
 using TerraMours_Gpt.Domains.LoginDomain.Contracts.Common;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels;
+using TerraMours_Gpt.Framework.Infrastructure.Middlewares;
 
 namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
     public class ChatMiniApiService : ServiceBase {
@@ -70,6 +71,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         /// <param name="req"></param>
         /// <returns></returns>
         [Authorize]
+        [KeyMiddlewareEnabled]
         [Produces("application/octet-stream")]
         public async Task ChatCompletionStream(ChatReq req, CancellationToken cancellationToken = default)
         {
@@ -100,6 +102,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
         /// <param name="req"></param>
         /// <returns></returns>
         [Authorize]
+        [KeyMiddlewareEnabled]
         public async Task<IResult> ChatCompletion(ChatReq req) {
             if (_httpContextAccessor.HttpContext?.Items["key"] != null) {
                 req.Key = _httpContextAccessor.HttpContext?.Items["key"]?.ToString();

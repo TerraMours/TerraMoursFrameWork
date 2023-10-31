@@ -8,6 +8,7 @@ using TerraMours.Framework.Infrastructure.Contracts.Commons;
 using TerraMours.Framework.Infrastructure.EFCore;
 using TerraMours_Gpt.Domains.GptDomain.IServices;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
+using TerraMours.Framework.Infrastructure.Redis;
 
 namespace TerraMours_Gpt.Domains.GptDomain.Services
 {
@@ -18,11 +19,12 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
     {
         private readonly FrameworkDbContext _dbContext;
         private readonly Serilog.ILogger _logger;
-
-        public SettingsService(FrameworkDbContext dbContext, Serilog.ILogger logger)
+        private readonly IDistributedCacheHelper _helper;
+        public SettingsService(FrameworkDbContext dbContext, Serilog.ILogger logger, IDistributedCacheHelper helper)
         {
             _dbContext = dbContext;
             _logger = logger;
+            _helper = helper;
         }
 
         public async Task<ApiResponse<bool>> ChangeEmailSettings(Email email, long? userId)
@@ -64,6 +66,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             _dbContext.ChangeTracker.Clear();
             _dbContext.GptOptions.Update(settings);
             await _dbContext.SaveChangesAsync();
+            //删除key池缓存
+            await _helper.RemoveAsync("GetKey");
             return ApiResponse<bool>.Success(true);
         }
 
