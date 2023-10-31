@@ -10,6 +10,7 @@ using TerraMours.Domains.LoginDomain.Contracts.Req;
 using TerraMours.Domains.LoginDomain.Contracts.Res;
 using TerraMours.Domains.LoginDomain.IServices;
 using TerraMours_Gpt.Domains.LoginDomain.Contracts.Req;
+using TerraMours_Gpt.Framework.Infrastructure.Middlewares;
 
 namespace TerraMours.Domains.LoginDomain.MiniApi
 {
@@ -107,6 +108,7 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
         /// </summary>
         /// <returns></returns>
         [Authorize]
+        [KeyMiddlewareEnabled]
         public async Task<IResult> GetUser()
         {
             var userId = long.Parse(_httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.UserData)!);
