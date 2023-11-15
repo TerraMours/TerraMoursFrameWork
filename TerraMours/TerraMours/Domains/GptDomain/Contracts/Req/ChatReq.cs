@@ -31,6 +31,13 @@ namespace TerraMours_Gpt.Domains.GptDomain.Contracts.Req {
         public int? ModelType { get; set; }
         [JsonIgnore]
         public string? Key { get; set; }
+        
+        /// <summary>
+        /// 代理地址
+        /// </summary>
+        [JsonIgnore]
+        public string? BaseUrl { get; set; }
+        
         [JsonIgnore]
         public string? IP { get; set; }
 

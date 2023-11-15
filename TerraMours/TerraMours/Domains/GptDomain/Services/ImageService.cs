@@ -299,7 +299,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             var openAiService = new OpenAIService(new OpenAiOptions()
             {
                 ApiKey = req.Key,
-                BaseDomain = options.OpenAIOptions.OpenAI.BaseUrl
+                BaseDomain = req.BaseUrl
             });
             //接受传进来的prompt生成一张或者多张图片
             var imageResult = await openAiService.Image.CreateImage(new ImageCreateRequest
@@ -376,7 +376,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             var openAiService = new OpenAIService(new OpenAiOptions()
             {
                 ApiKey = req.Key,
-                BaseDomain = options.OpenAIOptions.OpenAI.BaseUrl
+                BaseDomain = req.BaseUrl
             });
             var messegs = new List<ChatMessage>();
             messegs.Add(ChatMessage.FromSystem("Translate Chinese into English"));

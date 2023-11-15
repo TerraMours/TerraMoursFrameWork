@@ -62,13 +62,12 @@
         /// <summary>
         /// OpenAI Key池
         /// </summary>
-        public string[] KeyList { get; set; }
+        public KeyOption[] KeyList { get; set; }
         public int MaxTokens { get; set; }
         public float Temperature { get; set; }
         public int FrequencyPenalty { get; set; }
         public int PresencePenalty { get; set; }
         public string ChatModel { get; set; }
-        public string TextModel { get; set; }
         /// <summary>
         /// Diversity (0.0 - 1.0).
         /// </summary>
@@ -81,19 +80,26 @@
         /// 最大提问数量
         /// </summary>
         public int MaxQuestions { get; set; }
+    }
 
+    public class KeyOption
+    {
+        /// <summary>
+        /// key
+        /// </summary>
+        public string Key { get; set; }
         /// <summary>
         /// 代理地址
         /// </summary>
         public string BaseUrl { get; set; }
         /// <summary>
-        /// Gpt4Url
+        /// 是否可用
         /// </summary>
-        public string Gpt4Url { get; set; }
+        public bool IsEnable { get; set; }
         /// <summary>
-        /// Gpt4Key
+        /// key 适用的模型
         /// </summary>
-        public string Gpt4Key { get; set; }
+        public string[] ModelTypes { get; set; }
     }
     /// <summary>
     /// AzureOpenAI配置
