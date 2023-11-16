@@ -25,18 +25,12 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Middlewares {
             var isEnabled = endpoint?.Metadata.GetMetadata<KeyMiddlewareEnabledAttribute>()?.Enabled ?? false;
             if (isEnabled)
             {
-                var modelValue = "";
+                var modelValue = "gpt-3.5-turbo";
                 using (var document = JsonDocument.Parse(await GetRequestBody(context.Request)))
                 {
                     if (document.RootElement.TryGetProperty("model", out var modelProperty))
                     {
                          modelValue = modelProperty.GetString();
-                    }
-                    else
-                    {
-                        context.Response.StatusCode = 500;
-                        await context.Response.WriteAsync("缺少模型参数");
-                        return; 
                     }
                 }
                 var keyList = GetKeyList();
