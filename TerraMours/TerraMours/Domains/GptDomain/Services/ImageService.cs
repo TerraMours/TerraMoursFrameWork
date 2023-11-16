@@ -157,7 +157,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             if (imgList.Count() > 0) {
                 foreach (var item in imgList)
                 {
-                    SaveImg(prompt, pranslatePrompt, item, request.ModelType, request.Model,request.Size, request.UserId);
+                    SaveImg(prompt, pranslatePrompt, item, request.ModelType, request.ImgModel,request.Size, request.UserId);
                 }
                 await _dbContext.SaveChangesAsync();
             }
@@ -223,7 +223,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             }
             else
             {
-                sDOptions = form.Model != null ? imageOption.ImagOptions.SDOptions?.FirstOrDefault(m => m.Label == form.Model) : imageOption.ImagOptions.SDOptions?.FirstOrDefault();
+                sDOptions = form.ImgModel != null ? imageOption.ImagOptions.SDOptions?.FirstOrDefault(m => m.Label == form.ImgModel) : imageOption.ImagOptions.SDOptions?.FirstOrDefault();
             }
             var httpClient = new HttpClient();
             SDImgReq dto = new SDImgReq();
@@ -299,7 +299,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             var openAiService = new OpenAIService(new OpenAiOptions()
             {
                 ApiKey = req.Key,
-                BaseDomain = options.OpenAIOptions.OpenAI.BaseUrl
+                BaseDomain = req.BaseUrl
             });
             //接受传进来的prompt生成一张或者多张图片
             var imageResult = await openAiService.Image.CreateImage(new ImageCreateRequest
@@ -376,7 +376,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             var openAiService = new OpenAIService(new OpenAiOptions()
             {
                 ApiKey = req.Key,
-                BaseDomain = options.OpenAIOptions.OpenAI.BaseUrl
+                BaseDomain = req.BaseUrl
             });
             var messegs = new List<ChatMessage>();
             messegs.Add(ChatMessage.FromSystem("Translate Chinese into English"));

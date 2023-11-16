@@ -27,7 +27,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Contracts.Req {
         /// <summary>
         /// 模型
         /// </summary>
-        public string? Model { get; set; }
+        public string? ImgModel { get; set; }
         /// <summary>
         /// 模型类型 0 gpt 1 sd
         /// </summary>
@@ -40,6 +40,12 @@ namespace TerraMours_Gpt.Domains.GptDomain.Contracts.Req {
 
         [JsonIgnore]
         public string? Key { get; set; }
+                
+        /// <summary>
+        /// 代理地址
+        /// </summary>
+        [JsonIgnore]
+        public string? BaseUrl { get; set; }
         [JsonIgnore]
         public string? IP { get; set; }
 

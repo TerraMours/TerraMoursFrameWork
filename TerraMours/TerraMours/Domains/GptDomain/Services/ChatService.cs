@@ -93,7 +93,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             {
                 takesPrice = GetAskPrice(messegs, req.Model ?? openAiOptions.OpenAI.ChatModel);
                 //判断余额，gpt4时需要余额五元以上
-                if (user.Balance == null || user.Balance <= (req.Model == "gpt-4" ? (takesPrice + 5) : takesPrice))
+                if (user.Balance == null || user.Balance < (req.Model == "gpt-4" ? (takesPrice + 5) : takesPrice))
                 {
                     yield return ApiResponse<ChatRes>.Fail($"账号余额不足，请充值");
                     yield break;
@@ -120,23 +120,11 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 }
 
                 string apikey;
-                if (req.Model == "gpt-4")
-                    apikey = openAiOptions.OpenAI.Gpt4Key;
-                else
-                    apikey = req.Key;
-
                 var openAiOpetions = new OpenAI.OpenAiOptions()
                 {
                     ApiKey = req.Key,
-                    BaseDomain = openAiOptions.OpenAI.BaseUrl
+                    BaseDomain = req.BaseUrl
                 };
-                //gpt-4走的第三方
-                if (req.Model == "gpt-4")
-                {
-                    openAiOpetions.ApiKey = openAiOptions.OpenAI.Gpt4Key;
-                    openAiOpetions.BaseDomain = openAiOptions.OpenAI.Gpt4Url;
-                    _logger.Information($"当前会话调用gpt-4，key【{openAiOptions.OpenAI.Gpt4Key}】");
-                }
 
                 var openAiService = new OpenAIService(openAiOpetions);
                 //调用SDK
@@ -272,21 +260,10 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                     maxtoken = (int)((req.MaxTokens != null && req.MaxTokens < openAiOptions.OpenAI.MaxTokens) ? req.MaxTokens : openAiOptions.OpenAI.MaxTokens) ;
                     break;
             }
-            string apikey;
-            if (req.Model == "gpt-4")
-                apikey = openAiOptions.OpenAI.Gpt4Key;
-            else
-                apikey = req.Key;
-
             var openAiOpetions = new OpenAI.OpenAiOptions() {
                 ApiKey = req.Key,
-                BaseDomain = openAiOptions.OpenAI.BaseUrl
+                BaseDomain = req.BaseUrl
             };
-            //gpt-4走的第三方
-            if (req.Model == "gpt-4") {
-                openAiOpetions.ApiKey = openAiOptions.OpenAI.Gpt4Key;
-                openAiOpetions.BaseDomain = openAiOptions.OpenAI.Gpt4Url;
-            }
             var openAiService = new OpenAIService(openAiOpetions);
             //调用SDK
             var response = openAiService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest {
