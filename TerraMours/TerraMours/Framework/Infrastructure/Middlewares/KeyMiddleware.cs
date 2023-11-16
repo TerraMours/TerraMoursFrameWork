@@ -1,5 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Text;
+using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
 using TerraMours.Framework.Infrastructure.EFCore;
 using TerraMours.Framework.Infrastructure.Redis;
@@ -9,13 +12,12 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Middlewares {
         private readonly RequestDelegate _next;
         private readonly IServiceProvider _serviceProvider;
         private readonly IOptions<GptOptions> _options;
-        private int _index;
+        private Dictionary<string, int> _indexDict = new Dictionary<string, int>();
 
         public KeyMiddleware(RequestDelegate next, IOptions<GptOptions> options, IServiceProvider serviceProvider) {
             _next = next;
             _serviceProvider = serviceProvider;
             _options = options;
-            _index = 0;
         }
 
         public async Task InvokeAsync(HttpContext context) {
@@ -23,15 +25,42 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Middlewares {
             var isEnabled = endpoint?.Metadata.GetMetadata<KeyMiddlewareEnabledAttribute>()?.Enabled ?? false;
             if (isEnabled)
             {
+                var modelValue = "";
+                using (var document = JsonDocument.Parse(await GetRequestBody(context.Request)))
+                {
+                    if (document.RootElement.TryGetProperty("model", out var modelProperty))
+                    {
+                         modelValue = modelProperty.GetString();
+                    }
+                    else
+                    {
+                        context.Response.StatusCode = 500;
+                        await context.Response.WriteAsync("缺少模型参数");
+                        return; 
+                    }
+                }
                 var keyList = GetKeyList();
-                var item = keyList[_index];
-                _index = (_index + 1) % keyList.Length;
-                context.Items["key"] = item;
+                if (!_indexDict.ContainsKey(modelValue)) 
+                {
+                    _indexDict.Add(modelValue,0);
+                }
+                keyList = keyList.Where(m =>m.IsEnable==true && m.ModelTypes.Contains(modelValue)).ToArray();
+                if (keyList.Length == 0)
+                {
+                    // 返回“未配置对应模型的key”的错误信息
+                    context.Response.StatusCode = 500;
+                    await context.Response.WriteAsync("系统未配置对应模型");
+                    return;
+                }
+                var item = keyList[_indexDict[modelValue]];
+                _indexDict[modelValue] = (_indexDict[modelValue] + 1) % keyList.Length;
+                context.Items["key"] = item.Key;
+                context.Items["baseUrl"] = item.BaseUrl;
             }
             await _next(context);
         }
 
-        private string[] GetKeyList() {
+        private KeyOption[] GetKeyList() {
             using (var scope = _serviceProvider.CreateScope()) {
                 var _helper = scope.ServiceProvider.GetRequiredService<IDistributedCacheHelper>();
                 //key池缓存
@@ -52,9 +81,27 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Middlewares {
             }
         }
 
-        private string[] GetDefaultKeyList() {
+        private KeyOption[] GetDefaultKeyList() {
             var list = _options.Value.OpenAIOptions?.OpenAI?.KeyList;
             return list;
+        }
+        
+        private async Task<string> GetRequestBody(HttpRequest request)
+        {
+            // 开启数据缓存
+            request.EnableBuffering();
+            using (MemoryStream memoryStream = new())
+            {
+                // 复制Body数据到缓存
+                await request.Body.CopyToAsync(memoryStream);
+                request.Body.Position = 0;
+                memoryStream.Position = 0;
+                using (StreamReader streamReader = new StreamReader(memoryStream,Encoding.UTF8))
+                {
+                    // 读取Body数据
+                    return await streamReader.ReadToEndAsync();
+                }
+            }
         }
     }
 

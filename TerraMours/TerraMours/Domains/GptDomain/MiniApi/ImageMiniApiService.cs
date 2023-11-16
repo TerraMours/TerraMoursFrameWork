@@ -31,6 +31,10 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             if (_httpContextAccessor.HttpContext?.Items["key"] != null) {
                 req.Key = _httpContextAccessor.HttpContext?.Items["key"]?.ToString();
             }
+            if (_httpContextAccessor.HttpContext?.Items["baseUrl"] != null)
+            {
+                req.BaseUrl = _httpContextAccessor.HttpContext?.Items["baseUrl"]?.ToString();
+            }
             req.UserId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
             var res = await _imageService.GenerateGraph(req);
             return Results.Ok(res);

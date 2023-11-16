@@ -108,7 +108,6 @@ namespace TerraMours.Domains.LoginDomain.MiniApi
         /// </summary>
         /// <returns></returns>
         [Authorize]
-        [KeyMiddlewareEnabled]
         public async Task<IResult> GetUser()
         {
             var userId = long.Parse(_httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.UserData)!);
