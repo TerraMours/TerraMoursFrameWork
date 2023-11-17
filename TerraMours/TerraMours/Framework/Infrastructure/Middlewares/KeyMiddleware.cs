@@ -46,8 +46,9 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Middlewares {
                     await context.Response.WriteAsync("系统未配置对应模型");
                     return;
                 }
-                var item = keyList[_indexDict[modelValue]];
-                _indexDict[modelValue] = (_indexDict[modelValue] + 1) % keyList.Length;
+                var index = _indexDict[modelValue] > keyList.Length ? 0 : _indexDict[modelValue];
+                var item = keyList[index];
+                _indexDict[modelValue] = (index + 1) % keyList.Length;
                 context.Items["key"] = item.Key;
                 context.Items["baseUrl"] = item.BaseUrl;
             }
