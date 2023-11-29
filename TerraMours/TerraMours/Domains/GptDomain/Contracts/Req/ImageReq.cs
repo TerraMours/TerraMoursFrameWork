@@ -29,7 +29,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Contracts.Req {
         /// </summary>
         public string? ImgModel { get; set; }
         /// <summary>
-        /// 模型类型 0 gpt 1 sd
+        /// 模型类型 0 gpt 1 sd 2 SDXL-BAIDU
         /// </summary>
         public int? ModelType { get; set; }
 

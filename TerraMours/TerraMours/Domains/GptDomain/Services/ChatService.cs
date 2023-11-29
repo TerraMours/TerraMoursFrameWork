@@ -1,4 +1,6 @@
-﻿using AutoMapper;
+﻿using AllInAI.Sharp.API.Dto;
+using AllInAI.Sharp.API.Req;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
@@ -7,6 +9,7 @@ using Microsoft.SemanticKernel.Connectors.AI.OpenAI.ChatCompletion;
 using OpenAI.Managers;
 using OpenAI.ObjectModels.RequestModels;
 using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -84,7 +87,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             }
 
             //上下文
-            List<ChatMessage> messegs = await BuildMsgList(req);
+            List<MessageDto> messegs = await BuildMsgList(req);
             //计费
             decimal takesPrice = 0;
             //会员判断，非会员或者GPT4或者过期的通过余额扣费
@@ -119,27 +122,20 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                         break;
                 }
 
-                string apikey;
-                var openAiOpetions = new OpenAI.OpenAiOptions()
-                {
-                    ApiKey = req.Key,
-                    BaseDomain = req.BaseUrl
-                };
-
-                var openAiService = new OpenAIService(openAiOpetions);
+                AuthOption authOption = new AuthOption() { Key = req.Key, BaseUrl = req.BaseUrl, AIType = AllInAI.Sharp.API.Enums.AITypeEnum.OpenAi };
+                AllInAI.Sharp.API.Service.ChatService chatService = new AllInAI.Sharp.API.Service.ChatService(authOption);
                 //调用SDK
-                var response = openAiService.ChatCompletion.CreateCompletionAsStream(new ChatCompletionCreateRequest
-                {
+                var response = chatService.CompletionStream(new CompletionReq {
                     Messages = messegs,
-                    Model = req.Model ?? openAiOptions.OpenAI.ChatModel,
+                    Model = req.Model,
                     MaxTokens = maxtoken,
                     TopP = req.TopP,
                     N = req.N,
                     PresencePenalty = req.PresencePenalty,
                     FrequencyPenalty = req.FrequencyPenalty,
-                    Stop = req.Stop,
+                    //Stop = req.Stop,
                     Temperature = req.Temperature,
-                    LogitBias = req.LogitBias,
+                    //LogitBias = req.LogitBias,
                 });
                 //接口返回的完整内容
                 string totalMsg = "";
@@ -233,7 +229,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                  return ApiResponse<ChatRes>.Fail("超出了单日最大提问数量");
             }
             //上下文
-            List<ChatMessage> messegs = await BuildMsgList(req);
+            List<MessageDto> messegs = await BuildMsgList(req);
             //计费
             decimal takesPrice = 0;
             //会员判断，非会员或者GPT4或者过期的通过余额扣费
@@ -260,13 +256,11 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                     maxtoken = (int)((req.MaxTokens != null && req.MaxTokens < openAiOptions.OpenAI.MaxTokens) ? req.MaxTokens : openAiOptions.OpenAI.MaxTokens) ;
                     break;
             }
-            var openAiOpetions = new OpenAI.OpenAiOptions() {
-                ApiKey = req.Key,
-                BaseDomain = req.BaseUrl
-            };
-            var openAiService = new OpenAIService(openAiOpetions);
+            AuthOption authOption = new AuthOption() { Key = req.Key, BaseUrl = req.BaseUrl, AIType = AllInAI.Sharp.API.Enums.AITypeEnum.OpenAi };
+            AllInAI.Sharp.API.Service.ChatService chatService = new AllInAI.Sharp.API.Service.ChatService(authOption);
             //调用SDK
-            var response = openAiService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest {
+
+            var response = chatService.Completion(new CompletionReq {
                 Messages = messegs,
                 Model = req.Model ?? openAiOptions.OpenAI.ChatModel,
                 MaxTokens = maxtoken,
@@ -274,9 +268,9 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 N = req.N,
                 PresencePenalty = req.PresencePenalty,
                 FrequencyPenalty = req.FrequencyPenalty,
-                Stop = req.Stop,
+                //Stop = req.Stop,
                 Temperature = req.Temperature,
-                LogitBias = req.LogitBias,
+                //LogitBias = req.LogitBias,
             });
             if (response == null)
                 return ApiResponse<ChatRes>.Fail("接口调用失败");
@@ -840,14 +834,14 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         /// </summary>
         /// <param name="req"></param>
         /// <returns></returns>
-        private async Task<List<ChatMessage>> BuildMsgList(ChatReq req)
+        private async Task<List<MessageDto>> BuildMsgList(ChatReq req)
         {
             openAiOptions = _dbContext.GptOptions.AsNoTracking().Any() ? _dbContext.GptOptions.AsNoTracking().FirstOrDefault().OpenAIOptions : openAiOptions;
             //根据配置中的CONTEXT_COUNT 查询上下文
-            var messegs = new List<ChatMessage>();
+            var messegs = new List<MessageDto>();
             if (!string.IsNullOrEmpty(req.SystemMessage))
             {
-                messegs.Add(ChatMessage.FromSystem(req.SystemMessage));
+                messegs.Add(new MessageDto() { Role="system",Content= req.SystemMessage });
             }
 
             var parentMessages = _dbContext.ChatRecords
@@ -861,19 +855,19 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 switch (parentMessages[i].Role)
                 {
                     case "assistant":
-                        messegs.Add(ChatMessage.FromAssistant(parentMessages[i].Message));
+                        messegs.Add(new MessageDto() { Role = "assistant", Content = parentMessages[i].Message });
                         break;
                     case "system":
-                        messegs.Add(ChatMessage.FromSystem(parentMessages[i].Message));
+                        messegs.Add(new MessageDto() { Role = "system", Content = parentMessages[i].Message });
                         break;
                     case "user":
-                        messegs.Add(ChatMessage.FromUser(parentMessages[i].Message));
+                        messegs.Add(new MessageDto() { Role = "user", Content = parentMessages[i].Message });
                         break;
                 }
             }
 
             //当前问题
-            messegs.Add(ChatMessage.FromUser(req.Prompt));
+            messegs.Add(new MessageDto() { Role = "user", Content = req.Prompt });
             _logger.Information(
                 $"[{DateTime.Now.ToString()}]{req.UserId} 提问内容：{JsonSerializer.Serialize(req.Prompt, new JsonSerializerOptions()
                 {
@@ -913,7 +907,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             return length * price;
         }
 
-        private decimal GetAskPrice(List<ChatMessage> chatMessages, string model)
+        private decimal GetAskPrice(List<MessageDto> chatMessages, string model)
         {
             string msg = "";
             foreach (var item in chatMessages)
