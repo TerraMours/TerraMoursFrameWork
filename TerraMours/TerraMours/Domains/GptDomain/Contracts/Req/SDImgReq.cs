@@ -53,5 +53,7 @@
         /// 平铺
         /// </summary>
         public bool? tiling { get; set; } = false;
+
+        public int? n;
     }
 }

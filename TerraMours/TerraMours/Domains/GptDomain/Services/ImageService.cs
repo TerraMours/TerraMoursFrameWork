@@ -124,7 +124,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 _hubContext.Clients.Client(request.ConnectionId).SendAsync("updateImgUrl", imgList);
             }
             catch (Exception ex) {
-                _logger.Information($"SD 生成图片报错：{ex.Message}");
+                _logger.Error($"SD 生成图片报错：{ex.Message}");
                 _hubContext.Clients.Client(request.ConnectionId).SendAsync("updateImgUrl", $"生成图片失败：{ex.Message}");
             }
             finally {
@@ -214,6 +214,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         /// <param name="form"></param>
         /// <returns></returns>
         private async Task<List<string>> CreateSDImg(ImageReq form) {
+            try
+            {
             _logger.Information("CreateSDImg");
             SDOptions sDOptions = new SDOptions();
             var imageOption = await _dbContext.GptOptions.FirstOrDefaultAsync();
@@ -257,6 +259,13 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 imgList.Add(imageUrl);
             }
             return imgList;
+            }
+            catch (Exception e)
+            {
+                _logger.Error("sd图片报错："+e.Message);
+                _logger.Error("sd图片报错："+e.StackTrace);
+                throw;
+            }
         }
 
         /// <summary>
