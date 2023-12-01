@@ -37,7 +37,13 @@ namespace TerraMours_Gpt.Domains.GptDomain.Contracts.Req {
         /// </summary>
         [JsonIgnore]
         public string? BaseUrl { get; set; }
-        
+
+        /// <summary>
+        /// 模型类型：OpenAi = 1, Baidu =2,Ali=3,SD=4, MJ=5
+        /// </summary>
+        [JsonIgnore]
+        public int? BaseType { get; set; }
+
         [JsonIgnore]
         public string? IP { get; set; }
 

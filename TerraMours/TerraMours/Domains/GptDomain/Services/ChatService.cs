@@ -1,5 +1,6 @@
 ﻿using AllInAI.Sharp.API.Dto;
 using AllInAI.Sharp.API.Req;
+using AllInAI.Sharp.API.Service;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -121,8 +122,15 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                             : openAiOptions.OpenAI.MaxTokens);
                         break;
                 }
-
-                AuthOption authOption = new AuthOption() { Key = req.Key, BaseUrl = req.BaseUrl, AIType = AllInAI.Sharp.API.Enums.AITypeEnum.OpenAi };
+                AuthOption authOption;
+                if(req.BaseType ==(int) AllInAI.Sharp.API.Enums.AITypeEnum.Baidu) {
+                    AuthService authService = new AuthService("https://aip.baidubce.com");
+                    var token = await authService.GetTokenAsyncForBaidu(req.Key.Split(",")[0], req.Key.Split(",")[1]);
+                    authOption = new AuthOption() { Key = token.access_token, BaseUrl = req.BaseUrl, AIType = (AllInAI.Sharp.API.Enums.AITypeEnum)req.BaseType };
+                }
+                else {
+                    authOption = new AuthOption() { Key = req.Key, BaseUrl = req.BaseUrl, AIType =(AllInAI.Sharp.API.Enums.AITypeEnum)req.BaseType};
+                }
                 AllInAI.Sharp.API.Service.ChatService chatService = new AllInAI.Sharp.API.Service.ChatService(authOption);
                 //调用SDK
                 var response = chatService.CompletionStream(new CompletionReq {
@@ -256,7 +264,15 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                     maxtoken = (int)((req.MaxTokens != null && req.MaxTokens < openAiOptions.OpenAI.MaxTokens) ? req.MaxTokens : openAiOptions.OpenAI.MaxTokens) ;
                     break;
             }
-            AuthOption authOption = new AuthOption() { Key = req.Key, BaseUrl = req.BaseUrl, AIType = AllInAI.Sharp.API.Enums.AITypeEnum.OpenAi };
+            AuthOption authOption;
+            if (req.BaseType == (int)AllInAI.Sharp.API.Enums.AITypeEnum.Baidu) {
+                AuthService authService = new AuthService("https://aip.baidubce.com");
+                var token = await authService.GetTokenAsyncForBaidu(req.Key.Split(",")[0], req.Key.Split(",")[1]);
+                authOption = new AuthOption() { Key = token.access_token, BaseUrl = req.BaseUrl, AIType = (AllInAI.Sharp.API.Enums.AITypeEnum)req.BaseType };
+            }
+            else {
+                authOption = new AuthOption() { Key = req.Key, BaseUrl = req.BaseUrl, AIType = (AllInAI.Sharp.API.Enums.AITypeEnum)req.BaseType };
+            }
             AllInAI.Sharp.API.Service.ChatService chatService = new AllInAI.Sharp.API.Service.ChatService(authOption);
             //调用SDK
 

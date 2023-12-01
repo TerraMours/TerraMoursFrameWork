@@ -100,6 +100,10 @@
         /// key 适用的模型
         /// </summary>
         public string[] ModelTypes { get; set; }
+        /// <summary>
+        /// 模型类型：OpenAi = 1, Baidu =2,Ali=3,SD=4, MJ=5
+        /// </summary>
+        public int Type { get; set; }
     }
     /// <summary>
     /// AzureOpenAI配置

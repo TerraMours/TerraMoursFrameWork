@@ -83,6 +83,9 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             {
                 req.BaseUrl = _httpContextAccessor.HttpContext?.Items["baseUrl"]?.ToString();
             }
+            if (_httpContextAccessor.HttpContext?.Items["baseType"] != null) {
+                req.BaseType =int.Parse( _httpContextAccessor.HttpContext?.Items["baseType"]?.ToString());
+            }
             if (!req.Model.Contains("gpt-4"))
             {
                 _logger.Information($"ChatStream开始时间：{DateTime.Now}，key【{req.Key}】");
@@ -117,6 +120,9 @@ namespace TerraMours_Gpt.Domains.GptDomain.MiniApi {
             if (_httpContextAccessor.HttpContext?.Items["baseUrl"] != null)
             {
                 req.BaseUrl = _httpContextAccessor.HttpContext?.Items["baseUrl"]?.ToString();
+            }
+            if (_httpContextAccessor.HttpContext?.Items["baseType"] != null) {
+                req.BaseType = int.Parse(_httpContextAccessor.HttpContext?.Items["baseType"]?.ToString());
             }
             var userId = long.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.UserData));
             req.UserId = userId;
