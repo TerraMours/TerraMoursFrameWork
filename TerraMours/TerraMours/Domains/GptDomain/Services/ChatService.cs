@@ -124,7 +124,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 }
                 AuthOption authOption;
                 if(req.BaseType ==(int) AllInAI.Sharp.API.Enums.AITypeEnum.Baidu) {
-                    AuthService authService = new AuthService("https://aip.baidubce.com");
+                    AuthService authService = new AuthService(req.BaseUrl);
                     var token = await authService.GetTokenAsyncForBaidu(req.Key.Split(",")[0], req.Key.Split(",")[1]);
                     authOption = new AuthOption() { Key = token.access_token, BaseUrl = req.BaseUrl, AIType = (AllInAI.Sharp.API.Enums.AITypeEnum)req.BaseType };
                 }
@@ -168,7 +168,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                             yield break;
                         }
 
-                        totalMsg += itemMsg?.Choices?.FirstOrDefault().Message.Content;
+                        totalMsg +=itemMsg.Result ?? itemMsg?.Choices?.FirstOrDefault().Message.Content;
                         chatRes.Message = totalMsg;
                         chatRes.PromptTokens = itemMsg.Usage?.PromptTokens;
                         chatRes.CompletionTokens = itemMsg.Usage?.CompletionTokens;
@@ -266,7 +266,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             }
             AuthOption authOption;
             if (req.BaseType == (int)AllInAI.Sharp.API.Enums.AITypeEnum.Baidu) {
-                AuthService authService = new AuthService("https://aip.baidubce.com");
+                AuthService authService = new AuthService(req.BaseUrl);
                 var token = await authService.GetTokenAsyncForBaidu(req.Key.Split(",")[0], req.Key.Split(",")[1]);
                 authOption = new AuthOption() { Key = token.access_token, BaseUrl = req.BaseUrl, AIType = (AllInAI.Sharp.API.Enums.AITypeEnum)req.BaseType };
             }
@@ -294,8 +294,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 _logger.Error($"接口调用失败，key：{req.Key},报错内容：{response.Result.Error.Message}");
                 return ApiResponse<ChatRes>.Fail(response.Result.Error.Message);
             }
-
-            var chatRes = new ChatRes() { Role = "assistant", Message = response.Result.Choices.FirstOrDefault().Message.Content, Model = req.Model, ModelType = req.ModelType, ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId, Enable = true };
+            var chatRes = new ChatRes() { Role = "assistant", Message =response.Result.Result ?? response.Result.Choices.FirstOrDefault().Message.Content, Model = req.Model, ModelType = req.ModelType, ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId, Enable = true };
             chatRes.PromptTokens = response.Result.Usage?.PromptTokens;
             chatRes.CompletionTokens = response.Result.Usage?.CompletionTokens;
             chatRes.TotalTokens = response.Result.Usage?.TotalTokens;

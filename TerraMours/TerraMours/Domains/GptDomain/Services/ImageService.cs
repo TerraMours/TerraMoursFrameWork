@@ -224,7 +224,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             }
             AuthOption authOption;
             if (req.BaseType == (int)AllInAI.Sharp.API.Enums.AITypeEnum.Baidu) {
-                AuthService authService = new AuthService("https://aip.baidubce.com");
+                AuthService authService = new AuthService(req.BaseUrl);
                 var token = await authService.GetTokenAsyncForBaidu(req.Key.Split(",")[0], req.Key.Split(",")[1]);
                 authOption = new AuthOption() { Key = token.access_token, BaseUrl = req.BaseUrl, AIType = (AllInAI.Sharp.API.Enums.AITypeEnum)req.BaseType };
             }
@@ -315,7 +315,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             }
             AuthOption authOption;
             if (req.BaseType == (int)AllInAI.Sharp.API.Enums.AITypeEnum.Baidu) {
-                AuthService authService = new AuthService("https://aip.baidubce.com");
+                AuthService authService = new AuthService(req.BaseUrl);
                 var token = await authService.GetTokenAsyncForBaidu(req.Key.Split(",")[0], req.Key.Split(",")[1]);
                 authOption = new AuthOption() { Key = token.access_token, BaseUrl = req.BaseUrl, AIType = (AllInAI.Sharp.API.Enums.AITypeEnum)req.BaseType };
             }
