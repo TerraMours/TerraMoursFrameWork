@@ -25,6 +25,11 @@ using OpenAI.ObjectModels.RequestModels;
 using OpenAI.Managers;
 using OpenAI;
 using TerraMours.Domains.LoginDomain.IServices;
+using AllInAI.Sharp.API.Dto;
+using AllInAI.Sharp.API.Service;
+using AllInAI.Sharp.API.Req;
+using Org.BouncyCastle.Ocsp;
+using AllInAI.Sharp.API.Res;
 
 namespace TerraMours_Gpt.Domains.GptDomain.Services
 {
@@ -139,29 +144,22 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         /// <exception cref="NotImplementedException"></exception>
         public async Task<List<string>> CreatImages(ImageReq request) {
             List<string> imgList = new List<string>();
+            List<string> outImgList = new List<string>();
             var prompt=request.Prompt;
             string pranslatePrompt= string.Empty;
-            switch (request.ModelType) {
-                case 0:
-                    imgList = await CreateGptImgOpenAi(request);
-                    break;
-                case 1:
-                default:
-                    //判断用户输入的是不是中文，是中文调用chatgpt翻译
-                    pranslatePrompt= await TranslateOpenAi(request);
-                    request.Prompt = pranslatePrompt;
-                    imgList = await CreateSDImg(request);
-                    break;
-            }
-
+            imgList = await CreateImg(request);
+            var imageOption = await _dbContext.GptOptions.FirstOrDefaultAsync();
             if (imgList.Count() > 0) {
                 foreach (var item in imgList)
                 {
                     SaveImg(prompt, pranslatePrompt, item, request.ModelType, request.ImgModel,request.Size, request.UserId);
+                    // 获取图片路径
+                    var baseUrl = imageOption.ImagOptions.ImagFileBaseUrl;
+                    outImgList.Add(baseUrl + item);
                 }
                 await _dbContext.SaveChangesAsync();
             }
-            return imgList;
+            return outImgList;
         }
 
         public async Task<ApiResponse<PagedRes<ImageRes>>> AllImageList(PageReq page, long? userId) {
@@ -207,136 +205,69 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             ImageRecord record = new ImageRecord(prompt,pranslatePrompt,imagUrl,modelType,model,size,userId);
             _dbContext.ImageRecords.Add(record);
         }
-
         /// <summary>
-        /// sd图片
-        /// </summary>
-        /// <param name="form"></param>
-        /// <returns></returns>
-        private async Task<List<string>> CreateSDImg(ImageReq form) {
-            try
-            {
-            _logger.Information("CreateSDImg");
-            SDOptions sDOptions = new SDOptions();
-            var imageOption = await _dbContext.GptOptions.FirstOrDefaultAsync();
-            if(imageOption ==null)
-            {
-                sDOptions = _options.Value.ImagOptions.SDOptions.FirstOrDefault();
-            }
-            else
-            {
-                sDOptions = form.ImgModel != null ? imageOption.ImagOptions.SDOptions?.FirstOrDefault(m => m.Label == form.ImgModel) : imageOption.ImagOptions.SDOptions?.FirstOrDefault();
-            }
-            var httpClient = new HttpClient();
-            SDImgReq dto = new SDImgReq();
-            dto.prompt = form.Prompt;
-            dto.steps = 20;
-            dto.batch_size = form.Count;
-            dto.negative_prompt =form.NegativePrompt ?? sDOptions?.Negative_Prompt ?? "wrong hands";
-            var requestUrl = $"{sDOptions?.BaseUrl}/sdapi/v1/txt2img";
-            var content = new StringContent(JsonConvert.SerializeObject(dto), Encoding.UTF8, "application/json");
-            _logger.Information($"调用SD api，url:{requestUrl},参数：{await content.ReadAsStringAsync()}");
-            var message = await httpClient.PostAsync(requestUrl, content);
-            _logger.Information($"调用SD api，返回结果：{await new StringContent(JsonConvert.SerializeObject(message), Encoding.UTF8, "application/json").ReadAsStringAsync()}");
-            SDImgRes response = await message.Content.ReadFromJsonAsync<SDImgRes>();
-            //保存文件
-            var imgs = response?.images;
-            var imgList = new List<string>();
-            for (int i = 0; i < imgs.Length; i++) {
-                var fileName = $"{Guid.NewGuid()}.png";
-                var folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "images");
-                if (!Directory.Exists(folderPath)) {
-                    Directory.CreateDirectory(folderPath);
-                }
-                var filePath = Path.Combine(folderPath, fileName);
-                // 将 Base64 数据转换为二进制数据，并写入文件
-                var imageData = Convert.FromBase64String(imgs[i]);
-                await System.IO.File.WriteAllBytesAsync(filePath, imageData);
-                // 获取图片路径
-                var baseUrl = imageOption.ImagOptions.ImagFileBaseUrl;
-                // 生成图片 URL，注意将反斜杠转换为正斜杠
-                var imageUrl = $"{baseUrl}/{fileName.Replace("\\", "/")}";
-                imgList.Add(imageUrl);
-            }
-            return imgList;
-            }
-            catch (Exception e)
-            {
-                _logger.Error("sd图片报错："+e.Message);
-                _logger.Error("sd图片报错："+e.StackTrace);
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// chatgpt生成图片
+        /// 文生图
         /// </summary>
         /// <param name="req"></param>
         /// <returns></returns>
-        private async Task<List<string>> CreateGptImg(ImageReq req) {
-            IKernel kernel = Kernel.Builder.Build();
-            kernel.Config.AddOpenAIImageGenerationService("dallE",
-            req.Key);
-            IImageGeneration dallE = kernel.GetService<IImageGeneration>();
-            var imgList = new List<string>();
-            for (int i = 0; i < req.Count; i++) {
-                var content = await dallE.GenerateImageAsync(req.Prompt, (int)req.Size, (int)req.Size);
-                _logger.Information("生成图片结果：" + content);
-                imgList.Add(content);
-            }
-            return imgList;
-        }
-
-        /// <summary>
-        /// chatgpt生成图片(OpenAi)
-        /// </summary>
-        /// <param name="req"></param>
-        /// <returns></returns>
-        private async Task<List<string>> CreateGptImgOpenAi(ImageReq req)
-        {
-            var options = await _dbContext.GptOptions.FirstOrDefaultAsync();
-            var size = StaticValues.ImageStatics.Size.Size512;
-            switch (req.Size)
-            {
+        /// <exception cref="Exception"></exception>
+        private async Task<List<string>> CreateImg(ImageReq req) {
+            var size = "512x512";
+            switch (req.Size) {
                 case 256:
-                    size = StaticValues.ImageStatics.Size.Size256; break;
+                    size = "256x256"; break;
+                case 512:
+                    size = "512x512"; break;
                 case 1024:
-                    size = StaticValues.ImageStatics.Size.Size1024; break;
                 default:
-                    size = StaticValues.ImageStatics.Size.Size1024; break;
+                    size = "1024x1024"; break;
             }
-            var openAiService = new OpenAIService(new OpenAiOptions()
-            {
-                ApiKey = req.Key,
-                BaseDomain = req.BaseUrl
-            });
-            //接受传进来的prompt生成一张或者多张图片
-            var imageResult = await openAiService.Image.CreateImage(new ImageCreateRequest
-            {
-                //提示词
-                Prompt = req.Prompt,
-                //生成图片数量
-                N = req.Count,
-                Size = size,
-                //返回url或者base64,url更合适 
-                ResponseFormat = StaticValues.ImageStatics.ResponseFormat.Url,
-                User = "user"
-            });
-            string jsonContent = System.Text.Json.JsonSerializer.Serialize(imageResult, new JsonSerializerOptions
-            {
-                IgnoreNullValues = true
-            });
-            _logger.Information("生成图片结果：" + jsonContent);
-            List<string> res = new List<string>();
-            if (imageResult.Successful)
-            {
-                foreach (var item in imageResult.Results)
-                {
-                    res.Add(item.Url);
+            AuthOption authOption;
+            if (req.BaseType == (int)AllInAI.Sharp.API.Enums.AITypeEnum.Baidu) {
+                AuthService authService = new AuthService(req.BaseUrl);
+                var token = await authService.GetTokenAsyncForBaidu(req.Key.Split(",")[0], req.Key.Split(",")[1]);
+                authOption = new AuthOption() { Key = token.access_token, BaseUrl = req.BaseUrl, AIType = (AllInAI.Sharp.API.Enums.AITypeEnum)req.BaseType };
+            }
+            else {
+                authOption = new AuthOption() { Key = req.Key, BaseUrl = req.BaseUrl, AIType = (AllInAI.Sharp.API.Enums.AITypeEnum)req.BaseType };
+            }
+            ImgService imgService = new ImgService(authOption);
+            Txt2ImgReq imgReq = new Txt2ImgReq();
+            imgReq.Steps = 20;
+            imgReq.Size = size;
+            imgReq.N = req.Size;
+            imgReq.Prompt = req.Prompt;
+            imgReq.NegativePrompt = req.NegativePrompt;
+            imgReq.ResponseFormat = "b64_json";
+            ImgRes imgRes = await imgService.Txt2Img(imgReq);
+            if (imgRes.Error != null) {
+                _logger.Error("sd图片报错：" + imgRes.Error.Message);
+                throw new Exception("sd图片报错：" + imgRes.Error.Message);
+            }
+            else {
+                var imgList = new List<string>();
+                if (imgRes.Results.Count > 0) {
+                    foreach (var item in imgRes.Results) {
+                        var fileName = $"{Guid.NewGuid()}.png";
+                        var folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "images");
+                        if (!Directory.Exists(folderPath)) {
+                            Directory.CreateDirectory(folderPath);
+                        }
+                        var filePath = Path.Combine(folderPath, fileName);
+                        // 将 Base64 数据转换为二进制数据，并写入文件
+                        var imageData = Convert.FromBase64String(item.B64);
+                        await System.IO.File.WriteAllBytesAsync(filePath, imageData);
+                        // 生成图片 URL，注意将反斜杠转换为正斜杠
+                        var imageUrl = $"/{fileName.Replace("\\", "/")}";
+                        imgList.Add(imageUrl);
+                    }
                 }
+                return imgList;
             }
-            return res;
         }
+
+           
+
         /// <summary>
         /// 翻译文本
         /// </summary>
@@ -382,17 +313,21 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 _logger.Information("SD prompt无需翻译。");
                 return req.Prompt;
             }
-            var openAiService = new OpenAIService(new OpenAiOptions()
-            {
-                ApiKey = req.Key,
-                BaseDomain = req.BaseUrl
-            });
-            var messegs = new List<ChatMessage>();
-            messegs.Add(ChatMessage.FromSystem("Translate Chinese into English"));
-            messegs.Add(ChatMessage.FromUser(req.Prompt));
+            AuthOption authOption;
+            if (req.BaseType == (int)AllInAI.Sharp.API.Enums.AITypeEnum.Baidu) {
+                AuthService authService = new AuthService(req.BaseUrl);
+                var token = await authService.GetTokenAsyncForBaidu(req.Key.Split(",")[0], req.Key.Split(",")[1]);
+                authOption = new AuthOption() { Key = token.access_token, BaseUrl = req.BaseUrl, AIType = (AllInAI.Sharp.API.Enums.AITypeEnum)req.BaseType };
+            }
+            else {
+                authOption = new AuthOption() { Key = req.Key, BaseUrl = req.BaseUrl, AIType = (AllInAI.Sharp.API.Enums.AITypeEnum)req.BaseType };
+            }
+            var messegs = new List<MessageDto>();
+            messegs.Add(new MessageDto() { Role = "system", Content = "Translate Chinese into English" });
+            messegs.Add(new MessageDto() { Role = "user", Content = req.Prompt });
+            AllInAI.Sharp.API.Service.ChatService chatService = new AllInAI.Sharp.API.Service.ChatService(authOption);
             //调用SDK
-            var response = await openAiService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest
-            {
+            var response = await chatService.Completion(new CompletionReq {
                 Messages = messegs,
                 Model = options.OpenAIOptions.OpenAI.ChatModel,
                 MaxTokens = 500,

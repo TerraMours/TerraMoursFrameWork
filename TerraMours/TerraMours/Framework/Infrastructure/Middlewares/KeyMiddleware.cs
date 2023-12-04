@@ -51,6 +51,7 @@ namespace TerraMours_Gpt.Framework.Infrastructure.Middlewares {
                 _indexDict[modelValue] = (index + 1) % keyList.Length;
                 context.Items["key"] = item.Key;
                 context.Items["baseUrl"] = item.BaseUrl;
+                context.Items["baseType"] = item.Type;
             }
             await _next(context);
         }
