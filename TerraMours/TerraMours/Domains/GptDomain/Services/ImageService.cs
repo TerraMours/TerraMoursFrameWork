@@ -30,6 +30,7 @@ using AllInAI.Sharp.API.Service;
 using AllInAI.Sharp.API.Req;
 using Org.BouncyCastle.Ocsp;
 using AllInAI.Sharp.API.Res;
+using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
 
 namespace TerraMours_Gpt.Domains.GptDomain.Services
 {
@@ -72,6 +73,9 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
 
 
         public async Task<ApiResponse<PagedRes<ImageRes>>> ShareImageList(PageReq page) {
+            var imageOption = await _dbContext.GptOptions.FirstOrDefaultAsync();
+            // 获取图片路径
+            var baseUrl = imageOption.ImagOptions.ImagFileBaseUrl;
             var query = _dbContext.ImageRecords.Where(m => (string.IsNullOrEmpty(page.QueryString) || m.Prompt.Contains(page.QueryString)) && m.Enable == true && m.IsPublic == true);
             var total = await query.CountAsync();
             var item = await query.OrderByDescending(m => m.CreateDate).Skip((page.PageIndex - 1) * page.PageSize).Take(page.PageSize).ToListAsync();
@@ -82,15 +86,23 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             {
                 r.IsPublic = null;
                 r.UserName = sysUser.FirstOrDefault(m => m.Key == r.UserId).Value;
+
+                r.ImagUrl =r.ImagUrl.StartsWith("http") ? r.ImagUrl:(baseUrl + r.ImagUrl);
             }
             return ApiResponse<PagedRes<ImageRes>>.Success(new PagedRes<ImageRes>(res, total, page.PageIndex, page.PageSize));
         }
 
         public async Task<ApiResponse<PagedRes<ImageRes>>> MyImageList(PageReq page, long? userId) {
+            var imageOption = await _dbContext.GptOptions.FirstOrDefaultAsync();
+            // 获取图片路径
+            var baseUrl = imageOption.ImagOptions.ImagFileBaseUrl;
             var query = _dbContext.ImageRecords.Where(m => (string.IsNullOrEmpty(page.QueryString) || m.Prompt.Contains(page.QueryString)) && m.Enable==true && m.UserId==userId);
             var total = await query.CountAsync();
             var item = await query.OrderByDescending(m => m.CreateDate).Skip((page.PageIndex - 1) * page.PageSize).Take(page.PageSize).ToListAsync();
             var res = _mapper.Map<IEnumerable<ImageRes>>(item);
+            foreach (var r in res) {
+                r.ImagUrl = r.ImagUrl.StartsWith("http") ? r.ImagUrl : (baseUrl + r.ImagUrl);
+            }
             return ApiResponse<PagedRes<ImageRes>>.Success(new PagedRes<ImageRes>(res, total, page.PageIndex, page.PageSize));
         }
 
@@ -152,7 +164,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             if (imgList.Count() > 0) {
                 foreach (var item in imgList)
                 {
-                    SaveImg(prompt, pranslatePrompt, item, request.ModelType, request.ImgModel,request.Size, request.UserId);
+                    SaveImg(prompt, pranslatePrompt, item, request.BaseType, request.Model,request.Size, request.UserId);
                     // 获取图片路径
                     var baseUrl = imageOption.ImagOptions.ImagFileBaseUrl;
                     outImgList.Add(baseUrl + item);
@@ -235,7 +247,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             Txt2ImgReq imgReq = new Txt2ImgReq();
             imgReq.Steps = 20;
             imgReq.Size = size;
-            imgReq.N = req.Size;
+            imgReq.N = req.Count;
             imgReq.Prompt = req.Prompt;
             imgReq.NegativePrompt = req.NegativePrompt;
             imgReq.ResponseFormat = "b64_json";

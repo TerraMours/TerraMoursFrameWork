@@ -4,7 +4,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Contracts.Req {
     /// <summary>
     /// 图片发起类
     /// </summary>
-    public class ImageReq {
+    public class ImageReq :BaseModelReq{
         /// <summary>
         /// 提问词
         /// </summary>
@@ -24,40 +24,11 @@ namespace TerraMours_Gpt.Domains.GptDomain.Contracts.Req {
         /// </summary>
         public string ConnectionId { get; set; }
 
-        /// <summary>
-        /// 模型
-        /// </summary>
-        public string? ImgModel { get; set; }
-        /// <summary>
-        /// 模型类型 0 gpt 1 sd 2 SDXL-BAIDU
-        /// </summary>
-        public int? ModelType { get; set; }
 
         /// <summary>
         /// 反向提示词
         /// </summary>
         public string? NegativePrompt { get; set; }
 
-        [JsonIgnore]
-        public string? Key { get; set; }
-                
-        /// <summary>
-        /// 代理地址
-        /// </summary>
-        [JsonIgnore]
-        public string? BaseUrl { get; set; }
-        /// <summary>
-        /// 模型类型：OpenAi = 1, Baidu =2,Ali=3,SD=4, MJ=5
-        /// </summary>
-        [JsonIgnore]
-        public int? BaseType { get; set; }
-        [JsonIgnore]
-        public string? IP { get; set; }
-
-        /// <summary>
-        /// 用户id 自增
-        /// </summary>
-        [JsonIgnore]
-        public long UserId { get; set; }
     }
 }
