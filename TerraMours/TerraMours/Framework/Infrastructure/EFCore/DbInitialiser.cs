@@ -16,7 +16,7 @@ namespace TerraMours_Gpt.Framework.Infrastructure.EFCore {
 
         public void Run() {
             var tables = _context.Database.GetDbConnection().GetSchema("Tables");
-            _logger.Information($"后端服务版本：V1.01");
+            _logger.Information($"后端服务版本：V1.3");
             System.Console.WriteLine($"数据库中表数：{tables.Rows.Count}");
             _logger.Information($"数据库中表数：{tables.Rows.Count}");
             //数据库model有改动的话需要先执行下 add-migrate xxx 命令，然后每次运行程序GetPendingMigrations()就会检测有无更新，有的话自动迁移。
