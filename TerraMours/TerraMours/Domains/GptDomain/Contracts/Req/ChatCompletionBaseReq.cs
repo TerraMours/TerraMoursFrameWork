@@ -2,11 +2,8 @@
     /// <summary>
     /// Completion参数类（用于高级配置）
     /// </summary>
-    public class ChatCompletionBaseReq {
-        /// <summary>
-        /// 模型
-        /// </summary>
-        public string? Model { get; set; }
+    public class ChatCompletionBaseReq:BaseModelReq {
+        
         public int? MaxTokens { get; set; }
         public float? TopP { get; set; }
         public int? N { get; set; }
