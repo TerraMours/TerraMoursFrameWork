@@ -229,7 +229,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 case 256:
                     size = "256x256"; break;
                 case 512:
-                    size = "512x512"; break;
+                    size =req.BaseType==4? "512x512": "1024x1024"; break;
                 case 1024:
                 default:
                     size = "1024x1024"; break;
@@ -253,8 +253,8 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             imgReq.ResponseFormat = "b64_json";
             ImgRes imgRes = await imgService.Txt2Img(imgReq);
             if (imgRes.Error != null) {
-                _logger.Error("sd图片报错：" + imgRes.Error.Message);
-                throw new Exception("sd图片报错：" + imgRes.Error.Message);
+                _logger.Error("图片报错：" + imgRes.Error.Message);
+                throw new Exception("图片报错：" + imgRes.Error.Message);
             }
             else {
                 var imgList = new List<string>();
