@@ -17,6 +17,8 @@ namespace TerraMours_Gpt.Domains.LoginDomain.Contracts.Enum {
         [EnumMember(Value = "用户总数")]
         User,
         [EnumMember(Value = "销售额")]
-        SaleMoney
+        SaleMoney,
+        [EnumMember(Value = "Token消耗量")]
+        Token
     }
 }

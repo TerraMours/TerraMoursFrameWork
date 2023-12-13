@@ -47,7 +47,11 @@ TerraMours实战项目，实现用户登陆和基于SK的多语言模型聊天�
 
 
 ## 更新记录
-2023.12.4 V1.3 NEW!：
+
+2023.12.4 V1.4 NEW!：
+1.更新AllInAI.Sharp.API sdk到1.1.6版本，支持了openai的流式接口的token值获取
+
+2023.12.4 V1.3：
 1.增加对文心一言的Stable-Diffusion-XL模型支持。
 2.聊天和画图调用的模型配置统一到key池配置。
 3.使用AllInAI.Sharp.API 的模型调用SDK version 1.15，统一调用AI模型。

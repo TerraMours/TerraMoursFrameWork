@@ -1,6 +1,7 @@
 ﻿using k8s.KubeConfigModels;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using TerraMours.Domains.LoginDomain.Contracts.Common;
 using TerraMours.Domains.LoginDomain.Contracts.Req;
@@ -75,7 +76,39 @@ namespace TerraMours_Gpt.Domains.LoginDomain.Services
             switch (req.AnalysisType) {
                 case AnalysisTypeEnum.Image:
                     IQueryable<ImageRecord> imageQuery = _dbContext.ImageRecords;
-                    res = await GetAnalysis(req, imageQuery);
+                    res = await GetAnalysis(req, imageQuery,
+                    g => g.Count(),
+                    g => g.Count(), entity => entity.CreateDate);
+                    break;
+                case AnalysisTypeEnum.Ask:
+                    IQueryable<ChatRecord> chatQuery = _dbContext.ChatRecords;
+                    res = await GetAnalysis(req, chatQuery,
+                    g => g.Count(),
+                    g => g.Count(), entity => entity.CreateDate);
+                    break;
+                case AnalysisTypeEnum.Use:
+                    IQueryable<ChatRecord> useQuery = _dbContext.ChatRecords;
+                    res = await GetAnalysis(req, useQuery,
+                    g => g.Select(u => u.UserId).Distinct().Count(),
+                    g => g.Select(u => u.UserId).Distinct().Count(), entity => entity.CreateDate);
+                    break;
+                case AnalysisTypeEnum.Odrer:
+                    IQueryable<Order> orderQuery = _dbContext.Orders;
+                    res = await GetAnalysis(req, orderQuery,
+                    g => g.Count(),
+                    g => g.Count(), entity => entity.CreatedTime);
+                    break;
+                case AnalysisTypeEnum.SaleMoney:
+                    IQueryable<Order> saleMoneyQuery = _dbContext.Orders;
+                    res = await GetAnalysis(req, saleMoneyQuery,
+                    g => (int)g.Where(u => u.Status == "TRADE_SUCCESS").Sum(m => m.Price),
+                    g => (int)g.Where(u => u.Status == "TRADE_SUCCESS").Sum(m => m.Price), entity => entity.CreatedTime);
+                    break;
+                case AnalysisTypeEnum.Token:
+                    IQueryable<ChatRecord> tokenQuery = _dbContext.ChatRecords;
+                    res = await GetAnalysis(req, tokenQuery,
+                    g => (int)g.Sum(m => m.TotalTokens),
+                    g => (int)g.Sum(m => m.TotalTokens), entity => entity.CreateDate);
                     break;
                 default:
                     res = await GetChat(req);
@@ -88,29 +121,43 @@ namespace TerraMours_Gpt.Domains.LoginDomain.Services
         /// 统计( 泛型方法,适用于继承BaseEntity的实体)
         /// </summary>
         /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TKey"></typeparam>
         /// <param name="req"></param>
         /// <param name="query"></param>
+        /// <param name="resultSelector"></param>
         /// <returns></returns>
-        private async Task<List<TotalAnalysisRes>> GetAnalysis<T>(AnalysisBaseReq req, IQueryable<T> query) where T:BaseEntity
-        {
-            switch (req.DateType)
-            {
+        private async Task<List<TotalAnalysisRes>> GetAnalysis<T>(AnalysisBaseReq req,
+    IQueryable<T> query,
+    Func<IGrouping<int, T>, int> intSelector,
+    Func<IGrouping<DateTime, T>, int> dateTimeSelector,
+    Func<T, DateTime?> createDateSelector) {
+            List<T> results = await query.ToListAsync(); // 从远程获取数据
+
+            List<TotalAnalysisRes> analysisResults;
+
+            switch (req.DateType) {
                 case DateTypeEnum.Today:
                     DateTime today = DateTime.Today;
-                    query = query.Where(u => u.CreateDate >= today && u.CreateDate < today.AddDays(1));
-                    return await query.GroupBy(u => u.CreateDate.Value.Hour).OrderBy(m => m.Key)
-                        .Select(g => new TotalAnalysisRes { Key =$"{g.Key}:00" , Total = g.Count() })
-                        .ToListAsync();
+                    results = results.Where(u => createDateSelector(u).Value.Date >= today && createDateSelector(u).Value.Date < today.AddDays(1)).ToList();
+                    analysisResults = results.GroupBy(u => createDateSelector(u).Value.Hour).OrderBy(m => m.Key)
+                        .Select(g => new TotalAnalysisRes {Key = $"{g.Key.ToString("D2")}:00" , Total = intSelector(g) }).ToList();
+                    break;
                 case DateTypeEnum.Month:
-                    return await query.GroupBy(u => u.CreateDate.Value.Month).OrderBy(m => m.Key)
-                        .Select(g => new TotalAnalysisRes { Key = g.Key.ToString(), Total = g.Count() })
-                        .ToListAsync();
+                    analysisResults = results.GroupBy(u => createDateSelector(u).Value.Month).OrderBy(m => m.Key)
+                        .Select(g => new TotalAnalysisRes { Key = g.Key.ToString("D2"), Total = intSelector(g) }).ToList();
+                    break;
                 default:
-                    return await query.GroupBy(u => u.CreateDate.Value.Date).OrderBy(m => m.Key)
-                        .Select(g => new TotalAnalysisRes { Key = g.Key.ToString("yyyy-MM-dd"), Total = g.Count() })
-                        .ToListAsync();
+                    analysisResults = results.GroupBy(u => createDateSelector(u).Value.Date).OrderBy(m => m.Key)
+                        .Select(g => new TotalAnalysisRes { Key = g.Key.ToString("yyyy-MM-dd"), Total = dateTimeSelector(g) }).ToList();
+                    break;
             }
+
+            return analysisResults;
         }
+
+
+
+
         /// <summary>
         /// 聊天统计
         /// </summary>
