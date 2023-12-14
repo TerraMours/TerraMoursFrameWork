@@ -297,7 +297,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
             var chatRes = new ChatRes() { Role = "assistant", Message =response.Result.Result ?? response.Result.Choices.FirstOrDefault().Message.Content, Model = req.Model, ModelType = req.ModelType, ConversationId = req.ConversationId, CreateDate = DateTime.Now, UserId = req.UserId, Enable = true };
             chatRes.PromptTokens = response.Result.Usage?.PromptTokens;
             chatRes.CompletionTokens = response.Result.Usage?.CompletionTokens;
-            chatRes.TotalTokens = response.Result.Usage?.TotalTokens;
+            chatRes.TotalTokens = response.Result.Usage?.TotalTokens ?? (response.Result.Usage?.PromptTokens+ response.Result.Usage?.CompletionTokens);
             
             var chatRecord = _mapper.Map<ChatRecord>(chatRes);
             await _dbContext.ChatRecords.AddAsync(chatRecord);

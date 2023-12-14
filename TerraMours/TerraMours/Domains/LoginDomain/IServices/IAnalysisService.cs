@@ -28,5 +28,19 @@ namespace TerraMours_Gpt.Domains.LoginDomain.IServices
         /// <param name="req"></param>
         /// <returns></returns>
         Task<ApiResponse<List<AnalysisListRes>>> AllAnalysisList(AnalysisBaseReq req);
+
+        /// <summary>
+        /// 饼状图统计
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
+        Task<ApiResponse<List<TotalAnalysisRes>>> PieAnalysisList(AnalysisListReq req);
+
+        /// <summary>
+        /// 销售统计
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
+        Task<ApiResponse<List<TotalAnalysisRes>>> SaleAnalysis(AnalysisBaseReq req);
     }
 }

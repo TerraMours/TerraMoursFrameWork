@@ -253,7 +253,7 @@ builder.Services.AddDbContext<FrameworkDbContext>(opt =>
 
     opt.EnableDetailedErrors();
 });
-builder.Services.AddScoped<FrameworkDbContext>();
+//builder.Services.AddScoped<FrameworkDbContext>();
 
 
 

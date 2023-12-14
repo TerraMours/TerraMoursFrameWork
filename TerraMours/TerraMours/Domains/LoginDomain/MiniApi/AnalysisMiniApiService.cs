@@ -11,10 +11,12 @@ namespace TerraMours_Gpt.Domains.LoginDomain.MiniApi
 
         public AnalysisMiniApiService(IServiceCollection services, IAnalysisService analysisService) : base()
         {
-            _analysisService = analysisService;
+            this._analysisService = analysisService;
             App.MapPost("/api/v1/Analysis/TotalAnalysis", TotalAnalysis);
             App.MapPost("/api/v1/Analysis/AnalysisList", AnalysisList);
             App.MapPost("/api/v1/Analysis/AllAnalysisList", AllAnalysisList);
+            App.MapPost("/api/v1/Analysis/PieAnalysisList", PieAnalysisList);
+            App.MapPost("/api/v1/Analysis/SaleAnalysis", SaleAnalysis);
         }
 
         /// <summary>
@@ -51,5 +53,25 @@ namespace TerraMours_Gpt.Domains.LoginDomain.MiniApi
             return Results.Ok(res);
         }
 
+        /// <summary>
+        /// 单个统计数量（图表）
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
+        [AllowAnonymous]
+        public async Task<IResult> PieAnalysisList([FromBody] AnalysisListReq req) {
+            var res = await _analysisService.PieAnalysisList(req);
+            return Results.Ok(res);
+        }
+        /// <summary>
+        /// 销售统计
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
+        [AllowAnonymous]
+        public async Task<IResult> SaleAnalysis([FromBody] AnalysisListReq req) {
+            var res = await _analysisService.SaleAnalysis(req);
+            return Results.Ok(res);
+        }
     }
 }
