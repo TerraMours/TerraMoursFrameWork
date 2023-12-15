@@ -23,6 +23,7 @@ using AllInAI.Sharp.API.Req;
 using Org.BouncyCastle.Ocsp;
 using AllInAI.Sharp.API.Res;
 using TerraMours.Framework.Infrastructure.Contracts.SystemModels;
+using k8s.KubeConfigModels;
 
 namespace TerraMours_Gpt.Domains.GptDomain.Services
 {
@@ -59,6 +60,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 return ApiResponse<bool>.Fail("图片不存在");
             }
             image.Share(IsPublic,userId);
+            _dbContext.ImageRecords.Update(image);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
         }

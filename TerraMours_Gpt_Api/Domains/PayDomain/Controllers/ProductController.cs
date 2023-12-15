@@ -31,7 +31,7 @@ namespace TerraMours_Gpt_Api.Domains.PayDomain.Controllers {
         /// <param name="id"></param>
         /// <returns></returns>
         [Authorize]
-        [HttpGet]
+        [HttpPut]
         public async Task<IResult> DeleteProduct(long id) {
             var res = await _productService.DeleteProduct(id);
             return Results.Ok(res);
@@ -43,7 +43,7 @@ namespace TerraMours_Gpt_Api.Domains.PayDomain.Controllers {
         /// <param name="req"></param>
         /// <returns></returns>
         [Authorize]
-        [HttpPost]
+        [HttpPut]
         public async Task<IResult> UpdateProduct([FromBody] ProductReq req) {
             var res = await _productService.UpdateProduct(req);
             return Results.Ok(res);
