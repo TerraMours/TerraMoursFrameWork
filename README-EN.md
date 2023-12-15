@@ -47,6 +47,17 @@ Core features:
 
 2023.12.4 V1.5 NEW!:
 
+1. Role configuration module added: 1. Added role configuration for administrators. 2. Added default role configuration for new users.
+2. Added setting to give bonus balance to new users upon registration.
+3. Set the pricing to 1k tokens for easy input.
+4. Fixed bug in the product interface type settings inconsistency after refactoring.
+5. Fixed bug in the shared image interface not working.
+6. Fixed bugs in the order and product interfaces.
+
+
+
+2023.12.4 V1.5 :
+
 1. Refactored backend API services to address concurrent query issues.
 
 2. New additions to the data dashboard functionality:
