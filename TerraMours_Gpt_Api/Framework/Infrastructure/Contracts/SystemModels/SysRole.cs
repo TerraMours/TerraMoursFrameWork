@@ -33,6 +33,11 @@
         public bool? IsAdmin { get; set; }
 
         /// <summary>
+        /// 新建用户默认角色
+        /// </summary>
+        public bool? IsNewUser { get; set; }
+
+        /// <summary>
         /// 一个角色对应的多个权限（菜单）外键是roleid
         /// </summary>
         public List<SysRolesToMenu>? RolesToMenus { get; set; }
@@ -45,9 +50,11 @@
         /// 新建角色 todo：添加部门字段
         /// </summary>
         /// <param name="roleName"></param>
-        public SysRole(string roleName)
+        public SysRole(string roleName,bool? isAdmin, bool? isNewUser)
         {
             RoleName = roleName;
+            IsAdmin = isAdmin;
+            IsNewUser = isNewUser;
             HasChildren = false;
             //EntityBase
             Version = 1;

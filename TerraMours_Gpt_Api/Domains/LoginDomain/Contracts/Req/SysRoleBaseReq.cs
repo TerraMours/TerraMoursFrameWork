@@ -19,5 +19,10 @@
         /// 是否管理员
         /// </summary>
         public bool? IsAdmin { get; set; }
+
+        /// <summary>
+        /// 新建用户默认角色
+        /// </summary>
+        public bool? IsNewUser { get; set; }
     }
 }

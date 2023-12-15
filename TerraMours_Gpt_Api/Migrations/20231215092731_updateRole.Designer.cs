@@ -3,6 +3,7 @@ using System;
 using Essensoft.Paylink.Alipay;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Newtonsoft.Json.Linq;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -15,9 +16,11 @@ using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
 namespace TerraMours_Gpt.Migrations
 {
     [DbContext(typeof(FrameworkDbContext))]
-    partial class FrameworkDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231215092731_updateRole")]
+    partial class updateRole
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

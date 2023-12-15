@@ -30,7 +30,7 @@ namespace TerraMours.Domains.LoginDomain.Services
         /// <returns></returns>
         public async Task<ApiResponse<bool>> AddRole(SysRoleBaseReq req)
         {
-            var role = new SysRole(req.RoleName);
+            var role = new SysRole(req.RoleName,req.IsAdmin,req.IsNewUser);
              _dbContext.SysRoles.Add(role);
             await _dbContext.SaveChangesAsync();
             return ApiResponse<bool>.Success(true);
@@ -83,6 +83,9 @@ namespace TerraMours.Domains.LoginDomain.Services
                 return ApiResponse<bool>.Fail("用户不存在");
             }
             role.ChangeName(req.RoleName);
+            role.IsAdmin = req.IsAdmin;
+            role.IsNewUser = req.IsNewUser;
+            _dbContext.SysRoles.Update(role);
             _dbContext.SaveChanges();
             return ApiResponse<bool>.Success(true);
         }

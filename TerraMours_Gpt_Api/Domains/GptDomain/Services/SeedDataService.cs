@@ -45,11 +45,11 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
                 try {
                     if (!await _dbContext.SysRoles.AnyAsync() && !await _dbContext.SysMenus.AnyAsync() && !await _dbContext.SysRolesToMenus.AnyAsync() && !await _dbContext.SysUsers.AnyAsync()) {
                         _logger.Information("初始化数据库");
-                        SysRole admin = new SysRole("超级管理员") { IsAdmin = true };
+                        SysRole admin = new SysRole("超级管理员",true,false);
                         await _dbContext.SysRoles.AddRangeAsync(new[]
                         {
                     admin,
-                    new SysRole("普通用户")
+                    new SysRole("普通用户",false,true)
                 });
                         SysMenus sysSetting = new SysMenus() {
                             HasChildren = false,

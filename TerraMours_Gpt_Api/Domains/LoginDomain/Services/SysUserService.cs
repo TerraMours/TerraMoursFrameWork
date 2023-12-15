@@ -16,6 +16,7 @@ using TerraMours.Framework.Infrastructure.EFCore;
 using TerraMours.Framework.Infrastructure.Redis;
 using TerraMours.Framework.Infrastructure.Utils;
 using TerraMours_Gpt.Domains.LoginDomain.Contracts.Req;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.Commons;
 
 namespace TerraMours.Domains.LoginDomain.Services
 {
@@ -111,8 +112,12 @@ namespace TerraMours.Domains.LoginDomain.Services
                     var encryptPwd = userReq.UserPassword.EncryptDES(_sysSettings.Value.secret.Encrypt);
 
                     var addUser = new SysUser(userReq.UserAccount, encryptPwd);
+                    //新用户赠送金额
+                    if (_dbContext.GptOptions.AsNoTracking().Any() && _dbContext.GptOptions.AsNoTracking().FirstOrDefault().OpenAIOptions.NewUserBalance !=null) {
+                        addUser.Balance = _dbContext.GptOptions.AsNoTracking().FirstOrDefault().OpenAIOptions.NewUserBalance;
+                    }
                     //注册用户默认角色
-                    addUser.RoleId = _sysSettings.Value.initial.InitialRoleId;
+                    addUser.RoleId = _dbContext.SysRoles.AsNoTracking().Where(m=>m.IsNewUser == true).Any()? _dbContext.SysRoles.AsNoTracking().Where(m => m.IsNewUser == true).FirstOrDefault().RoleId: _sysSettings.Value.initial.InitialRoleId;
                     _dbContext.SysUsers.Add(addUser);
 
                     //更新数据库
