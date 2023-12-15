@@ -12,7 +12,7 @@
     public class OpenAIOptions
     {
         /// <summary>
-        /// 1token定价
+        /// 1K token定价
         /// </summary>
         public decimal TokenPrice { get; set; }
         public OpenAI? OpenAI { get; set; }

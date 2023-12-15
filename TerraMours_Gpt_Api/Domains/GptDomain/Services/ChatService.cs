@@ -903,7 +903,7 @@ namespace TerraMours_Gpt.Domains.GptDomain.Services
         {
             openAiOptions = _dbContext.GptOptions.AsNoTracking().Any() ? _dbContext.GptOptions.AsNoTracking().FirstOrDefault().OpenAIOptions : openAiOptions;
             var length = System.Text.Encoding.Default.GetBytes(str.ToCharArray()).Length;
-            decimal price = openAiOptions.TokenPrice;
+            decimal price = openAiOptions.TokenPrice / 1000;
             switch (model)
             {
                 case "gpt-3.5-turbo-16k":
