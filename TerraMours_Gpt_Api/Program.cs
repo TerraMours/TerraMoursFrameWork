@@ -16,7 +16,6 @@ using TerraMours.Domains.LoginDomain.Contracts.Res;
 using TerraMours_Gpt.Domains.GptDomain.Contracts.Res;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.GptModels;
 using TerraMours_Gpt.Domains.PayDomain.Contracts.Req;
-using Essensoft.Paylink.Alipay.Domain;
 using TerraMours_Gpt.Domains.PayDomain.Contracts.Res;
 using TerraMours_Gpt.Framework.Infrastructure.Contracts.PaymentModels;
 using TerraMours.Domains.LoginDomain.IServices;
@@ -43,6 +42,8 @@ using TerraMours_Gpt.Framework.Infrastructure.Middlewares;
 using TerraMours_Gpt.Domains.GptDomain.Hubs;
 using TerraMours_Gpt.Domains.PayDomain.Hubs;
 using Microsoft.OpenApi.Models;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts;
+using TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
@@ -72,8 +73,8 @@ MapperConfiguration mapperConfig = new(cfg => {
     cfg.CreateMap<PromptOptions, PromptOptionRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
     cfg.CreateMap<ProductReq, Product>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
     cfg.CreateMap<Product, ProductRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
-    cfg.CreateMap<CategoryReq, TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels.Category>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
-    cfg.CreateMap<TerraMours_Gpt.Framework.Infrastructure.Contracts.ProductModels.Category, CategoryRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<CategoryReq, Category>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+    cfg.CreateMap<Category, CategoryRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
     cfg.CreateMap<Order, OrderRes>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 });
 //×¢²áÅäÖÃ
