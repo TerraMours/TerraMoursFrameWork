@@ -11,3 +11,9 @@ TerraMours/.idea/.idea.TerraMours_Gpt/.idea/indexLayout.xml
 TerraMours/.idea/.idea.TerraMours_Gpt/.idea/.name
 TerraMours/.idea/.idea.TerraMours_Gpt/.idea/encodings.xml
 TerraMours/.idea/.idea.TerraMours_Gpt/.idea/vcs.xml
+/TerraMours_Gpt_Api/bin
+/TerraMours_Gpt_Api/obj
+/TerraMours_Gpt_Api/TerraMours_Gpt_Api.csproj.user
+/TerraMours_Gpt_Api/*.user
+*.user
+.vs/TerraMours_Gpt/v17/.suo
