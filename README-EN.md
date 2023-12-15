@@ -57,6 +57,9 @@ Core features:
        4. Sales revenue time distribution chart
        5. Statistics and proportional distribution charts of question frequency/image generation frequency/token consumption for each model.
 
+2023.12.4 V1.4 ：
+1.Update AllInAI.Sharp.API SDK to version 1.1.6, adding support for retrieving token values from OpenAI's streaming interface.
+
 
 
 2023.12.4 V1.3 ：
